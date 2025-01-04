@@ -1,5 +1,5 @@
 # OneDrive
-[English Document](https://github.com/leeyoshinari/OneDrive/blob/main/README.md)
+[English Document](https://github.com/leeyoshinari/WinHub/blob/main/README.md)
 
 [更多内容详见博客](https://blog.ihuster.top/p/940241891.html)
 
@@ -10,7 +10,9 @@
 - 支持 txt、markdown、xmind脑图、表格、文档的在线编辑功能
 - 支持 python 脚本在线编辑和运行
 - 支持给文件添加桌面快捷方式
+- 支持自动备份指定文件夹中的所有文件
 - 支持远程连接 Linux 服务器
+- 支持点对点视频聊天和屏幕分享(基于 WebRTC)
 - 音乐播放器，支持播放云盘（服务端）和本地（客户端）的音乐
 - 支持 KTV，自建曲库，想唱就唱
 - 集成 aria2，支持 HTTP、FTP、BitTorrent 等多种下载协议
@@ -20,7 +22,7 @@
 - 支持 PWA，可以“安装”到手机上
 - 可任意挂载多个磁盘
 
-查看详细页面样式，[请点我](https://github.com/leeyoshinari/OneDrive/blob/main/web/detail_zh.md)
+查看详细页面样式，[请点我](https://github.com/leeyoshinari/WinHub/blob/main/web/detail_zh.md)
 
 
 ## 技术选型
@@ -28,17 +30,10 @@
 - 数据库：SQLite3 or MySQL<br>
 - 前端：html + js + css<br>
 
-## 实现方案
-文件和文件夹的层级结构维护在数据库中，这样在页面查询列表时，只需要查询数据库就可以了，速度会快很多；同时数据库中的文件和文件夹的层级结构也全部真实的映射到磁盘里，所见即所得，便于以后这个系统不用了也保留完整有序的文件，而不是乱序的。
-- 查询文件和文件夹时，直接在数据库中查询，可以非常方便的进行过滤和排序，只有在读写文件和文件夹时，才会和磁盘交互，有效的降低了磁盘IO。
-- 所有文件和文件夹的数据通过 id 查询，页面上只能看到相对路径，完全隐藏了本地真实的文件路径。
-- 可以很方便的“挂载”磁盘，只需要在配置文件中将新磁盘配置上就行了。
-- 搭配大家都熟悉的 Windows 文件系统的页面交互(来源Windows12概念图)，前端页面使用的是这个项目[tjy-gitnub](https://github.com/tjy-gitnub/win12)，非常感谢作者。我只是在这个项目的基础上进行了大量的增删（删除了大量的静态代码和缓存数据的代码，提高了整个页面的加载速度，并把大量的功能变成真实有用的功能）。
-
 ## 部署
-1、克隆 `git clone https://github.com/leeyoshinari/OneDrive.git` ；
+1、克隆 `git clone https://github.com/leeyoshinari/WinHub.git` ；
 
-2、进入目录 `cd OneDrive`，修改配置文件`config.conf`；
+2、进入目录 `cd WinHub`，修改配置文件`config.conf`；
 
 3、安装第三方包
 ```shell script
@@ -65,10 +60,10 @@ http://IP:Port/配置文件中的prefix/swagger-ui
 ```
 
 8、配置并启动 `nginx`，location相关配置如下：<br>
-（1）前端配置：前端文件在 `web` 目录里, `/OneDrive`可任意修改成你喜欢的名字
+（1）前端配置：前端文件在 `web` 目录里, `/Windows`可任意修改成你喜欢的名字
 ```shell script
-location /OneDrive {
-    alias /home/OneDrive/web/;
+location /Windows {
+    alias /home/WinHub/web/;
     index  index.html;
 }
 ```
@@ -102,32 +97,35 @@ location /api/openapi {
 
 如果你不了解 nginx，请先去[nginx 官方网站](http://nginx.org/en/download.html)下载对应系统的nginx安装包，并按照网上的教程安装。安装完成后用本项目中的`nginx.conf`替换掉安装完成后的`nginx.conf`，然后重启nginx即可。如果你使用的是`https`，直接修改端口并配置 ssl 即可。
 
-9、访问页面，url是 `http://IP:Port/OneDrive`（这里的 IP 和 端口是 Nginx 中设置的 IP 和 端口。`OneDrive`就是第7步中的前端配置的名字）
-![](https://github.com/leeyoshinari/OneDrive/blob/main/web/img/pictures/login.jpg)
-![](https://github.com/leeyoshinari/OneDrive/blob/main/web/img/pictures/home.jpg)
+9、访问页面，url是 `http://IP:Port/Windows`（这里的 IP 和 端口是 Nginx 中设置的 IP 和 端口。`Windows`就是第8步中的前端配置的名字）
+![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
+![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/home.jpg)
 
 10、如果想把当前服务器上已有的文件导入系统中，可访问后台 api 接口页面，找到 `file/import` 接口，请求参数分别是需要导入的文件夹的绝对路径和目标的目录Id。
 
-11、如需配置多语言，[请点我](https://github.com/leeyoshinari/OneDrive/blob/main/web/detail_zh.md) 。
+11、如需配置多语言，[请点我](https://github.com/leeyoshinari/WinHub/blob/main/web/detail_zh.md) 。
 
-12、如需了解更多，[请点我](https://github.com/leeyoshinari/OneDrive/blob/main/web/detail_zh.md) 。
+12、如需了解更多，[请点我](https://github.com/leeyoshinari/WinHub/blob/main/web/detail_zh.md) 。
 
 ## 其他
 1、支持 `Linux`、`Windows`、`MacOS` 等多个平台，建议在 `Linux` 系统部署； 
 
-2、因为是在操作本地文件，所以不支持集群部署和分布式存储，如需集群部署和分布式存储，[请点我](https://github.com/leeyoshinari/mycloud)；
+2、因为是在操作本地文件，所以不支持集群部署和分布式存储；
 
 3、登录页面的背景图片的路径是`web/img/pictures/undefined/background.jpg`，如需修改登录背景图片，可直接替换掉这个图片即可，注意：图片名必须是`background.jpg`；
 
-4、桌面的背景图片默认和登录页面的背景图片一样，如需修改，可在`设置->个性化->设置背景图片`中上传，上传成功后，清缓存刷新页面即可，注意：图片格式必须是`jpg`；
+4、目前多语言已支持中文简体和英文，如有翻译不正确，或者漏翻译的，烦请告知。多语言已完全放开，可自行配置；
 
-5、目前多语言已支持中文简体和英文，如有翻译不正确，或者漏翻译的，烦请告知。多语言已完全放开，可自行配置；
-
-6、在线播放视频，基本上都是用的是流式播放（边缓存边播放），这就要求视频的元数据必须在视频文件的最前面，而有些视频的元数据在视频文件的末尾，这就需要浏览器把整个视频加载完成后才能播放，体验极差。因此需要手动将视频的元数据移动到视频文件的最前面，然后再上传至云盘，这里使用 [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) 工具移动视频的元数据，命令：`ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`。
+5、在线播放视频，基本上都是用的是流式播放（边缓存边播放），这就要求视频的元数据必须在视频文件的最前面，而有些视频的元数据在视频文件的末尾，这就需要浏览器把整个视频加载完成后才能播放，体验极差。因此需要手动将视频的元数据移动到视频文件的最前面，然后再上传至云盘，这里使用 [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) 工具移动视频的元数据，命令：`ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`。
 
 7、所有页面和操作已尽可能的适配手机端了，使用手机浏览器打开页面，手机横屏展示，使用体验还是不错的；
 
 8、更好的使用体验建议：不管你用的是PC端浏览器还是手机端浏览器，设置浏览器全屏展示，使用体验更好；
+
+## 开源协议
+此项目使用 GPL-2.0 许可证。当您使用此项目时，请遵守 GPL-2.0 许可证的条款。请自觉尊重我们的工作成果。
+
+如果您不愿意遵守 GPL-2.0 许可证的条款，请在 Issues 中联系我以获取商业许可信息。
 
 ## 鸣谢
 鸣谢以下项目
@@ -138,5 +136,4 @@ location /api/openapi {
 - [editor.md](https://github.com/pandao/editor.md)
 - [Luckysheet](https://github.com/dream-num/Luckysheet)
 - [wangEditor](https://github.com/wangeditor-team/wangEditor)
-- [优折美在线音乐播放器](https://m.uzz.me)
 - [snake](https://github.com/SunQQQ/snake)

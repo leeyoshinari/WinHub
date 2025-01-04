@@ -24,7 +24,7 @@
     if (!is_share) {
         url = servers + '/share/get/' + file_id;
     }
-	$.ajax({
+	window.parent.$.ajax({
 		type: "GET",
         async: false,
 		url: url,
@@ -36,7 +36,10 @@
                 document.title = data['msg'];
 				$('#layout>#editormd>textarea')[0].value = data['data'];
 				document.getElementById("content_length").value = md5(data['data']);
-			}
+			} else {
+                window.parent.$.Toast(data['msg'], 'error');
+                return;
+            }
 		}
 	});
 	let testEditor = editormd("editormd", {

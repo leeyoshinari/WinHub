@@ -29,11 +29,11 @@ async def open_share_file(share_id: int, hh: models.SessionBase) -> dict:
 async def get_share_file(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        files = await models.Shares.all().order_by('-create_time')
-        result.data = [models.ShareFileList.from_orm_format(f).dict() for f in files]
+        files = await models.Shares.filter(username=hh.username).order_by('-create_time')
+        result.data = [models.ShareFileList.from_orm_format(f).model_dump() for f in files]
         result.total = len(result.data)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
         result.code = 1
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
@@ -46,7 +46,7 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
     try:
         _ = await models.Shares.filter(id__in=query.ids).delete()
         result.msg = f"{Msg.Delete.get_text(hh.lang).format('')}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(query.ids) + Msg.Success.get_text(hh.lang), query.ids, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(query.ids) + Msg.Success.get_text(hh.lang), query.ids, hh.username, hh.ip))
     except:
         result.code = 1
         result.msg = f"{Msg.Delete.get_text(hh.lang).format('')}{Msg.Failure.get_text(hh.lang)}"

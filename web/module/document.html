@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wangEditor catalog</title>
+  <link href="document/normalize.min.css" rel="stylesheet">
+  <link href="document/style.css" rel="stylesheet">
+    <script src="../js/jq.min.js"></script>
+    <script src="../js/md5.min.js"></script>
+  <style>
+    #header-container {
+      list-style-type: none;
+      padding-left: 20px;
+    }
+
+    #header-container li {
+      color: #333;
+      margin: 10px 0;
+      cursor: pointer;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    #header-container li:hover {
+      text-decoration: underline;
+    }
+
+    #header-container li[type="header1"] {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #header-container li[type="header2"] {
+      font-size: 16px;
+      padding-left: 15px;
+      font-weight: bold;
+    }
+
+    #header-container li[type="header3"] {
+      font-size: 14px;
+      padding-left: 30px;
+    }
+
+    #header-container li[type="header4"] {
+      font-size: 12px;
+      padding-left: 45px;
+    }
+
+    #header-container li[type="header5"] {
+      font-size: 12px;
+      padding-left: 60px;
+    }
+  </style>
+</head>
+
+<body style="margin: 0;">
+    <div class="page-container">
+        <input type="text" id="content_length" name="" value="0" style="display:none;"/>
+        <div class="page-right" style="display: flex;">
+            <div id="content-doc" style="border: 1px solid #ccc; flex: 1; width: calc(100vw - 370px);">
+                <div id="editor-toolbar" style="border-bottom: 1px solid #ccc;"></div>
+                <div id="editor-text-area"></div>
+            </div>
+            <div id="catalog" style="width: 20%; background-color: #ffffff; overflow-y: scroll;border: 1px solid #ccc;">
+                <ul id="header-container"></ul>
+            </div>
+        </div>
+    </div>
+    <script src="document/index.js"></script>
+  <script>
+    let params = window.location.href.split('&');
+    let servers = params[0].split('=')[1];
+    let file_id = params[1].split('=')[1];
+    let is_share = file_id.length > 10;
+    let url = servers + '/file/content/' + file_id;
+    if (!is_share) {
+        url = servers + '/share/get/' + file_id;
+    }
+    let content = '';
+    let filename = '';
+    let old_md5 = '';
+    window.parent.$.ajax({
+      type: "GET",
+      async: false,
+      url: url,
+      success: function (data) {
+        if (data['code'] === 0) {
+                  if (is_share) {
+                      window.parent.document.querySelectorAll('.window.docu>.titbar>span>.title')[0].innerText = data['msg'];
+                      old_md5 = md5(data['data']);
+                  }
+                  document.title = data['msg'];
+                  filename = data['msg'];
+                  content = data['data'];
+        } else {
+                  window.parent.$.Toast(data['msg'], 'error');
+                  return;
+              }
+      }
+    });
+    const E = window.wangEditor
+    const LANG = location.href.indexOf('lang=zh') > 0 ? 'zh-CN' : 'en'
+    E.i18nChangeLanguage(LANG)
+    const headerContainer = document.getElementById('header-container')
+    headerContainer.addEventListener('mousedown', event => {
+      if (event.target.tagName !== 'LI') return
+      event.preventDefault()
+      const id = event.target.id
+      editor.scrollToElem(id)
+    })
+
+    window.editor = E.createEditor({
+      selector: '#editor-text-area',
+      html: content,
+      config: {
+        MENU_CONF: {
+          uploadImage: {
+            fieldName: filename,
+            base64LimitSize: 10 * 1024 * 1024 // 10M 以下插入 base64
+          }
+        },
+        onChange(editor) {
+          const headers = editor.getElemsByTypePrefix('header')
+          headerContainer.innerHTML = headers.map(header => {
+            const text = E.SlateNode.string(header)
+            const { id, type } = header
+            return `<li id="${id}" type="${type}">${text}</li>`
+          }).join('')
+        }
+      }
+    })
+    window.toolbar = E.createToolbar({
+      editor,
+      selector: '#editor-toolbar',
+      config: {}
+    })
+    if (localStorage.getItem('transparent') === '1') {
+        $('#editor-text-area>.w-e-text-container').addClass('transparent');
+        $('#editor-toolbar>.w-e-bar.w-e-toolbar').addClass('transparent');
+        $('#catalog')[0].style.backgroundColor = '#00000000';
+        $('#editor-toolbar>.w-e-bar.w-e-toolbar>.w-e-bar-divider').addClass('transparent');
+    }
+
+    if (is_share) {
+        document.getElementById("content-doc").style.height = window.parent.document.getElementById("iframe_docu").clientHeight - 1 + 'px';
+        document.getElementById("catalog").style.height = window.parent.document.getElementById("iframe_docu").clientHeight - 1 + 'px';
+        // document.getElementById("editor-text-area").style.height = window.parent.document.getElementById("iframe_docu").contentRect.height - document.getElementById("editor-toolbar").clientHeight - 20 + 'px';
+        let resizeDoc = new ResizeObserver(event => {
+            document.getElementById("content-doc").style.height = event[0].contentRect.height - 1 + 'px';
+            document.getElementById("catalog").style.height = event[0].contentRect.height - 1 + 'px';
+            document.getElementById("editor-text-area").style.height = event[0].contentRect.height - document.getElementById("editor-toolbar").clientHeight - 1 + 'px';
+        })
+        setTimeout(() => {
+            resizeDoc.observe(window.parent.document.getElementById("iframe_docu"));
+        }, 200);
+        let editor_interval = window.setInterval(() => {
+            let text_data = editor.getHtml();
+            let new_md5 = md5(text_data);
+            if (new_md5 !== old_md5) {
+                window.parent.document.querySelectorAll('.window.docu>.titbar>span>.save-status')[0].innerText = window.parent.i18next.t('edit.online.saving.tips');
+                window.parent.save_text_file(file_id, text_data);
+                old_md5 = new_md5;
+                window.parent.document.querySelectorAll('.window.docu>.titbar>span>.save-status')[0].innerText = window.parent.get_current_time() + window.parent.i18next.t('edit.online.saved.tips');
+            }
+        }, 10000);
+
+        function close_document_editor(file_id) {
+            clearInterval(editor_interval);
+            resizeDoc.disconnect();
+            window.parent.document.querySelectorAll('.window.docu>.titbar>span>.save-status')[0].innerText = window.parent.i18next.t('edit.online.saving.tips');
+            let content = editor.getHtml();
+            if (old_md5 !== md5(content)) {
+                window.parent.save_text_file(file_id, content);
+            }
+            window.parent.document.querySelectorAll('.window.docu>.titbar>span>.save-status')[0].innerText = "";
+            window.parent.document.getElementById("iframe_docu").src = 'about:blank';
+        }
+    } else {
+        setTimeout(() => {
+            document.getElementById("content-doc").style.height = window.innerHeight - 1 + 'px';
+            document.getElementById("catalog").style.height = window.innerHeight - 1 + 'px';
+            document.getElementById("editor-text-area").style.height = window.innerHeight - document.getElementById("editor-toolbar").clientHeight - 1 + 'px';
+        }, 100);
+    }
+</script>
+</body>
+</html>

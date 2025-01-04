@@ -363,6 +363,7 @@ var Game = function()
 		scoreDiv = doms.scoreDiv;
 		let i18nList = document.getElementsByClassName('i18n');
 		for (let i=0; i<i18nList.length; i++) {i18nList[i].innerText = window.parent.i18next.t(i18nList[i].getAttribute('key'));}
+		window.parent.document.querySelectorAll('.window.game>.titbar>span>.title')[0].innerText = window.parent.i18next.t('game.tetris');
 		next = SquareFactory.prototype.make(type,dir);
 		initDiv(gameDiv,gameData,gameDivs);
 		initDiv(nextDiv,next.data,nextDivs);	

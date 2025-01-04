@@ -23,6 +23,10 @@ class Msg:
     CommonLog.zh_CN = "{}, 用户: {}, IP: {}"
     CommonLog.en = "{}, User: {}, IP: {}"
 
+    DateFormatPretty = MsgObj()
+    DateFormatPretty.zh_CN = "{}天 {}时 {}分 {}秒"
+    DateFormatPretty.en = "{} days {} hours {} minutes {} seconds"
+
     CommonLog1 = MsgObj()
     CommonLog1.zh_CN = "{}, Id: {}, 用户: {}, IP: {}"
     CommonLog1.en = "{}, Id: {}, User: {}, IP: {}"
@@ -30,6 +34,10 @@ class Msg:
     Folder = MsgObj()
     Folder.zh_CN = "新建文件夹"
     Folder.en = "New Folder"
+
+    File = MsgObj()
+    File.zh_CN = "{} 文件"
+    File.en = "{} file"
 
     FileTxt = MsgObj()
     FileTxt.zh_CN = "新建文本文件"
@@ -128,8 +136,8 @@ class Msg:
     ExportError3.en = "File export failed, please try again."
 
     VideoError = MsgObj()
-    VideoError.zh_CN = "播放视频失败，请重试"
-    VideoError.en = "Failed to play video, please try again."
+    VideoError.zh_CN = "播放失败，请重试"
+    VideoError.en = "Failed to play, please try again."
 
     SSHExport = MsgObj()
     SSHExport.zh_CN = "请输入正确完整的文件绝对路径"
@@ -154,6 +162,10 @@ class Msg:
     Download = MsgObj()
     Download.zh_CN = "{} 下载中"
     Download.en = "{} downloading"
+
+    GetFilePath = MsgObj()
+    GetFilePath.zh_CN = "查询文件路径"
+    GetFilePath.en = "Query file path"
 
     DownloadOnline = MsgObj()
     DownloadOnline.zh_CN = "正在下载中，请去下载列表中查看进度"
@@ -190,6 +202,10 @@ class Msg:
     Delete = MsgObj()
     Delete.zh_CN = "{} 删除"
     Delete.en = "{} delete"
+
+    Deal = MsgObj()
+    Deal.zh_CN = "{} 处理"
+    Deal.en = "{} is done"
 
     Copy = MsgObj()
     Copy.zh_CN = "{} 复制"
@@ -258,3 +274,95 @@ class Msg:
     RestoreFromHistory = MsgObj()
     RestoreFromHistory.zh_CN = "从历史记录中恢复"
     RestoreFromHistory.en = "Restore from history record"
+
+    HistoryRecords = MsgObj()
+    HistoryRecords.zh_CN = "历史记录"
+    HistoryRecords.en = " history record"
+
+    SystemInfo = MsgObj()
+    SystemInfo.zh_CN = "查询操作系统信息"
+    SystemInfo.en = "Get OS Detail"
+
+    SystemResource = MsgObj()
+    SystemResource.zh_CN = "查询系统资源使用率"
+    SystemResource.en = "Get System Resource usage"
+
+    SystemCPUInfo = MsgObj()
+    SystemCPUInfo.zh_CN = "查询CPU硬件信息"
+    SystemCPUInfo.en = "Get CPU hardware detail"
+
+    SystemDiskInfo = MsgObj()
+    SystemDiskInfo.zh_CN = "查询磁盘信息"
+    SystemDiskInfo.en = "Get Disks detail"
+
+    SystemNetWorkInfo = MsgObj()
+    SystemNetWorkInfo.zh_CN = "查询网卡信息"
+    SystemNetWorkInfo.en = "Get Network Card detail"
+
+    ShortCutsInfo = MsgObj()
+    ShortCutsInfo.zh_CN = "查询快捷方式列表"
+    ShortCutsInfo.en = "Query Shortcuts List"
+
+    ShortCutsSave = MsgObj()
+    ShortCutsSave.zh_CN = "添加快捷方式"
+    ShortCutsSave.en = "Add Shortcuts"
+
+    ShortCutsDelete = MsgObj()
+    ShortCutsDelete.zh_CN = "删除快捷方式"
+    ShortCutsDelete.en = "Delete Shortcuts"
+
+    ShortCutsNotExist = MsgObj()
+    ShortCutsNotExist.zh_CN = "快捷方式不存在 ~"
+    ShortCutsNotExist.en = "The shortcuts is not exist ~"
+
+    Video = MsgObj()
+    Video.zh_CN = "视频"
+    Video.en = "Video"
+
+    Vocal = MsgObj()
+    Vocal.zh_CN = "人声"
+    Vocal.en = "Vocal"
+
+    Accompaniment = MsgObj()
+    Accompaniment.zh_CN = "伴奏"
+    Accompaniment.en = "Accompaniment"
+
+    RequestSong = MsgObj()
+    RequestSong.zh_CN = "点歌"
+    RequestSong.en = " Request Song"
+
+    SetTop = MsgObj()
+    SetTop.zh_CN = "置顶"
+    SetTop.en = " set top"
+
+    Singed = MsgObj()
+    Singed.zh_CN = " K歌"
+    Singed.en = " sing"
+
+    Setting = MsgObj()
+    Setting.zh_CN = "设置"
+    Setting.en = "Set"
+
+    SyncManual = MsgObj()
+    SyncManual.zh_CN = "手动备份"
+    SyncManual.en = "Manual Sync"
+
+    SyncDataNo = MsgObj()
+    SyncDataNo.zh_CN = "未启用备份功能~"
+    SyncDataNo.en = "Backup function is not enabled."
+    
+    MeetingCreate = MsgObj()
+    MeetingCreate.zh_CN = "创建会议码"
+    MeetingCreate.en = "Create Meeting Code"
+
+    MeetingJoin = MsgObj()
+    MeetingJoin.zh_CN = "正在加入聊天中..."
+    MeetingJoin.en = "Joining Chatting..."
+
+    MeetingQuit = MsgObj()
+    MeetingQuit.zh_CN = "退出会议"
+    MeetingQuit.en = "Quit Meeting"
+
+    ChatStatus = MsgObj()
+    ChatStatus.zh_CN = ["未开始", "聊天中", "已结束"]
+    ChatStatus.en = ["NotStart", "Chatting", "Stopped"]

@@ -4,6 +4,7 @@
 
 import os
 import sys
+import json
 import configparser
 
 if hasattr(sys, 'frozen'):
@@ -18,6 +19,27 @@ TOKENs = {}
 
 def get_config(key):
     return cfg.get('default', key, fallback=None)
+
+
+TRACKER_URL = get_config("trackerUrls")
+ROOT_PATH = json.loads(get_config("rootPath"))
+TMP_PATH = os.path.join(path, 'tmp')
+KTV_TMP_PATH = os.path.join(TMP_PATH, 'ktv')
+KARAOKE_PATH = os.path.join(ROOT_PATH['D'], 'karaoke_ktv')
+ENABLE_BACKUP = int(get_config("enableBackup"))
+BACKUP_PATH = get_config("backupPath")
+BACKUP_INTERVAL = int(get_config("backupInterval"))
+WEBRTC_STUN = get_config("STUN")
+WEBRTC_TURN = get_config("TURN")
+WEBRTC_USER = get_config("TURNUserName")
+WEBRTC_CRED = get_config("credential")
+
+if not os.path.exists(TMP_PATH):
+    os.mkdir(TMP_PATH)
+if ENABLE_BACKUP == 1 and not os.path.exists(BACKUP_PATH):
+    os.mkdir(BACKUP_PATH)
+if not os.path.exists(KARAOKE_PATH):
+    os.mkdir(KARAOKE_PATH)
 
 
 TORTOISE_ORM = {

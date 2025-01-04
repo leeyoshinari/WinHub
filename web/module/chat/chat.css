@@ -1,0 +1,95 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    font-family: sans-serif;
+}
+
+.controls {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.control-button {
+   background-color: rgba(0, 0, 0, 0.5);
+   color: white;
+   border: none;
+   border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.control-button:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.fa-cancel {color: red;}
+
+.video-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.remote-videos {
+    width: 200px;
+    max-height: 100vh;
+    border-left: 1px solid #ccc;
+    overflow-y : auto;
+    padding: 10px;
+
+}
+
+.remote-videos>.video {
+    cursor: pointer;
+    float: left;
+}
+
+.remote-videos>.video video {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    float: left;
+}
+
+.remote-videos>.video>.user-status {
+    position: position;
+    transform: translateY(21px);
+    background-color: gray;
+    color: white;
+    border-radius: 9px;
+    padding: 0 8px 0 8px;
+    float: left;
+}
+
+.remote-videos>.video>.user-status span{
+    margin-left: 8px;
+}
+
+.setting-video {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    transform: translateX(17px);
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Music</title>
+        <meta charset="utf-8">
+        <link rel="shortcut icon" href="favicon.ico">
+        <script src="../js/jq.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="music/css/player.css">
+        <link rel="stylesheet" type="text/css" href="music/css/jquery.mCustomScrollbar.min.css">
+        <link rel="stylesheet" href="music/layer/layer.css?v=3.0.2302" id="layuicss-skinlayercss">
+    </head>
+<body>
+    <div id="blur-img">
+        <div class="blur-mask" style="display: block;"></div>
+    </div>
+    <div class="center">
+        <div class="container">
+            <div class="btn-bar">
+                <div class="btn-box" id="btn-area">
+                    <span class="btn active" data-action="playing" title="添加的音乐列表">正在播放</span>
+                    <span class="btn" data-action="history" title="音乐播放历史">播放历史</span>
+                    <span class="btn" data-action="usual" title="常听的音乐">经常听的</span>
+                    <span class="btn" data-action="adds" title="添加服务端音乐到播放列表">添加音乐（S）</span>
+                    <span class="btn" data-action="addc" title="添加客户端音乐到播放列表">添加音乐（C）</span>
+                    <input type="file" name="filename" id="play_local_mp3" multiple accept=".lrc,audio/*" style="display: none">
+                </div>
+            </div>
+            <div class="data-area">
+                <div id="main-list" class="music-list data-box mCustomScrollbar _mCS_2 mCS-autoHide" style="overflow: visible;">
+                    <div id="mCSB_2" class="mCustomScrollBox mCS-minimal mCSB_vertical mCSB_outside" style="max-height: none;" tabindex="0">
+                        <div id="mCSB_2_container" class="mCSB_container" style="position:relative; top:0; left:0;" dir="ltr"></div>
+                    </div>
+                    <div id="mCSB_2_scrollbar_vertical" class="mCSB_scrollTools mCSB_2_scrollbar mCS-minimal mCSB_scrollTools_vertical" style="display: block;">
+                        <div class="mCSB_draggerContainer">
+                            <div id="mCSB_2_dragger_vertical" class="mCSB_dragger" style="position: absolute; min-height: 50px; top: 0px; display: block; height: 17px; max-height: 399px;">
+                                <div class="mCSB_dragger_bar" style="line-height: 50px;"></div>
+                            </div>
+                            <div class="mCSB_draggerRail"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="player" id="player">
+                <div class="lyric">
+                    <ul id="lyric"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <div class="container">
+            <div class="con-btn">
+                <a href="javascript:;" class="player-btn btn-prev" title="上一首"></a>
+                <a href="javascript:;" class="player-btn btn-play" title="暂停/继续"></a>
+                <a href="javascript:;" class="player-btn btn-next" title="下一首"></a>
+                <a href="javascript:;" class="player-btn btn-order" title="循环控制"></a>
+            </div>
+            <div class="vol">
+                <div class="quiet">
+                    <a href="javascript:;" class="player-btn btn-quiet" title="静音"></a>
+                </div>
+                <div class="volume">
+                    <div class="volume-box">
+                        <div id="volume-progress" class="mkpgb-area">
+                            <div class="mkpgb-bar"></div>
+                            <div class="mkpgb-cur" style="width: 0%;"></div>
+                            <div class="mkpgb-dot" style="left: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="progress">
+                <div class="progress-box">
+                    <div id="music-progress" class="mkpgb-area mkpgb-locked">
+                        <div class="mkpgb-bar"></div>
+                        <div class="mkpgb-cur" style="width: 0%;"></div>
+                        <div class="mkpgb-dot" style="left: 0%;"></div>
+                    </div>
+                </div>
+                <span id="play-time" style="position:relative;float:right;top:25%;color:whitesmoke;">00:00</span>
+            </div>
+        </div>
+    </div>
+    <script src="music/layer/layer.js"></script>
+    <script src="music/js/lyric.js"></script>
+    <script src="music/js/functions.js"></script>
+    <script src="music/js/player.js"></script>
+    <script src="music/js/jquery.mCustomScrollbar.concat.min.js"></script>
+    <script src="music/js/background-blur.min.js"></script>
+    <audio></audio>
+</body>
+</html>

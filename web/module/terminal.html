@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Terminal</title>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="../img/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="terminal/webssh.css">
+    <link rel="stylesheet" href="terminal/xterm.css"/>
+    <link rel="stylesheet" href="toast/toast.style.css"/>
+    <script src="../js/jq.min.js"></script>
+    <script src="../js/i18next.min.js"></script>
+    <script src="toast/toast.script.js"></script>
+    <script src="terminal/xterm.js"></script>
+    <script src="terminal/xterm-addon-fit.js"></script>
+</head>
+<body>
+    <div class="container1">
+        <div class="float_left"><img src="../img/logo.png"></div>
+        <h4>IP: </h4>
+        <div class="float_right"><a onclick="float_path(0)" class="i18n" key="terminal.page.upload.text">上传</a>
+            <a onclick="float_path(1)" class="i18n" key="terminal.page.download.text">下载</a>
+            <input type="file" name="filename" id="upload-input" multiple style="display: none">
+        </div></div>
+    <div style="height: 100%; width: 100%;"><div id="terminal" style="margin-top: 30px;"></div></div>
+    <div class="modal_cover"><div class="modal_gif"></div><progress id="progressBar" value="0" max="100"></progress><span id="percentage"></span></div>
+    <div id="failure_file"><div class="modal-content"><div class="modal-header"><span class="close">&times;</span><h2></h2></div>
+            <div class="modal-body"></div>
+            <div class="modal-footer"><a class="cancel i18n" key="cancel">取消</a><a class="submit i18n" key="submit">确定</a></div></div></div>
+    <div id="modal_input">
+        <div class="modal-content">
+            <div class="modal-header"><span class="close">&times;</span><h2 id="title-name"></h2></div>
+            <div class="input-body"></div>
+            <div class="modal-footer"><a class="cancel i18n" key="cancel">取消</a><a class="submit i18n" key="submit">确定</a></div></div></div>
+</body>
+    <script type="text/javascript" src="terminal/webssh.js"></script>
+</html>

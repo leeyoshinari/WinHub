@@ -71,6 +71,12 @@ async def copy_file(file_id: str, hh: models.SessionBase = Depends(auth)):
     return result
 
 
+@router.get("/path/{file_id}", summary="Get file path (获取文件路径)")
+async def path_file(file_id: str, hh: models.SessionBase = Depends(auth)):
+    result = await views.get_file_path(file_id, hh)
+    return result
+
+
 @router.get("/download/{file_id}", summary="Download file (下载文件)")
 async def download_file(file_id: str, hh: models.SessionBase = Depends(auth)):
     try:
@@ -132,26 +138,32 @@ async def upload_image(query: Request, hh: models.SessionBase = Depends(auth)):
     return result
 
 
-@router.get("/background/getImage", summary="get image (获取用户背景图片)")
-async def get_image(request: Request, hh: models.SessionBase = Depends(auth)):
-    try:
-        image_path = os.path.join(settings.path, 'mycloud/static_files', hh.username + '.jpg')
-        if not os.path.exists(image_path):
-            image_path = os.path.join(settings.path, 'mycloud/static_files', 'background.jpg')
-        last_modify_time = str(os.path.getmtime(image_path))
-        if request.headers.get("if-modified-since", "") == last_modify_time:
-            return MyResponse(status_code=304, media_type="image/jpeg")
-        headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(image_path)),
-                   'Content-Disposition': f'inline;filename="{hh.username}.jpg"', 'Last-Modified': last_modify_time}
-        return StreamResponse(read_file(image_path), media_type="image/jpeg", headers=headers)
-    except:
-        logger.error(traceback.format_exc())
-        return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
+# @router.get("/background/getImage", summary="get image (获取用户背景图片)")
+# async def get_image(request: Request, hh: models.SessionBase = Depends(auth)):
+#     try:
+#         image_path = os.path.join(settings.path, 'mycloud/static_files', hh.username + '.jpg')
+#         if not os.path.exists(image_path):
+#             image_path = os.path.join(settings.path, 'mycloud/static_files', 'background.jpg')
+#         last_modify_time = str(os.path.getmtime(image_path))
+#         if request.headers.get("if-modified-since", "") == last_modify_time:
+#             return MyResponse(status_code=304, media_type="image/jpeg")
+#         headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(image_path)),
+#                    'Content-Disposition': f'inline;filename="{hh.username}.jpg"', 'Last-Modified': last_modify_time}
+#         return StreamResponse(read_file(image_path), media_type="image/jpeg", headers=headers)
+#     except:
+#         logger.error(traceback.format_exc())
+#         return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
 
 
 @router.post("/share", summary="Share file (分享文件)")
 async def share_file(query: models.ShareFile, hh: models.SessionBase = Depends(auth)):
     result = await views.share_file(query, hh)
+    return result
+
+
+@router.get("/save/{share_id}", summary="Save shared file (保存分享的文件至网盘)")
+async def save_share(share_id: int, hh: models.SessionBase = Depends(auth)):
+    result = await views.save_shared_to_myself(share_id, hh)
     return result
 
 
@@ -171,6 +183,18 @@ async def play_video(file_id: str, request: Request, hh: models.SessionBase = De
         return Result(code=1, msg=Msg.VideoError.get_text(hh.lang))
 
 
+@router.get("/export/xmind/{file_id}", summary="Export xmind file (导出 xmind 文件)")
+async def export_file(file_id: str, hh: models.SessionBase = Depends(auth)):
+    try:
+        result = await views.export_xmind_file(file_id, hh)
+        headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
+                   'Content-Disposition': f'inline;filename="{result["name"]}"'}
+        return StreamResponse(read_file(result['path']), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+    except:
+        logger.error(traceback.format_exc())
+        return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
+
+
 @router.get("/export/md/{file_id}", summary="Export markdown to html (导出 markdown 转 html)")
 async def md2html(file_id: str, hh: models.SessionBase = Depends(auth)):
     try:
@@ -180,3 +204,21 @@ async def md2html(file_id: str, hh: models.SessionBase = Depends(auth)):
     except:
         logger.error(traceback.format_exc())
         return Result(code=1, msg=Msg.Failure.get_text(hh.lang))
+
+
+@router.get("/shortcuts", summary="Get all shortcuts (查询快捷方式数据)")
+async def get_shortcuts(hh: models.SessionBase = Depends(auth)):
+    result = await views.get_shortcuts(hh)
+    return result
+
+
+@router.get("/shortcuts/save/{file_id}", summary="Save file to shortcuts (把文件添加到桌面快捷方式)")
+async def set_shortcuts(file_id: str, hh: models.SessionBase = Depends(auth)):
+    result = await views.set_shortcuts(file_id, hh)
+    return result
+
+
+@router.get("/shortcuts/delete/{file_id}", summary="Delete shortcuts (删除桌面快捷方式)")
+async def delete_shortcuts(file_id: int, hh: models.SessionBase = Depends(auth)):
+    result = await views.delete_shortcuts(file_id, hh)
+    return result

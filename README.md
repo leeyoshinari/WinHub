@@ -1,7 +1,7 @@
-# OneDrive
+# WinHub
 Windows-style personal cloud-drive with supporting online editing.
 
-[中文文档](https://github.com/leeyoshinari/OneDrive/blob/main/README_zh.md)
+[中文文档](https://github.com/leeyoshinari/WinHub/blob/main/README_zh.md)
 
 [更多内容详见博客](https://blog.ihuster.top/p/940241891.html)
 
@@ -12,7 +12,9 @@ Windows-style personal cloud-drive with supporting online editing.
 - Supports online editing functions of txt, markdown, xmind, sheet, and document
 - Support online editing and running of python scripts
 - Support add desktop shortcuts for files
+- Support auto-backup of all files in the specified folder
 - Support remote connection to Linux server
+- Support peer-to-peer video chat and screen sharing (based on WebRTC)
 - Music player, supports playing music from this cloud-drive (Server) and local (Client)
 - Karaoke, supports building your own song library
 - Integrate aria2, and support multiple download protocols such as HTTP, FTP, BitTorrent, etc.
@@ -22,7 +24,7 @@ Windows-style personal cloud-drive with supporting online editing.
 - Support PWA, it can be installed on the mobile
 - Multiple disks can be mounted arbitrarily
 
-View detailed page style, [Please click me.](https://github.com/leeyoshinari/OneDrive/blob/main/web/detail.md)
+View detailed page style, [Please click me.](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md)
 
 ## Technology
 - Framework: FastApi
@@ -30,9 +32,9 @@ View detailed page style, [Please click me.](https://github.com/leeyoshinari/One
 - Front-end: html + js + css
 
 ## Deploy
-1.Clone `git clone https://github.com/leeyoshinari/OneDrive.git` ；
+1.Clone `git clone https://github.com/leeyoshinari/WinHub.git` ；
 
-2.`cd OneDrive`, and modify `config.conf`；
+2.`cd WinHub`, and modify `config.conf`；
 
 3.Install third-party packages
 ```shell script
@@ -59,10 +61,10 @@ http://IP:Port/配置文件中的prefix/swagger-ui
 ```
 
 8.Configure and start `nginx`, the location configuration is as follows:<br>
-(1)Front-end configuration: The front-end file is in `web`, `/OneDrive` can be modified to any name you like.
+(1)Front-end configuration: The front-end file is in `web`, `/Windows` can be modified to any name you like.
 ```shell script
-location /OneDrive {
-    alias /home/OneDrive/web/;
+location /Windows {
+    alias /home/WinHub/web/;
     index  index.html;
 }
 ```
@@ -96,28 +98,31 @@ Usually nginx will limit the size of the request body, and you need to add `clie
 
 If you don’t know nginx, please go to [nginx official website](http://nginx.org/en/download.html) to download nginx and install it. After the installation is completed, replace the installed `nginx.conf` with the `nginx.conf` in this project, and then restart nginx.
 
-9.Page, the url is `http://IP:Port/OneDrive` (the IP and port are the IP and port set in Nginx. `OneDrive` is the name of the front-end configuration in step 7)
-![](https://github.com/leeyoshinari/OneDrive/blob/main/web/img/pictures/login.jpg)
-![](https://github.com/leeyoshinari/OneDrive/blob/main/web/img/pictures/home.jpg)
+9.Page, the url is `http://IP:Port/Windows` (the IP and port are the IP and port set in Nginx. `Windows` is the name of the front-end configuration in step 7)
+![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
+![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/home.jpg)
 
 10.If you want to import existing files on the current server into the system, you can access the background api interface page and find the `file/import` interface. The request parameters are the absolute path of the folder to be imported and the Id of the target catalog.
 
-11.If you need to configure multiple languages, [Please click me](https://github.com/leeyoshinari/OneDrive/blob/main/web/detail.md).
+11.If you need to configure multiple languages, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
 
-12.If you want to know more, [Please click me](https://github.com/leeyoshinari/OneDrive/blob/main/web/detail.md).
+12.If you want to know more, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
 
 ## Others
 1.Supports multiple platforms such as `Linux`, `Windows`, `MacOS`, etc. It is recommended to deploy on `Linux`.
 
-2.Cluster deployment and distributed storage are not supported. If you need cluster deployment and distributed storage, [Please click me](https://github.com/leeyoshinari/mycloud).
+2.Cluster deployment and distributed storage are not supported.
 
 3.The path of the background image of the login page is `web/img/pictures/undefined/background.jpg`. If you need to modify the login background image, you can directly replace this image. Note: the image name must be `background.jpg`.
 
-4.The background image of the desktop is the same as the background image of the login page by default. If you need to modify it, you can upload it in `Setting->Personalized->Set background image`. After the upload is successful, clear the cache and refresh the page. Note: The image format must be `jpg`.
+4.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
 
-5.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
+5.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
 
-6.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
+## License
+This repository uses the GPL-2.0 License. When you use this repository, please comply with the terms of the GPL-2.0 License. Please respect our work results consciously.
+
+If you don't wish to comply with the terms of the GPL-2.0 License, please contact me in the Issues for commercial licensing information.
 
 ## Thanks
 Thanks to the following projects
@@ -128,5 +133,4 @@ Thanks to the following projects
 - [editor.md](https://github.com/pandao/editor.md)
 - [Luckysheet](https://github.com/dream-num/Luckysheet)
 - [wangEditor](https://github.com/wangeditor-team/wangEditor)
-- [优折美在线音乐播放器](https://m.uzz.me)
 - [snake](https://github.com/SunQQQ/snake)

@@ -4,7 +4,6 @@
 
 import os
 import time
-import json
 import shutil
 import traceback
 from fastapi import APIRouter, Request, Response, Depends
@@ -19,8 +18,13 @@ from common.messages import Msg
 import settings
 
 
-root_path = json.loads(settings.get_config("rootPath"))
 router = APIRouter(prefix='/user', tags=['user (用户管理)'], responses={404: {'description': 'Not found'}})
+current_date = time.strftime("%Y-%m-%d-%H-%M-%S")
+
+
+@router.get("/version", summary="Get serviceworker.js version (获取 serviceworker.js 的版本号)")
+async def get_version(request: Request):
+    return Result(data=current_date)
 
 
 @router.get("/status", summary="Get login status (获取用户登录状态)")
@@ -49,13 +53,13 @@ async def create_user(username: str, nickname: str, password: str, password1: st
         user = await models.User.filter(username=username.strip())
         if user:
             result.code = 1
-            result.msg = f"{Msg.ExistUserError.get_text(lang).format(username)}"
+            result.msg = Msg.ExistUserError.get_text(lang).format(username)
             logger.error(f"{result.msg}, IP: {request.headers.get('x-real-ip', '')}")
             return result
         async with transactions.in_transaction():
             password = str_md5(password)
             user = await models.User.create(nickname=nickname, username=username, password=password)
-            for k, v in root_path.items():
+            for k, v in settings.ROOT_PATH.items():
                 folder = await models.Catalog.filter(id=k)
                 if not folder:
                     await models.Catalog.create(id=k, parent=None, name=v)
@@ -65,9 +69,11 @@ async def create_user(username: str, nickname: str, password: str, password1: st
                 user_path = os.path.join(v, user.username)
                 if not os.path.exists(user_path):
                     os.mkdir(user_path)
-            back_path = os.path.join(settings.path, 'mycloud/static_files')
-            source_file = os.path.join(back_path, 'background.jpg')
-            target_file = os.path.join(back_path, user.username + '.jpg')
+            back_path = os.path.join(settings.path, 'web/img/pictures', user.username)
+            if not os.path.exists(back_path):
+                os.mkdir(back_path)
+            source_file = os.path.join(settings.path, 'web/img/pictures/undefined/background.jpg')
+            target_file = os.path.join(back_path, 'background.jpg')
             shutil.copy(source_file, target_file)
         result.msg = f"{Msg.CreateUser.get_text(lang).format(user.username)}{Msg.Success.get_text(lang)}"
         logger.info(f"{result.msg}, IP: {request.headers.get('x-real-ip', '')}")
@@ -90,7 +96,7 @@ async def modify_pwd(query: models.CreateUser, hh: models.SessionBase = Depends(
         user.password = str_md5(parse_pwd(query.password, query.t))
         await user.save()
         result.msg = f"{Msg.ModifyPwd.get_text(hh.lang).format(user.username)}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
         result.code = 1
         result.msg = f"{Msg.ModifyPwd.get_text(hh.lang).format(query.username)}{Msg.Failure.get_text(hh.lang)}"
@@ -122,7 +128,7 @@ async def login(query: models.UserBase, request: Request, response: Response):
     try:
         user = await models.User.get(username=query.username, password=str_md5(parse_pwd(query.password, query.t)))
         if user:
-            for k, v in root_path.items():
+            for k, v in settings.ROOT_PATH.items():
                 folder = await models.Catalog.filter(id=k)
                 if not folder:
                     await models.Catalog.create(id=k, parent=None, name=v)
@@ -143,11 +149,11 @@ async def login(query: models.UserBase, request: Request, response: Response):
             logger.info(f"{result.msg}, IP: {request.headers.get('x-real-ip', '')}")
         else:
             result.code = 1
-            result.msg = f"{Msg.LoginUserOrPwdError.get_text(lang)}"
+            result.msg = Msg.LoginUserOrPwdError.get_text(lang)
             logger.error(f"{result.msg}, IP: {request.headers.get('x-real-ip', '')}")
     except DoesNotExist:
         result.code = 1
-        result.msg = f"{Msg.LoginUserOrPwdError.get_text(lang)}"
+        result.msg = Msg.LoginUserOrPwdError.get_text(lang)
         logger.error(f"{result.msg}, IP: {request.headers.get('x-real-ip', '')}")
     except:
         result.code = 1

@@ -1,4 +1,5 @@
 {
+    "taskmgr": "img/taskmgr.png",
     "video": "img/files/video.svg",
     "mp4": "img/files/video.svg",
     "avi": "img/files/video.svg",
@@ -36,7 +37,6 @@
     "pptx": "img/files/ppt.svg",
     "zip": "img/files/zip.svg",
 
-    "music": "img/music.svg",
     "mp3": "img/files/music.svg",
     "pdf": "img/files/pdf.svg",
     "json": "img/files/json.svg",
@@ -44,5 +44,6 @@
     "css": "img/files/css.svg",
     "js": "img/files/js.svg",
     "py": "img/python.svg",
-    "pythonEditor": "img/python.svg"
+    "pythonEditor": "img/python.svg",
+    "torrent":"img/files/bt.svg"
 }

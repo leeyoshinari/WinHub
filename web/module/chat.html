@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat & Video</title>
+    <link rel="stylesheet" href="chat/chat.css">
+    <link rel="stylesheet" href="../css/all.min.css"><!--https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css-->
+</head>
+<body>
+     <div class="video-container">
+        <video id="mainVideo" autoplay muted></video>
+        <div class="controls">
+            <button id="micButton" class="control-button"><i class="fas fa-microphone"></i></button>
+            <button id="cameraButton" class="control-button"><i class="fas fa-video"></i></button>
+            <button class="control-button" onclick="switchCamera()"><i class="fas fa-sync-alt"></i></button>
+            <button id="shareScreenButton" class="control-button"><i class="fas fa-desktop"></i></button>
+            <button id="speakerButton" class="control-button"><i class="fas fa-volume-up"></i></button>
+        </div>
+     </div>
+     <div class="setting-video"><img id="expand-img" src="karaoke/img/expand.svg" alt="expand.svg"></div>
+     <div class="remote-videos">
+        <div class="video" id="localVideo">
+            <div class="user-status"><i class="fas fa-microphone"></i><span></span></div><video autoplay muted></video>
+        </div>
+     </div>
+</body>
+<script type="text/javascript" src="chat/chat.js"></script>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>任务管理器</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="../../js/jq.min.js"></script>
+</head>
+<body>
+<div class="main">
+    <div class="cnt performance show">
+        <div class="content">
+            <div class="select-menu">
+                <div onclick="apps.taskmgr.graph('graph-cpu')" class="graph-cpu check">
+                    <div class="left">
+                        <svg class="graph-view-cpu" viewBox="0 0 6000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="right">
+                        <div class="tit">CPU</div>
+                        <div class="data">
+                            <div class="value1"></div>
+                        </div>
+                    </div>
+                </div>
+                <div onclick="apps.taskmgr.graph('graph-memory');" class="graph-memory">
+                    <div class="left">
+                        <svg class="graph-view-memory" viewBox="0 0 6000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="right">
+                        <div class="tit i18n" key="setting.window.system.resource.memory">内存</div>
+                        <div class="data">
+                            <div class="value1"></div>
+                        </div>
+                    </div>
+                </div>
+                <div onclick="apps.taskmgr.graph('graph-disk');" class="graph-disk">
+                    <div class="left">
+                        <svg class="graph-view-disk" viewBox="0 0 6000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="right">
+                        <div class="tit i18n" key="setting.window.system.resource.disk">磁盘</div>
+                        <div class="data">
+                            <div class="value1"></div>
+                        </div>
+                    </div>
+                </div>
+                <div onclick="apps.taskmgr.graph('graph-wifi');" class="graph-wifi">
+                    <div class="left">
+                        <svg class="graph-view-wifi" viewBox="0 0 6000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="right">
+                        <div class="tit i18n" key="setting.window.system.resource.network">网络</div>
+                        <div class="data">
+                            <div class="value1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="performance-graph">
+                <div class="graph-cpu show">
+                    <div class="tit">
+                        <div class="left-name">CPU</div>
+                        <div class="right-message"></div>
+                    </div>
+                    <div class="graph-msg top">
+                        <div class="left i18n" key="setting.window.system.resource.cpu.usage">CPU利用率</div>
+                        <div class="right">100%</div>
+                    </div>
+                    <div class="graph">
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="bg" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="chart" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="graph-msg bottom">
+                        <div class="left i18n" key="setting.window.system.resource.x.axis">60 秒</div>
+                        <div class="right">0</div>
+                    </div>
+                </div>
+                <div class="graph-memory">
+                    <div class="tit">
+                        <div class="left-name i18n" key="setting.window.system.resource.memory">内存</div>
+                        <div class="right-message"></div>
+                    </div>
+                    <div class="graph-msg top">
+                        <div class="left i18n" key="setting.window.system.resource.memory.usage">内存使用率</div>
+                        <div class="right">100%</div>
+                    </div>
+                    <div class="graph">
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="bg" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="chart" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="graph-msg bottom">
+                        <div class="left i18n" key="setting.window.system.resource.x.axis">60 秒</div>
+                        <div class="right">0</div>
+                    </div>
+                    <div class="information">
+                        <div class="left">
+                            <div><div class="top i18n" key="setting.window.system.resource.memory.total">总内存</div><div class="value"></div></div>
+                            <div><div class="top i18n" key="setting.window.system.resource.memory.used">已使用</div><div class="value"></div></div>
+                            <div><div class="top i18n" key="setting.window.system.resource.memory.available">可用内存</div><div class="value"></div></div>
+                            <div><div class="top i18n" key="setting.window.system.resource.memory.free">剩余内存</div><div class="value"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="graph-disk">
+                    <div class="tit">
+                        <div class="left-name i18n" key="setting.window.system.resource.disk">磁盘</div>
+                        <div class="right-message"></div>
+                    </div>
+                    <div class="graph-msg top">
+                        <div class="left i18n" key="setting.window.system.resource.disk.speed">磁盘传输速率</div>
+                        <div class="right">50 MB/s</div>
+                    </div>
+                    <div class="graph">
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="chart" xmlns="http://www.w3.org/2000/svg" style="width: 100% !important; height: 100% !important"></svg>
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="bg" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="graph-msg bottom">
+                        <div class="left i18n" key="setting.window.system.resource.x.axis">60 秒</div>
+                        <div class="right">0</div>
+                    </div>
+                    <div class="information">
+                        <div class="left">
+                            <div><div class="top i18n" key="setting.window.system.resource.disk.total">总大小</div><div class="value"></div></div>
+                            <div><div class="top i18n" key="setting.window.system.resource.disk.used">已使用</div><div class="value"></div></div>
+                            <div style="border-left: 2px #008000 solid; padding-left: 10px;"><div class="top i18n" key="setting.window.system.resource.disk.speed.read">读取速度</div><div class="value"></div></div>
+                            <div style="border-left: 2px #008000 dotted; padding-left: 10px;"><div class="top i18n" key="setting.window.system.resource.disk.speed.write">写入速度</div><div class="value"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="graph-wifi">
+                    <div class="tit">
+                        <div class="left-name i18n" key="setting.window.system.resource.network">网络</div>
+                        <div class="right-message"></div>
+                    </div>
+                    <div class="graph-msg top">
+                        <div class="left i18n" key="setting.window.system.resource.network.speed">吞吐量</div>
+                        <div class="right">50 Mbps</div>
+                    </div>
+                    <div class="graph">
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="bg" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <svg viewBox="0 0 6000 1000" preserveAspectRatio="none" class="chart" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </div>
+                    <div class="graph-msg bottom">
+                        <div class="left i18n" key="setting.window.system.resource.x.axis">60 秒</div>
+                        <div class="right">0</div>
+                    </div>
+                    <div class="information" style="grid-template-columns: auto 339px;">
+                        <div class="left">
+                            <div><div class="top i18n" key="setting.window.system.resource.network.speed.send">发送</div><div class="value"></div></div>
+                            <div><div class="top i18n" key="setting.window.system.resource.network.speed.recv">接收</div><div class="value"></div></div>
+                        </div>
+                        <div class="right">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td class="i18n" key="setting.window.system.resource.network.info.name">适配器名称:</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="i18n" key="setting.window.system.resource.network.info.speed">适配器速度:</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="i18n" key="setting.window.system.resource.network.info.mac">MAC地址:</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="i18n" key="setting.window.system.resource.network.info.ipv4">IPv4地址:</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="i18n" key="setting.window.system.resource.network.info.ipv6">IPv6地址:</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="index.js"></script>
+</html>

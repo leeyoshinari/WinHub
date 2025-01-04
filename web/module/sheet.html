@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>在线sheet编辑</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="sheet/pluginsCss.css" />
+    <link rel="stylesheet" href="sheet/plugins.css" />
+    <link rel="stylesheet" href="sheet/iconfont.css" />
+    <link rel="stylesheet" href="sheet/luckysheet.css" />
+    <script src="sheet/plugin.js"></script>
+    <script src="sheet/luckysheet.umd.js"></script>
+    <script src="../js/md5.min.js"></script>
+</head>
+<body>
+    <div id="luckysheet" style="margin:0px;padding:0px;position:absolute;width:100%;height:100%;left: 0px;top: 0px;"></div>
+</body>
+<script type="text/javascript">
+    let params = window.location.href.split('&');
+	let servers = params[0].split('=')[1];
+	let file_id = params[1].split('=')[1];
+    let is_share = file_id.length > 10;
+    let old_md5 = '';
+    let get_url = servers + '/file/content/' + file_id;
+    if (!is_share) {
+        get_url = servers + '/share/get/' + file_id;
+    }
+    window.parent.$.ajax({
+        type: "GET",
+        async: false,
+        url: get_url,
+        success: function (data) {
+            if (data['code'] === 0) {
+                if (is_share) {
+                    window.parent.document.querySelectorAll('.window.sheet>.titbar>span>.title')[0].innerText = data['msg'];
+                }
+                document.title = data['msg'];
+                luckysheet.create({
+                    lang: location.href.indexOf('lang=zh') > 0 ? 'zh' : 'en',
+                    container: 'luckysheet',
+                    data: data['data']
+                });
+                old_md5 = md5(JSON.stringify(data['data']));
+            } else {
+                window.parent.$.Toast(data['msg'], 'error');
+                return;
+            }
+        }
+    });
+    if (is_share) {
+        let xlsx_interval = window.setInterval(() => {
+            let content = luckysheet.getluckysheetfile();
+            for (let i=0; i<content.length; i++) {
+                content[i].luckysheet_select_save = [];
+            }
+            content = JSON.stringify(content);
+            let new_md5 = md5(content);
+            if (new_md5 !== old_md5) {
+                window.parent.document.querySelectorAll('.window.sheet>.titbar>span>.save-status')[0].innerText = window.parent.i18next.t('edit.online.saving.tips');
+                window.parent.save_text_file(file_id, content, false);
+                old_md5 = new_md5;
+                window.parent.document.querySelectorAll('.window.sheet>.titbar>span>.save-status')[0].innerText = window.parent.get_current_time() + window.parent.i18next.t('edit.online.saved.tips');
+            }
+        }, 10000);
+
+        function close_sheet_editor(file_id) {
+            clearInterval(xlsx_interval);
+            window.parent.document.querySelectorAll('.window.sheet>.titbar>span>.save-status')[0].innerText = window.parent.i18next.t('edit.online.saving.tips');
+            let content = luckysheet.getluckysheetfile();
+            for (let i=0; i<content.length; i++) {
+                content[i].luckysheet_select_save = [];
+            }
+            content = JSON.stringify(content);
+            let new_md5 = md5(content);
+            if (new_md5 !== old_md5) {
+                window.parent.save_text_file(file_id, content, false);
+            }
+            window.parent.document.querySelectorAll('.window.sheet>.titbar>span>.save-status')[0].innerText = "";
+            window.parent.document.getElementById("iframe_sheet").src = 'about:blank';
+        }
+    }
+</script>
+</html>

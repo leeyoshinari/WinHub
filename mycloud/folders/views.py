@@ -3,34 +3,32 @@
 # Author: leeyoshinari
 import os
 import time
-import json
 import shutil
 import traceback
 from tortoise import transactions
 from tortoise.expressions import Q
+from tortoise.exceptions import DoesNotExist
 from mycloud import models
-from settings import get_config
+from mycloud.onlyoffice.views import remove
+from settings import get_config, ROOT_PATH
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
 from common.calc import beauty_size
 
 
-root_path = json.loads(get_config("rootPath"))
-
-
 async def get_disk_usage(hh: models.SessionBase) -> Result:
     result = Result()
     try:
         data = []
-        for k, v in root_path.items():
+        for k, v in ROOT_PATH.items():
             info = shutil.disk_usage(v)
             data.append({'disk': k, 'total': beauty_size(info.total), 'free': beauty_size(info.free),
                          'used': round(info.used / info.total * 100, 2), 'enableOnlyoffice': get_config("enableOnlyoffice")})
         result.data = data
         result.total = len(result.data)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
         result.code = 1
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
@@ -48,10 +46,10 @@ async def get_folders_by_id(folder_id: str, hh: models.SessionBase) -> Result:
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
         folders = await models.Catalog.filter(Q(parent_id=folder_id) & Q(is_delete=0))
-        folder_list = [models.CatalogGetInfo.from_orm(f) for f in folders if f.id.startswith(tuple('123456789'))]
+        folder_list = [models.CatalogGetInfo.model_validate(f) for f in folders if f.id.startswith(tuple('123456789'))]
         folder = await models.Catalog.get(id=folder_id)
         folder_path = await folder.get_all_path()
-        for k, v in root_path.items():
+        for k, v in ROOT_PATH.items():
             tmp1 = folder_path.replace('\\', '/')
             tmp2 = v.replace('\\', '/') + '/' + hh.username
             full_path = tmp1.replace(tmp2, '')
@@ -61,7 +59,7 @@ async def get_folders_by_id(folder_id: str, hh: models.SessionBase) -> Result:
         result.data = {'folder': folder_list, 'path': folder_path}
         result.total = len(result.data['folder'])
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder_id, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder_id, hh.username, hh.ip))
     except:
         result.code = 1
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
@@ -87,7 +85,7 @@ async def create_folder(parent_id: str, hh: models.SessionBase) -> Result:
                 os.mkdir(folder_path)
         result.data = folder.id
         result.msg = f"{Msg.Create.get_text(hh.lang).format(folder.name)}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip))
     except FileExistsError:
         result.code = 1
         result.msg = Msg.FileExist.get_text(hh.lang).format(Msg.Folder.get_text(hh.lang))
@@ -113,7 +111,7 @@ async def rename_folder(query: models.FilesBase, hh: models.SessionBase) -> Resu
                 os.rename(folder_path, new_path)
         result.data = query.id
         result.msg = f"{Msg.Rename.get_text(hh.lang).format(query.name)}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip))
     except FileExistsError:
         result.code = 1
         result.msg = Msg.RenameError.get_text(hh.lang)
@@ -150,11 +148,40 @@ async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) ->
                 await folder.save()
                 shutil.move(os.path.join(from_path, folder.name), to_path)
         result.msg = f"{Msg.Move.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
-        logger.info(f"{Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip)}")
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
         result.code = 1
         result.msg = f"{Msg.Move.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
         logger.error(traceback.format_exc())
+    return result
+
+
+async def get_file_path(folder_id: str, hh: models.SessionBase) -> Result:
+    result = Result()
+    try:
+        folder = await models.Catalog.get(id=folder_id)
+        path_id_list = []
+        path_name_list = []
+        while folder.parent:
+            folder = await folder.parent.get()
+            if folder.name == hh.username:
+                path_id_list.append(folder.parent_id)
+                path_name_list.append(folder.parent_id + ':')
+                break
+            else:
+                path_name_list.append(folder.name)
+                path_id_list.append(folder.id)
+        result.data = {'name': '/'.join(path_name_list[::-1]), 'id': '/'.join(path_id_list[::-1])}
+        result.msg = f"{Msg.GetFilePath.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder_id, hh.username, hh.ip))
+    except DoesNotExist:
+        result.code = 1
+        result.msg = Msg.FileNotExist.get_text(hh.lang).format(folder_id)
+        logger.error(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
+    except:
+        logger.error(traceback.format_exc())
+        result.code = 1
+        result.msg = f"{Msg.GetFilePath.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
     return result
 
 
@@ -167,13 +194,13 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
                     folder = await models.Catalog.get(id=file_id)
                     folder.is_delete = query.is_delete
                     await folder.save()
-                    logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(folder.name) + Msg.Success.get_text(hh.lang), folder.id, hh.username, hh.ip)}")
+                    logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(folder.name) + Msg.Success.get_text(hh.lang), folder.id, hh.username, hh.ip))
             if query.file_type == 'file':
                 for file_id in query.ids:
                     file = await models.Files.get(id=file_id)
                     file.is_delete = query.is_delete
                     await file.save()
-                    logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(file.name) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip)}")
+                    logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(file.name) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip))
 
         if query.delete_type == 1 or query.delete_type == 2:       # 硬删除，从回收站彻底删除
             if query.file_type == 'folder':
@@ -184,12 +211,12 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
                             folder_path = await folder.get_all_path()
                             await folder.delete()
                             shutil.rmtree(folder_path)
-                        logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(folder.name) + Msg.Success.get_text(hh.lang), folder.id, hh.username, hh.ip)}")
+                        logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(folder.name) + Msg.Success.get_text(hh.lang), folder.id, hh.username, hh.ip))
                     except FileNotFoundError:
                         logger.error(traceback.format_exc())
                         result.code = 1
                         result.msg = Msg.FileNotExist.get_text(hh.lang).format(folder.name)
-                        logger.error(f"{Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip)}")
+                        logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip))
                         return result
             if query.file_type == 'file':
                 files = await models.Files.filter(id__in=query.ids).select_related('parent')
@@ -198,11 +225,13 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
                         file_path = await file.parent.get_all_path()
                         try:
                             os.remove(os.path.join(file_path, file.name))
+                            if file.format in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
+                                remove(file.id, hh)
                         except FileNotFoundError:
-                            logger.error(f"{Msg.CommonLog1.get_text(hh.lang).format(Msg.FileNotExist.get_text(hh.lang).format(file.name), file.id, hh.username, hh.ip)}")
+                            logger.error(Msg.CommonLog1.get_text(hh.lang).format(Msg.FileNotExist.get_text(hh.lang).format(file.name), file.id, hh.username, hh.ip))
                             logger.error(traceback.format_exc())
                         await file.delete()
-                    logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(file.name) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip)}")
+                    logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(file.name) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip))
 
         if query.delete_type == 0 and query.is_delete == 0:
             result.msg = f"{Msg.Restore.get_text(hh.lang).format('')}{Msg.Success.get_text(hh.lang)}"

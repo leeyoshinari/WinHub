@@ -27,6 +27,7 @@ window.onload = function(){
     // boss.style.width = '640px';
   }
   document.querySelectorAll('.i18n').forEach(ele => {ele.innerText = window.parent.i18next.t(ele.getAttribute('key'));})
+  window.parent.document.querySelectorAll('.window.game>.titbar>span>.title')[0].innerText = window.parent.i18next.t('game.rings');
   boss.classList.add('show');
   boxW = container.offsetWidth;
   boxH = container.offsetHeight;

@@ -41,6 +41,12 @@ async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase = D
     return result
 
 
+@router.get("/path/{folder_id}", summary="Get folder path (获取文件夹路径)")
+async def path_file(folder_id: str, hh: models.SessionBase = Depends(auth)):
+    result = await views.get_file_path(folder_id, hh)
+    return result
+
+
 @router.post("/delete", summary="Delete file/folder (删除文件/文件夹)")
 async def delete_file(query: models.IsDelete, hh: models.SessionBase = Depends(auth)):
     result = await views.delete_file(query, hh)

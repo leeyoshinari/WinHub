@@ -5,7 +5,7 @@ function change_language(flag) {
     if (flag === 0){
         lang = $('#loginback>div>select')[0].value;
     } else {
-        lang = $('#win-setting>.page>.appearance>.setting-list>.lang>select')[0].value;
+        lang = $('#win-setting>.page>.appearance>.setting-list>a>.languageSelect')[0].value;
     }
     localStorage.setItem('lang', lang);
     fetch(`language/${lang}.json`)
@@ -27,7 +27,7 @@ function get_status() {
                 $('#loginback').css('display', 'none');
                 $('#dock-box').css('display', 'flex');
                 $('#desktop').css('display', 'flex');
-                document.body.style.backgroundImage = 'url("' + server + '/file/background/getImage")';
+                document.body.style.backgroundImage = 'url("img/pictures/' + document.cookie.split('u=')[1].split(';')[0] + '/background.jpg")';
             } else {
                 $('#loginback').css('opacity', '1');
                 $('#loginback').css('display', 'flex');
