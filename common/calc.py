@@ -98,6 +98,16 @@ def modify_prefix(prefix='/mycloud'):
             f.writelines(lines)
 
 
+def modify_sw():
+    current_date = time.strftime("%Y-%m-%d-%H-%M-%S")
+    if os.path.exists('web/sw.js'):
+        with open('web/sw.js', 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        lines[0] = f"const server = winhub-'{current_date}';\n"
+        with open('web/sw.js', 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+
 def parse_pwd(password: str, s: str):
     p = ''
     time_len = len(s)

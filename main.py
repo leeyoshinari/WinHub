@@ -5,7 +5,7 @@
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 from tortoise.contrib.fastapi import register_tortoise
-from common.calc import modify_prefix
+from common.calc import modify_prefix, modify_sw
 from common.scheduler import scheduler
 import settings
 import mycloud.user.urls as user_urls
@@ -26,7 +26,8 @@ import mycloud.chat.urls as chat_urls
 prefix = settings.get_config("prefix")
 app = FastAPI(docs_url=None, redoc_url=None, root_path='/api/openapi')
 register_tortoise(app=app, config=settings.TORTOISE_ORM)
-modify_prefix(prefix)
+modify_prefix(prefix)   # 将后端的 prefix 写入前端变量中
+modify_sw()     # 修改 sw.js 文件中的缓存版本号
 
 
 async def startup_event():

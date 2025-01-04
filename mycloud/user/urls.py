@@ -19,12 +19,6 @@ import settings
 
 
 router = APIRouter(prefix='/user', tags=['user (用户管理)'], responses={404: {'description': 'Not found'}})
-current_date = time.strftime("%Y-%m-%d-%H-%M-%S")
-
-
-@router.get("/version", summary="Get serviceworker.js version (获取 serviceworker.js 的版本号)")
-async def get_version(request: Request):
-    return Result(data=current_date)
 
 
 @router.get("/status", summary="Get login status (获取用户登录状态)")

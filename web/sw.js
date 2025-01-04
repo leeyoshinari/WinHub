@@ -1,16 +1,9 @@
-const CACHE_NAME_PREFIX = 'windows';
-const serverName = '/mycloud';
+const CACHE_NAME = 'winhub';
 const staticFileExtensions = ['/img/', '/css/', '/js/', '.html', '.json', '/module/', 'head.js', 'sw.js'];
 const excludeFiles = ['/background.jpg', '/avatar.jpg'];
 const regex = new RegExp(`(${staticFileExtensions.join('|').replace(/\./g, '\\.')})`, 'i');
 const excludeRegex = new RegExp(`(${excludeFiles.join('|').replace(/\./g, '\\.')})`, 'i');
 const urlsToCache = [''];
-let CACHE_NAME = CACHE_NAME_PREFIX;
-
-function updateCache(version) {
-  CACHE_NAME = CACHE_NAME_PREFIX + version;
-  console.log("Update cache to:", CACHE_NAME);
-}
 
 // 安装事件
 self.addEventListener('install', event => {
@@ -60,8 +53,3 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
-fetch(serverName + '/user/version')
-.then(response => response.json())
-.then(data => {updateCache(data.data);})
-.catch(error => console.error('Error fetching version:', error));
