@@ -38,7 +38,7 @@ async def set_score(query: models.GamesScoreInfo, hh: models.SessionBase) -> Res
         else:
             _ = await models.Games.create(type=query.type, name=hh.username, score=query.score)
         result.msg = Msg.GameScore.get_text(hh.lang).format(Msg.Success.get_text(hh.lang))
-        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, f'{query.type}-{query.score}',hh.username, hh.ip))
+        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, f'{query.type}-{query.score}', hh.username, hh.ip))
     except:
         result.code = 1
         result.msg = Msg.GameScore.get_text(hh.lang).format(Msg.Failure.get_text(hh.lang))

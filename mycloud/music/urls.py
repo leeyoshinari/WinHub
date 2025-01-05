@@ -26,13 +26,14 @@ async def get_music_from_folder(folder_id: str, hh: models.SessionBase = Depends
 @router.get("/history/get/{flag}", summary="query music history list (查询播放历史列表)")
 async def get_music_history_list(flag: int = 1, hh: models.SessionBase = Depends(auth)):
     order_by = '-update_time'
-    if flag == 2: order_by = '-times'
+    if flag == 2:
+        order_by = '-times'
     result = await views.get_mp3_history(order_by, hh)
     return result
 
 
 @router.get("/history/delete/{file_id}", summary="delete music history (删除播放历史记录)")
-async def get_music_history_list(file_id: str, hh: models.SessionBase = Depends(auth)):
+async def delete_music_history(file_id: str, hh: models.SessionBase = Depends(auth)):
     result = await views.delete_mp3_history(file_id, hh)
     return result
 

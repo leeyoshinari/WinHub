@@ -39,8 +39,7 @@ class ChecklistPostprocessor(Postprocessor):
         return re.sub(self.item_pattern, self._convert_item, html)
 
     def _convert_list(self, match):
-        return match.group(1).replace('<ul>',
-                '<ul class="%s">' % self.list_class)
+        return match.group(1).replace('<ul>', '<ul class="%s">' % self.list_class)
 
     def _convert_item(self, match):
         state, caption = match.groups()

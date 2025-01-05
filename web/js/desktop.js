@@ -2961,6 +2961,7 @@ function upload_file() {
             let xhr = new XMLHttpRequest();
             xhr.open("POST", server + "/file/upload");
             xhr.setRequestHeader("processData", "false");
+            xhr.setRequestHeader("lang", localStorage.getItem('lang'));
             // xhr.upload.onprogress = function(event) {
             //     if (event.lengthComputable) {}};
             // xhr.onload = function(event) {}
@@ -3033,6 +3034,7 @@ function upload_back_img(img_type) {
             let xhr = new XMLHttpRequest();
             xhr.open("POST", server + "/file/uploadImage");
             xhr.setRequestHeader("processData", "false");
+            xhr.setRequestHeader("lang", localStorage.getItem('lang'));
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if(xhr.status === 200) {
@@ -3212,35 +3214,36 @@ function save_text_file(file_id, data, is_code=true) {
     })
 }
 
-function create_meeting_code() {
+function create_meeting_code(chat_mode) {
     $.ajax({
         type: "GET",
-        url: server + '/chat/create',
+        url: server + '/chat/create/' + chat_mode,
         success: function (data) {
             if (data['code'] === 0) {
-                document.getElementById("meeting-code").value = data['data'];
+                document.getElementById("meeting-code-" + chat_mode).value = data['data'];
                 $.Toast(data['msg'], 'success');
             }
         }
     })
 }
 
-function join_meeting() {
-    let code = document.getElementById("meeting-code").value.trim();
+function join_meeting(chat_mode) {
+    let code = document.getElementById("meeting-code-" + chat_mode).value.trim();
     if (!code || code === "") {
         $.Toast(i18next.t("chat.code.placeholder"), "error");
         return;
     }
     $.ajax({
         type: "GET",
-        url: server + '/chat/auth/' + code,
+        url: server + '/chat/auth/' + chat_mode + '/' + code,
         success: function (data) {
             if (data['code'] === 0) {
                 $('.window.chat>.titbar>span>.title')[0].innerText = i18next.t('chat.title');
                 openapp('chat');
-                let username = document.cookie.split('u=')[1].split(';')[0];
+                let html_str = 'chat';
+                if (chat_mode === 0) {html_str = 'voice';}
                 document.getElementsByClassName("chat")[0].style.display = 'block';
-                document.getElementById("iframe_chat").src = 'module/chat.html?server=' + server + '&code=' + code;
+                document.getElementById("iframe_chat").src = 'module/' + html_str + '.html?server=' + server + '&code=' + code + chat_mode;
                 $('.window.chat>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_chat").src='about:blank';hidewin('chat');`);
             } else {
                 $.Toast(data['msg'], 'error');

@@ -99,7 +99,7 @@ async def modify_pwd(query: models.CreateUser, hh: models.SessionBase = Depends(
 
 
 @router.get("/modify/nickname/{nickname}", summary="Modify nickname (修改昵称)")
-async def modify_pwd(nickname: str, hh: models.SessionBase = Depends(auth)):
+async def modify_nickname(nickname: str, hh: models.SessionBase = Depends(auth)):
     result = Result()
     try:
         user = await models.User.get(username=hh.username)

@@ -242,6 +242,8 @@
   "chat.code.placeholder": "请输入聊天室~",
   "chat.create.code": "创建聊天室",
   "chat.join": "加入聊天",
+  "chat.voice.title": "语音聊天",
+  "chat.voice.tips": "立刻开始语音聊天",
 
   "karaoke": "卡拉OK",
   "karaoke.title": "自建曲库，在家里想唱就唱",

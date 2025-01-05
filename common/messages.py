@@ -350,7 +350,7 @@ class Msg:
     SyncDataNo = MsgObj()
     SyncDataNo.zh_CN = "未启用备份功能~"
     SyncDataNo.en = "Backup function is not enabled."
-    
+
     MeetingCreate = MsgObj()
     MeetingCreate.zh_CN = "创建会议码"
     MeetingCreate.en = "Create Meeting Code"
@@ -366,3 +366,7 @@ class Msg:
     ChatStatus = MsgObj()
     ChatStatus.zh_CN = ["未开始", "聊天中", "已结束"]
     ChatStatus.en = ["NotStart", "Chatting", "Stopped"]
+
+    ChatMode = MsgObj()
+    ChatMode.zh_CN = ["语音聊天", "视频聊天", "文件传输"]
+    ChatMode.en = ["VoiceChat", "VideoChat", "FileTransfer"]

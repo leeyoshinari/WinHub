@@ -20,20 +20,20 @@ async def chat_list(hh: models.SessionBase = Depends(auth)):
     return result
 
 
-@router.get("/create", summary="Create code (创建房间码)")
-async def create_code(hh: models.SessionBase = Depends(auth)):
-    result = await views.create_code(hh)
+@router.get("/create/{chat_mode}", summary="Create code (创建房间码)")
+async def create_code(chat_mode: int, hh: models.SessionBase = Depends(auth)):
+    result = await views.create_code(chat_mode, hh)
     return result
 
 
-@router.get("/auth/{room_code}", summary="Start Chat (开始聊天)")
-async def auth_chat(room_code, hh: models.SessionBase = Depends(auth)):
-    result = await views.start_chat(room_code, hh)
+@router.get("/auth/{chat_mode}/{room_code}", summary="Start Chat (开始聊天)")
+async def auth_chat(chat_mode: int, room_code: str, hh: models.SessionBase = Depends(auth)):
+    result = await views.start_chat(room_code, chat_mode, hh)
     return result
 
 
 @router.get("/stun/{room_code}", summary="Get stun & turn (获取stun & turn)")
-async def auth_chat(room_code, hh: models.SessionBase = Depends(auth)):
+async def chat_stun(room_code, hh: models.SessionBase = Depends(auth)):
     result = await views.get_stun_server(room_code, hh)
     return result
 

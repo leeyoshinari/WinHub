@@ -8,7 +8,7 @@ from typing import Optional, List, Any
 from tortoise import fields
 from tortoise.models import Model
 from pydantic import BaseModel
-from common.calc import beauty_size, beauty_time, time2date, beauty_chat_status
+from common.calc import beauty_size, beauty_time, time2date, beauty_chat_status, beauty_chat_mode
 
 
 # 用户数据库模型
@@ -172,7 +172,7 @@ class ChatRoom(Model):
 # 登陆会话验证模型
 class SessionBase(BaseModel):
     username: str
-    ip: str = None
+    ip: Optional[str] = None
     lang: str = 'en'
 
 
@@ -466,7 +466,7 @@ class KaraokeList(BaseModel):
     @classmethod
     def from_orm_format(cls, obj: Files):
         c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-        m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        # m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
         return cls(id=obj.id, name=obj.name, create_time=c)
 
 
@@ -513,6 +513,7 @@ class ChatList(BaseModel):
     id: int
     code: str
     status: str
+    mode: str
     duration: str
     start_time: str
     create_time: str
@@ -534,5 +535,5 @@ class ChatList(BaseModel):
         if obj.end_time != 0:
             status = 2
             duration = obj.end_time - obj.start_time
-        return cls(id=obj.id, code=obj.code, duration=beauty_time(duration), start_time=start_time, status=beauty_chat_status(status, lang),
+        return cls(id=obj.id, code=obj.code, duration=beauty_time(duration), start_time=start_time, status=beauty_chat_status(status, lang), mode=beauty_chat_mode(obj.mode, lang),
                    create_time=obj.create_time.strftime("%Y-%m-%d %H:%M:%S"), update_time=obj.update_time.strftime("%Y-%m-%d %H:%M:%S"))

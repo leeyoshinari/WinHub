@@ -110,7 +110,7 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        gid = aria2c_downloader.add_bt_task(query.url, settings.TMP_PATH, query.cookie)
+        gid = aria2c_downloader.add_bt_task(query.url, settings.TMP_PATH)
         res = aria2c_downloader.get_completed_task_info(gid)
         while res['status'] != 'complete':
             logger.info(res)

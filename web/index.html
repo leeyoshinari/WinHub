@@ -209,12 +209,20 @@
 					<p class="title i18n" key="setting.window.media"></p>
 					<div class="setting-list" style="margin-top: 10px;">
 						<a class="dp app-color" onclick="$('.dp.app-color.chat').toggleClass('show');">
-							<icon></icon><div><p class="i18n" key="chat.title"></p><p class="i18n" key="chat.tips"></p></div><i class="bi bi-chevron-down"></i>
+							<icon></icon><div><p class="i18n" key="chat.title"></p><p class="i18n" key="chat.tips"></p></div><i class="bi bi-chevron-down"></i>
 						</a>
 						<div class="dp app-color chat" style="display:flex;justify-content:space-around;flex-wrap:nowrap;">
-							<a class="i18n" onclick="create_meeting_code();" style="cursor:pointer;color:blue;" key="chat.create.code"></a>
-							<div style="width:50%;"><label class="i18n" key="chat.code"></label><input class="i18n_p" type="text" id="meeting-code" placeholder="" key="chat.code.placeholder" value="">
-							<a class="i18n" onclick="join_meeting();" style="cursor:pointer;color:blue;margin-left:5%;" key="chat.join"></a></div>
+							<a class="i18n" onclick="create_meeting_code(1);" style="cursor:pointer;color:blue;" key="chat.create.code"></a>
+							<div style="width:50%;"><label class="i18n" key="chat.code"></label><input class="i18n_p" type="text" id="meeting-code-1" placeholder="" key="chat.code.placeholder" value="">
+							<a class="i18n" onclick="join_meeting(1);" style="cursor:pointer;color:blue;margin-left:5%;" key="chat.join"></a></div>
+						</div>
+						<a class="dp app-color" onclick="$('.dp.app-color.voice').toggleClass('show');">
+							<icon></icon><div><p class="i18n" key="chat.voice.title"></p><p class="i18n" key="chat.voice.tips"></p></div><i class="bi bi-chevron-down"></i>
+						</a>
+						<div class="dp app-color voice" style="display:flex;justify-content:space-around;flex-wrap:nowrap;">
+							<a class="i18n" onclick="create_meeting_code(0);" style="cursor:pointer;color:blue;" key="chat.create.code"></a>
+							<div style="width:50%;"><label class="i18n" key="chat.code"></label><input class="i18n_p" type="text" id="meeting-code-0" placeholder="" key="chat.code.placeholder" value="">
+							<a class="i18n" onclick="join_meeting(0);" style="cursor:pointer;color:blue;margin-left:5%;" key="chat.join"></a></div>
 						</div>
 						<a class="dp app-color" onclick="open_music('');">
 							<icon></icon><div><p class="i18n" key="music"></p><p class="i18n" key="music.title"></p></div><i class="bi bi-chevron-right"></i>
@@ -584,10 +592,12 @@
 		    </div>
 			<div id="save-bar" style="margin:10px;margin-top: 3px;">
 				<a onclick="apps.edge.goto('https://blog.ihuster.top')" win12_title="博客" class="save-item"><i class="bi bi-file-earmark"></i>博客</a>
-				<a onclick="apps.edge.goto('https://www.musicenc.com')" win12_title="MusicEnc" class="save-item"><i class="bi bi-file-earmark"></i>MusicEnc</a>
 				<a onclick="apps.edge.goto('https://music.txqq.pro')" win12_title="全网音乐免费下载" class="save-item"><i class="bi bi-file-earmark"></i>全网音乐免费下载</a>
 				<a onclick="apps.edge.goto('https://tool.liumingye.cn/music')" win12_title="MyFreeMP3" class="save-item"><i class="bi bi-file-earmark"></i>MyFreeMP3</a>
 				<a onclick="apps.edge.goto('https://xbeibeix.com/api/bilibili')" win12_title="bilibili" class="save-item"><i class="bi bi-file-earmark"></i>B站视频下载</a>
+				<a onclick="apps.edge.goto('https://jx.xmflv.cc/?url=')" win12_title="虾米解析-VIP视频免费看" class="save-item"><i class="bi bi-file-earmark"></i>虾米解析</a>
+				<a onclick="apps.edge.goto('https://im1907.top/?jx=')" win12_title="M1079云加速播放器-VIP视频免费看" class="save-item"><i class="bi bi-file-earmark"></i>云加速播放器</a>
+				<a onclick="apps.edge.goto('https://vip.jbsou.cn/?url=')" win12_title="煎饼vip解析-VIP视频在线解析，请复制链接去浏览器打开" class="save-item"><i class="bi bi-file-earmark"></i>煎饼vip解析</a>
 			</div>
 			<iframe id="iframe_edge" class="0 show" onmousemove="if(apps.edge.fuls){$('.edge>.titbar').hide();$('.edge>.content>.tool').hide()}"></iframe>
 		</div>

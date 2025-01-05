@@ -89,6 +89,10 @@ def beauty_chat_status(status: int, lang: str) -> str:
     return Msg.ChatStatus.get_text(lang)[status]
 
 
+def beauty_chat_mode(mode: int, lang: str) -> str:
+    return Msg.ChatMode.get_text(lang)[mode]
+
+
 def modify_prefix(prefix='/mycloud'):
     if os.path.exists('web/head.js'):
         with open('web/head.js', 'r', encoding='utf-8') as f:
@@ -103,7 +107,7 @@ def modify_sw():
     if os.path.exists('web/sw.js'):
         with open('web/sw.js', 'r', encoding='utf-8') as f:
             lines = f.readlines()
-        lines[0] = f"const server = winhub-'{current_date}';\n"
+        lines[0] = f"const CACHE_NAME = 'winhub-{current_date}';\n"
         with open('web/sw.js', 'w', encoding='utf-8') as f:
             f.writelines(lines)
 

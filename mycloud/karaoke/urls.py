@@ -9,8 +9,8 @@ import traceback
 from urllib.parse import unquote
 from fastapi import APIRouter, Request, Depends
 from sse_starlette import EventSourceResponse
-from mycloud import models
 from settings import KARAOKE_PATH, CONTENT_TYPE, KTV_TMP_PATH
+from mycloud import models
 from mycloud.responses import StreamResponse
 from mycloud.auth_middleware import auth, no_auth
 from mycloud.karaoke import views
@@ -80,19 +80,19 @@ async def set_top(file_id: int, hh: models.SessionBase = Depends(no_auth)):
 
 
 @router.get("/setSinged/{file_id}", summary="设置已经播放过")
-async def set_top(file_id: int, hh: models.SessionBase = Depends(no_auth)):
+async def set_singed(file_id: int, hh: models.SessionBase = Depends(no_auth)):
     result = await views.set_singed(file_id, hh)
     return result
 
 
 @router.get("/setSinging/{file_id}", summary="设置正在播放")
-async def set_top(file_id: int, hh: models.SessionBase = Depends(no_auth)):
+async def set_singing(file_id: int, hh: models.SessionBase = Depends(no_auth)):
     result = await views.set_singing(file_id, hh)
     return result
 
 
 @router.post('/upload/video', summary="上传视频")
-async def upload_file(query: Request, hh: models.SessionBase = Depends(auth)):
+async def upload_file_video(query: Request, hh: models.SessionBase = Depends(auth)):
     result = await views.upload_video(query, hh)
     return result
 
@@ -158,7 +158,7 @@ async def download_file(file_name: str, hh: models.SessionBase = Depends(no_auth
 
 
 @router.get("/tmp/{file_name}", summary="Download Temporary file (获取临时文件)")
-async def download_file(file_name: str, hh: models.SessionBase = Depends(no_auth)):
+async def download_tmp_file(file_name: str, hh: models.SessionBase = Depends(no_auth)):
     try:
         file_name = unquote(file_name)
         file_path = os.path.join(KTV_TMP_PATH, file_name)

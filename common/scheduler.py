@@ -18,7 +18,7 @@ scheduler = AsyncIOScheduler()
 def remove_tmp_folder():
     try:
         # 删除最近30分钟没有修改的文件，避免删除当前正在编辑的文件
-        for root, dirs, files in os.walk(TMP_PATH):
+        for root, _, files in os.walk(TMP_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
                 if os.path.getmtime(file_path) < time.time() - 1800:
@@ -37,7 +37,7 @@ def remove_tmp_folder():
 
 def get_folder_size(folder_path) -> int:
     total_size = 0
-    for root, dirs, files in os.walk(folder_path):
+    for root, _, files in os.walk(folder_path):
         try:
             for file in files:
                 file_path = os.path.join(root, file)

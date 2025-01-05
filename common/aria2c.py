@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 
-import os.path
 import time
 import subprocess
 import traceback
@@ -62,7 +61,7 @@ class Aria2Downloader:
         logger.info(response.json())
         return response.json().get('result')
 
-    def add_bt_task(self, url: str, file_path: str, cookie: str = ""):
+    def add_bt_task(self, url: str, file_path: str):
         if not self.process:
             self.start_rpc_server()
             time.sleep(1)
@@ -179,7 +178,7 @@ class Aria2Downloader:
             "jsonrpc": "2.0",
             "id": "9",
             "method": "aria2.changeOption",
-            "params": [gid, options] #{"select-file": f"{file_index}"}]
+            "params": [gid, options]  # {"select-file": f"{file_index}"}]
         }
         response = requests.post(self.rpc_url, json=payload)
         return response.json()

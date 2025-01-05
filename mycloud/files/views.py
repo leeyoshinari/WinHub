@@ -453,7 +453,7 @@ async def upload_image(query, hh: models.SessionBase) -> Result:
     folder_path = os.path.join(path, 'web/img/pictures', hh.username)
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
-    if img_type == 1:
+    if img_type == '1':
         file_path = os.path.join(folder_path, 'background.jpg')
     else:
         file_path = os.path.join(folder_path, 'avatar.jpg')
@@ -551,8 +551,12 @@ async def save_shared_to_myself(share_id: int, folder_id: str, hh: models.Sessio
         file = await models.Files.get(id=share.file_id).select_related('parent')
         file_parent_path = await file.parent.get_all_path()
         origin_file_path = os.path.join(file_parent_path, file.name)
-        folder = await models.Catalogs.get(id=folder_id)
+        folder = await models.Catalog.get(id=folder_id)
         target_folder_path = await folder.get_all_path()
+        async with transactions.in_transaction():
+            file = await models.Files.create(id=str(int(time.time() * 10000)), name=file.name, format=file.format, parent_id=folder_id,
+                                             size=file.size, md5=file.md5)
+            shutil.copy2(origin_file_path, target_folder_path)
         await file.save()
         result.msg = f"{Msg.Save.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))

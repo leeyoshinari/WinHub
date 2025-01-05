@@ -8,8 +8,8 @@ import shutil
 import subprocess
 import traceback
 import socket
-import psutil
 import platform
+import psutil
 import settings
 from mycloud import models
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
@@ -165,7 +165,7 @@ async def get_net_info(hh: models.SessionBase) -> Result:
 async def remove_tmp_folder(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        for root, dirs, files in os.walk(settings.TMP_PATH):
+        for root, _, files in os.walk(settings.TMP_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
                 os.remove(file_path)
@@ -187,7 +187,7 @@ async def remove_tmp_folder(hh: models.SessionBase) -> Result:
 
 def get_windows_cpu_model() -> str:
     try:
-        result = subprocess.run(['wmic', 'cpu', 'get', 'name'], capture_output=True, text=True)
+        result = subprocess.run(['wmic', 'cpu', 'get', 'name'], capture_output=True, text=True, check=True)
         return result.stdout.replace('Name', '').strip()
     except:
         logger.error(traceback.format_exc())
@@ -220,9 +220,6 @@ def get_linux_system_version() -> str:
 
 
 def exec_cmd(cmd):
-    try:
-        with os.popen(cmd) as p:
-            res = p.readlines()
-        return res
-    except:
-        raise
+    with os.popen(cmd) as p:
+        res = p.readlines()
+    return res

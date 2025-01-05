@@ -32,6 +32,7 @@ document.getElementById("file-upload").addEventListener('click', () => {
             let xhr = new XMLHttpRequest();
             xhr.open("POST", server + "/karaoke/upload");
             xhr.setRequestHeader("processData", "false");
+            xhr.setRequestHeader("lang", localStorage.getItem('lang'));
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if(xhr.status === 200) {

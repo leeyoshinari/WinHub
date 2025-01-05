@@ -3,13 +3,12 @@
 # Author: leeyoshinari
 
 import io
-import re
 import time
 import socket
 import asyncio
 import traceback
-import paramiko
 from threading import Thread
+import paramiko
 import websockets.exceptions
 from common.logging import logger
 from common.calc import parse_pwd
@@ -24,15 +23,15 @@ class SSH:
         self.channel = None
 
     async def connect(self, host, user, password=None, ssh_key=None, port=22, timeout=10,
-                term='xterm', pty_width=40, pty_height=24, current_time=None):
+                      term='xterm', pty_width=40, pty_height=24, current_time=None):
         try:
             # Allow trusted hosts to be added to "host_allow" list.
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             if ssh_key:
                 key = get_key_obj(paramiko.RSAKey, pkey_obj=ssh_key, password=password) or \
-                      get_key_obj(paramiko.DSSKey, pkey_obj=ssh_key, password=password) or \
-                      get_key_obj(paramiko.ECDSAKey, pkey_obj=ssh_key, password=password) or \
-                      get_key_obj(paramiko.Ed25519Key, pkey_obj=ssh_key, password=password)
+                    get_key_obj(paramiko.DSSKey, pkey_obj=ssh_key, password=password) or \
+                    get_key_obj(paramiko.ECDSAKey, pkey_obj=ssh_key, password=password) or \
+                    get_key_obj(paramiko.Ed25519Key, pkey_obj=ssh_key, password=password)
 
                 self.ssh_client.connect(username=user, hostname=host, port=port, pkey=key, timeout=timeout)
             else:
@@ -274,13 +273,10 @@ class UploadAndDownloadFile(object):
             return {'code': 1, 'msg': 'upload file failure ~', 'data': local_path}
 
     def download(self, file_path):
-        try:
-            fp = io.BytesIO()
-            self.sftp.getfo(file_path, fp)
-            fp.seek(0)
-            return fp
-        except:
-            raise
+        fp = io.BytesIO()
+        self.sftp.getfo(file_path, fp)
+        fp.seek(0)
+        return fp
 
     def __del__(self):
         self.sftp.close()

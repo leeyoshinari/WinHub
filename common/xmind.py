@@ -21,7 +21,7 @@ progress = ['', 'start', 'oct', 'quarter', '3oct', 'half', '5oct', '3quar', '7oc
 
 
 def create_xmind(file_path):
-    content = {"template": "right", "theme": "fresh-blue", "version": "0", "root": {"data": {"id": str(int(time.time()*1000)), "text": "中心主题"}, "children": [{"data": {"id": str(int(time.time())), "text": "分支主题"}, "children": []}]}}
+    content = {"template": "right", "theme": "fresh-blue", "version": "0", "root": {"data": {"id": str(int(time.time() * 1000)), "text": "中心主题"}, "children": [{"data": {"id": str(int(time.time())), "text": "分支主题"}, "children": []}]}}
     with codecs.open(file_path, 'w', encoding='utf-8') as f:
         f.write(json.dumps(content, ensure_ascii=False))
 
@@ -65,7 +65,7 @@ def generate_xmind8(file_id, file_name, file_path):
     with codecs.open(os.path.join(tmp_path, 'styles.xml'), 'w', encoding='utf-8') as f:
         f.write(x_style.format(styles))
     with codecs.open(os.path.join(tmp_path, 'content.xml'), 'w', encoding='utf-8') as f:
-        f.write(x_content.format(int(time.time()*1000), int(time.time()*1000), content))
+        f.write(x_content.format(int(time.time() * 1000), int(time.time() * 1000), content))
     with codecs.open(os.path.join(tmp_path, 'manifest.xml'), 'w', encoding='utf-8') as f:
         f.write(x_manifest)
     with codecs.open(os.path.join(tmp_path, 'meta.xml'), 'w', encoding='utf-8') as f:
@@ -74,7 +74,8 @@ def generate_xmind8(file_id, file_name, file_path):
     file_names = os.listdir(tmp_path)
     with ZipFile(new_path, "w") as z:
         for file in file_names:
-            if 'xmind' in file or 'json' in file: continue
+            if 'xmind' in file or 'json' in file:
+                continue
             if 'manifest.xml' == file:
                 z.write(os.path.join(tmp_path, file), 'META-INF/' + file)
             else:
@@ -226,7 +227,7 @@ def deal_xmind_title(text: str) -> str:
     return text
 
 
-def format_x_styles(id: str, data: dict):
+def format_x_styles(ele_id: str, data: dict):
     res = '<topic-properties'
     if 'background' in data:
         res += ' svg:fill="{}"'.format(data['background'])
@@ -241,7 +242,7 @@ def format_x_styles(id: str, data: dict):
     if 'font-family' in data:
         res += ' fo:font-family="{}"'.format(data['font-family'])
     if len(res) > 20:
-        res = '<style id="{}" name="" type="topic">{}/></style>'.format(id, res)
+        res = '<style id="{}" name="" type="topic">{}/></style>'.format(ele_id, res)
         return res
     else:
         return ''
@@ -271,4 +272,3 @@ def format_x_note(data: dict):
         return res
     else:
         return ''
-

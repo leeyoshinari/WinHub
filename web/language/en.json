@@ -236,12 +236,14 @@
   "music.lyric.loading.error.text": "Lyric is loading...",
   "music.lyric.nodata": "No lyrics",
 
-  "chat.title": "Live Chat",
+  "chat.title": "Video Chat",
   "chat.tips": "Start video chat immediately.",
   "chat.code": "Chat Room: ",
   "chat.code.placeholder": "Pls input Chat Room ~",
   "chat.create.code": "Create Chat Room",
   "chat.join": "Join Chat",
+  "chat.voice.title": "Voice Chat",
+  "chat.voice.tips": "Start voice chat immediately.",
 
   "karaoke": "Karaoke",
   "karaoke.title": "Build your own song library, sing whenever you want at home.",

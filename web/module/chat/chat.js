@@ -1,6 +1,7 @@
 const params = window.location.href.split('&');
 const servers = params[0].split('=')[1];
-const roomCode = params[1].split('=')[1];
+const roomParam = params[1].split('=')[1];
+const roomCode = roomParam.slice(0, roomParam.length - 1);
 let socketURL = 'ws://' + window.location.host + servers + '/chat/join' ;
 if (window.location.protocol === 'https:') {
     socketURL = 'wss://' + window.location.host + servers + '/chat/join' ;
@@ -33,7 +34,7 @@ let nickname;
 window.parent.$.ajax({
     type: "GET",
     async: false,
-    url: servers + '/chat/stun/' + roomCode,
+    url: servers + '/chat/stun/' + roomParam,
     success: function (data) {
         if (data['code'] === 0) {
             stunServer = { iceServers: [{ urls: data['data']['stun'] }, { username: data['data']['user'], credential: data['data']['cred'], urls: data['data']['turn'] }]};
@@ -136,7 +137,7 @@ async function createOfferForNewUser(userId, nick) {
     peerConnection.ontrack = (event) => {
         const existVideo = document.getElementById(userId);
         if (existVideo) {
-            existVideo.srcObject = event.streams[0];
+            existVideo.getElementsByTagName('video')[0].srcObject = event.streams[0];
         } else {
             const newVideo = document.createElement("div");
             newVideo.classList.add("video");
@@ -172,7 +173,7 @@ async function handleOffer(offer, userId, nick, isMic) {
     peerConnection.ontrack = (event) => {
         const existVideo = document.getElementById(userId);
         if (existVideo) {
-            existVideo.srcObject = event.streams[0];
+            existVideo.getElementsByTagName('video')[0].srcObject = event.streams[0];
         } else {
             const newVideo = document.createElement("div");
             newVideo.classList.add("video");
@@ -215,9 +216,9 @@ async function startScreenShare() {
     remoteStreams['localVideo'] = localStream;
 
     for (const [userId, peerConnection] of Object.entries(peerConnections)) {
-        const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-        if (sender) {
-            await sender.replaceTrack(localStream.getVideoTracks()[0]);
+        const videoSender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+            await videoSender.replaceTrack(localStream.getVideoTracks()[0]);
         }
     }
     mainVideo.srcObject = localStream;
@@ -235,10 +236,9 @@ async function stopScreenShare() {
     remoteStreams['localVideo'] = localStream;
 
     for (const [userId, peerConnection] of Object.entries(peerConnections)) {
-        const [newVideoTrack] = localStream.getVideoTracks();
-        const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-        if (sender) {
-            await sender.replaceTrack(newVideoTrack);
+        const videoSender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (videoSender) {
+            await videoSender.replaceTrack(localStream.getVideoTracks()[0]);
         }
     }
     mainVideo.srcObject = localStream;

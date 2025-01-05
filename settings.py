@@ -18,7 +18,7 @@ TOKENs = {}
 
 
 def get_config(key):
-    return cfg.get('default', key, fallback=None)
+    return cfg.get('default', key, fallback="")
 
 
 TRACKER_URL = get_config("trackerUrls")

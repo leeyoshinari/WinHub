@@ -21,8 +21,7 @@ async def save_server(query: models.ServerModel, hh: models.SessionBase) -> Resu
         async with transactions.in_transaction():
             datas = get_server_info(host=query.host, port=int(query.port), user=query.user, pwd=query.pwd, current_time=query.t)
             if datas['code'] == 0:
-                _ = await models.Servers.create(id=query.t, host=query.host, port=query.port, user=query.user, creator=hh.username,
-                        pwd=query.pwd, system=datas['system'], cpu=datas['cpu'], mem=datas['mem'], disk=datas['disk'])
+                _ = await models.Servers.create(id=query.t, host=query.host, port=query.port, user=query.user, creator=hh.username, pwd=query.pwd, system=datas['system'], cpu=datas['cpu'], mem=datas['mem'], disk=datas['disk'])
             else:
                 result.code = 1
                 result.msg = datas['msg']
@@ -98,10 +97,8 @@ async def download_file_from_linux(server_id, file_path, hh: models.SessionBase)
         server = await models.Servers.get(id=server_id)
         upload_obj = UploadAndDownloadFile(server)
         fp = upload_obj.download(file_path)
-        del upload_obj
         logger.info(Msg.CommonLog.get_text(hh.lang).format(Msg.Download.get_text(hh.lang).format(file_path), hh.username, hh.ip))
         return fp
     except:
-        del upload_obj
         logger.error(traceback.format_exc())
         return None

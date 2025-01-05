@@ -17,11 +17,11 @@ from common.messages import Msg
 rooms = {}
 
 
-async def create_code(hh: models.SessionBase) -> Result:
+async def create_code(chat_mode: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         room_code = str(uuid.uuid4())[:6]
-        await models.ChatRoom.create(code=room_code)
+        await models.ChatRoom.create(code=room_code, mode=chat_mode)
         result.msg = f"{Msg.MeetingCreate.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         result.data = room_code
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
@@ -32,19 +32,24 @@ async def create_code(hh: models.SessionBase) -> Result:
     return result
 
 
-async def start_chat(room_code: str, hh: models.SessionBase) -> Result:
+async def start_chat(room_code: str, chat_mode: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         if room_code not in rooms:
-            room = await models.ChatRoom.filter(code=room_code, end_time=0)
+            room = await models.ChatRoom.filter(code=room_code, mode=chat_mode, end_time=0)
             if not room or len(room) > 1:
                 result.code = 1
                 result.msg = Msg.FileNotExist.get_text(hh.lang).format(room_code)
                 logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
                 return result
-            rooms[room_code] = {"users": [], "usernames": {}}
+            rooms[room_code] = {"users": [], "usernames": {}, "mode": chat_mode}
             room[0].start_time = int(time.time())
             await room[0].save()
+        if rooms[room_code]['mode'] != chat_mode:
+            result.code = 1
+            result.msg = Msg.FileNotExist.get_text(hh.lang).format(room_code)
+            logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
+            return result
         rooms[room_code]["usernames"][hh.username] = True
         result.msg = Msg.MeetingJoin.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
@@ -55,15 +60,17 @@ async def start_chat(room_code: str, hh: models.SessionBase) -> Result:
     return result
 
 
-async def get_stun_server(room_code: str, hh: models.SessionBase) -> Result:
+async def get_stun_server(room_param: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
+        room_code = room_param[:-1]
+        chat_mode = int(room_param[-1])
         if room_code not in rooms:
             result.code = 1
             result.msg = Msg.FileNotExist.get_text(hh.lang).format(room_code)
             logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
             return result
-        if hh.username not in rooms[room_code]["usernames"] or not rooms[room_code]["usernames"][hh.username]:
+        if hh.username not in rooms[room_code]["usernames"] or not rooms[room_code]["usernames"][hh.username] or rooms[room_code]["mode"] != chat_mode:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
