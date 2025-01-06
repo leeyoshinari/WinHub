@@ -3238,10 +3238,13 @@ function join_meeting(chat_mode) {
         url: server + '/chat/auth/' + chat_mode + '/' + code,
         success: function (data) {
             if (data['code'] === 0) {
-                $('.window.chat>.titbar>span>.title')[0].innerText = i18next.t('chat.title');
                 openapp('chat');
+                $('.window.chat>.titbar>span>.title')[0].innerText = i18next.t('chat.title');
                 let html_str = 'chat';
-                if (chat_mode === 0) {html_str = 'voice';}
+                if (chat_mode === 0) {
+                    html_str = 'voice';
+                    $('.window.chat>.titbar>span>.title')[0].innerText = i18next.t('chat.voice.title');
+                }
                 document.getElementsByClassName("chat")[0].style.display = 'block';
                 document.getElementById("iframe_chat").src = 'module/' + html_str + '.html?server=' + server + '&code=' + code + chat_mode;
                 $('.window.chat>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_chat").src='about:blank';hidewin('chat');`);

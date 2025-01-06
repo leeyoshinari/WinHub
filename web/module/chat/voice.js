@@ -57,15 +57,15 @@ async function createEmptyVideoTrack() {
     const stream = canvas.captureStream(1);
     const videoTrack = stream.getVideoTracks()[0];
     return videoTrack;
-  }
+}
 
 async function joinRoom() {
     localStream = await navigator.mediaDevices.getUserMedia({video: false, audio: true});
-    const emptyVideoTrack = await createEmptyVideoTrack();
-    const combinedStream = new MediaStream([localStream.getAudioTracks()[0], emptyVideoTrack]);
-    localStream = combinedStream;
+    // const emptyVideoTrack = await createEmptyVideoTrack();
+    // const combinedStream = new MediaStream([localStream.getAudioTracks()[0], emptyVideoTrack]);
+    // localStream = combinedStream;
     localVideo.srcObject = localStream;
-    // localVideo.muted = true;
+    localVideo.muted = true;
     remoteStreams[username] = localStream;
     localVideoDiv.getElementsByTagName('span')[0].innerText = nickname;
     localImage.src = "../img/pictures/" + username + "/avatar.jpg";
@@ -141,7 +141,6 @@ async function createOfferForNewUser(userId, nick) {
     const newOffer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(newOffer);
     ws.send(JSON.stringify({offer: newOffer, from: username, nick: nickname, mic: micEnabled, to: userId}));
-    console.log(peerConnection.getSenders());
 }
 
 async function handleOffer(offer, userId, nick, isMic) {
@@ -179,7 +178,6 @@ async function handleOffer(offer, userId, nick, isMic) {
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
     ws.send(JSON.stringify({answer: answer, from: username, to: userId}));
-    console.log(peerConnection.getSenders());
 }
 
 async function handleAnswer(answer, userId) {
@@ -358,25 +356,25 @@ speakerButton.addEventListener('click', () => {
     }
 })
 
-shareScreenButton.addEventListener('click', () => {
-    shareScreenEnabled = !shareScreenEnabled;
-    if (shareScreenEnabled) {
-        startScreenShare()
-            .then(() => console.log("share screen."))
-            .catch(error => {console.log("Error: ", error);window.parent.$.Toast(error, 'error');});
-        ws.send(JSON.stringify({type:'shareScreen', from: username}));
-        shareScreenButton.querySelector('i').classList.remove('fa-desktop');
-        shareScreenButton.querySelector('i').classList.add('fa-stop');
-        shareScreenButton.querySelector('i').classList.add('fa-cancel');
-    } else {
-        stopScreenShare()
-            .then(() => console.log("stop screen."))
-            .catch(error => {console.log("Error: ", error)});
-        shareScreenButton.querySelector('i').classList.remove('fa-stop');
-        shareScreenButton.querySelector('i').classList.add('fa-desktop');
-        shareScreenButton.querySelector('i').classList.remove('fa-cancel');
-    }
-})
+// shareScreenButton.addEventListener('click', () => {
+//     shareScreenEnabled = !shareScreenEnabled;
+//     if (shareScreenEnabled) {
+//         startScreenShare()
+//             .then(() => console.log("share screen."))
+//             .catch(error => {console.log("Error: ", error);window.parent.$.Toast(error, 'error');});
+//         ws.send(JSON.stringify({type:'shareScreen', from: username}));
+//         shareScreenButton.querySelector('i').classList.remove('fa-desktop');
+//         shareScreenButton.querySelector('i').classList.add('fa-stop');
+//         shareScreenButton.querySelector('i').classList.add('fa-cancel');
+//     } else {
+//         stopScreenShare()
+//             .then(() => console.log("stop screen."))
+//             .catch(error => {console.log("Error: ", error)});
+//         shareScreenButton.querySelector('i').classList.remove('fa-stop');
+//         shareScreenButton.querySelector('i').classList.add('fa-desktop');
+//         shareScreenButton.querySelector('i').classList.remove('fa-cancel');
+//     }
+// })
 
 expandAndPickup.addEventListener('click', () => {
     img_src = expandAndPickup.src;

@@ -66,10 +66,16 @@ body {
     float: left;
 }
 
-.remote-videos>.video video, .remote-videos>.video img {
+.remote-videos>.video video {
     width: 100%;
     height: auto;
     object-fit: contain;
+    float: left;
+}
+
+.remote-videos>.video img {
+    width: 100%;
+    max-height: 180px;
     float: left;
 }
 
