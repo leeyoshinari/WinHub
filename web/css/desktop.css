@@ -467,6 +467,8 @@ list:not(.new)>a:active,
     position: absolute;
     background-color: #ffffffdb;
     min-width: 200px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
     z-index: 1;
 }
@@ -701,9 +703,14 @@ list:not(.new)>a:active,
     width: 88px;
     height: 87px;
     cursor: pointer;
+    overflow: hidden;
     text-overflow: ellipsis;
     border-radius: 5px;
     text-align: center;
+    display: -webkit-box;
+    line-clamp: 4;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
     margin: 8px 10px 2px 10px;
     padding: 0 3px 3px 3px;
     z-index: 3;
@@ -734,6 +741,8 @@ list:not(.new)>a:active,
     color: #fff;
     text-shadow: 2px 2px 4px var(--sd), 0 0 3px #000;
     margin-top: -6px;
+    white-space: normal;
+    word-break: break-all;
 }
 
 #desktop>.choose {

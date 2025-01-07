@@ -614,11 +614,8 @@ let apps = {
                 } else {
                     $('#win-explorer>.page>.main>.content>.view>.group>.item').removeClass('transparent');
                 }
-                if (res.data[0]['enableOnlyoffice'] === '1') {
-                    $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[2].style.display = 'none';
+                if (res.data[0]['enableOnlyoffice'] === '0') {
                     $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[4].style.display = 'none';
-                } else {
-                    $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[3].style.display = 'none';
                     $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[5].style.display = 'none';
                     $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[6].style.display = 'none';
                 }
