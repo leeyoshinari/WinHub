@@ -161,9 +161,9 @@ async def share_file(query: models.ShareFile, hh: models.SessionBase = Depends(a
     return result
 
 
-@router.get("/save/{share_id}", summary="Save shared file (保存分享的文件至网盘)")
-async def save_share(share_id: int, hh: models.SessionBase = Depends(auth)):
-    result = await views.save_shared_to_myself(share_id, hh)
+@router.get("/save/{share_id}/{folder_id}", summary="Save shared file (保存分享的文件至网盘)")
+async def save_share(share_id: int, folder_id: str, hh: models.SessionBase = Depends(auth)):
+    result = await views.save_shared_to_myself(share_id, folder_id, hh)
     return result
 
 
