@@ -52,12 +52,12 @@ class Msg:
     FileXmind.en = "New xmind.xmind"
 
     FileSheet = MsgObj()
-    FileSheet.zh_CN = "新建sheet工作表.sheet"
-    FileSheet.en = "New Worksheet.sheet"
+    FileSheet.zh_CN = "新建在线表格.sheet"
+    FileSheet.en = "New Online Sheet.sheet"
 
     FileDocu = MsgObj()
-    FileDocu.zh_CN = "新建doc文档.docu"
-    FileDocu.en = "New Document.docu"
+    FileDocu.zh_CN = "新建在线文档.docu"
+    FileDocu.en = "New Online Document.docu"
 
     FileExcel = MsgObj()
     FileExcel.zh_CN = "新建 Excel 工作表.xlsx"
@@ -65,7 +65,7 @@ class Msg:
 
     FileWord = MsgObj()
     FileWord.zh_CN = "新建 Word 文档.docx"
-    FileWord.en = "New Document.docx"
+    FileWord.en = "New Word Document.docx"
 
     FilePowerPoint = MsgObj()
     FilePowerPoint.zh_CN = "新建 PowerPoint 演示文稿.pptx"
