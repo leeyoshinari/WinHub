@@ -1,0 +1,204 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+body{
+    width: 100%;
+    height: 100%;
+}
+
+.container1 {
+	top: 0;
+	position: fixed;
+	z-index: 100;
+	width: 100%;
+	height: 30px;
+	background-color: #ffdddd1a;
+}
+
+.float_right {
+	float: right;
+	width: 333px;
+	text-align: right;
+	margin-top: 6px;
+}
+.container1 a {
+	cursor: pointer;
+	margin-right: 20px;
+	margin-left: 10px;
+	text-decoration: none;
+	color: blue;
+}
+.container1 img {
+	margin-top: 4px;
+	float: left;
+	margin-left: 1%;
+	height: 20px;
+}
+
+.container1 h4 {
+    float: left;
+    margin-top: 4px;
+    margin-left: 6px;
+}
+
+.container2 {
+	/*height: 100%;*/
+}
+
+.container2 .detail {
+	position: absolute;
+	width: 98%;
+	top: 50px;
+	background-color: #ffffff;
+}
+
+.modal_cover {
+    display: none;
+	z-index: 999;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, .6);
+}
+.modal_gif {
+    display: none;
+    position: absolute;
+    width: 100px;
+    z-index: 99;
+    height: 120px;
+    /* 水平垂直居中 */
+    left: 44%;
+    top: 41%;
+    transform: translate(-50%,-50%);
+    /* 超出高度右侧出现垂直滚动条 */
+    overflow:auto;
+    overflow-x:hidden;
+    background: url("../../css/loading.gif") no-repeat;
+    background-size: 80px 108px;
+}
+
+#progressBar {
+	position: absolute;
+	top: 50%;
+	left: 32%;
+	width: 23%;
+	height: 3%;
+}
+#percentage {
+	position: absolute;
+	top: 50%;
+	left: 57%;
+	font-weight: bolder;
+	font-size: x-large;
+	color: #d9534f;
+}
+
+/* 弹窗 (background) */
+#failure_file {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+}
+
+/* 弹窗内容 */
+.modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    width: 36%;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+/* 添加动画 */
+@-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+/* 关闭按钮 */
+.close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-header {
+    padding: 20px 16px;
+}
+
+.modal-body {padding: 2px 16px;}
+
+.modal-footer {
+    padding: 16px 20px;
+	text-align: right;
+	color: blue;
+}
+.modal-body div {
+    margin-bottom: 5%;
+    margin-top: 5%;
+}
+.modal-footer a {
+    text-decoration: none;
+    margin-left: 1%;
+    margin-right: 1%;
+}
+
+.cancel:hover,
+.cancel:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+.submit:hover,
+.submit:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#modal_input {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+}
+
+.input-body {padding: 2px 16px;}
+.input-body div {
+    margin-bottom: 5%;
+    margin-top: 5%;
+}
+.input-body input {
+    width: 69%;
+    height: 32px;
+}

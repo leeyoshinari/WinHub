@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>ONLYOFFICE</title>
+    <link rel="stylesheet" type="text/css" href="onlyoffice/css/editor.css" />
+    <script type="text/javascript" src="../js/jq.min.js"></script>
+</head>
+<body>
+    <div class="form"><div id="iframeEditor"></div></div>
+    <script type="text/javascript" language="javascript">
+        let lang = 'en';
+        let params = window.location.href.split('&');
+        let servers = params[0].split('=')[1];
+        let file_id = params[1].split('=')[1];
+        lang = params[2].split('=')[1];
+        $.ajaxSetup({beforeSend:function(xhr){xhr.setRequestHeader('lang', lang);}});
+        let cfg = null;
+        let dataInsertImage = null;
+        let dataDocument = null;
+        let dataSpreadsheet = null;
+        let usersForProtect = null;
+        let usersInfo = null;
+        let usersForMentions = null;
+        $.ajax({
+            type: 'GET',
+            async: false,
+            url: servers + '/onlyoffice/edit/' + file_id,
+            success: function (data) {
+                if (data['code'] === 0) {
+                    let api_url = document.createElement('script');
+                    api_url.src = data['data']['apiUrl'];
+                    document.head.appendChild(api_url);
+                    // window.parent.document.querySelectorAll('.window.' + data['data']['fileType'] + '>.titbar>span>.title')[0].innerText = data['data']['file_name'];
+                    cfg = JSON.parse(data['data']['cfg']);
+                    dataInsertImage = data['data']['dataInsertImage'];
+                    dataDocument = JSON.parse(data['data']['dataDocument']);
+                    dataSpreadsheet = JSON.parse(data['data']['dataSpreadsheet']);
+                    usersForProtect = JSON.parse(data['data']['usersForProtect']);
+                    usersInfo = JSON.parse(data['data']['usersInfo']);
+                    usersForMentions = JSON.parse(data['data']['usersForMentions']);
+                }
+            }
+        })
+        var docEditor;
+        var config;
+        var hist;
+        var innerAlert = function (message, inEditor) {
+            if (console && console.log)
+                console.log(message);
+            if (inEditor && docEditor)
+                docEditor.showMessage(message);
+        };
+
+        // the application is loaded into the browser
+        var onAppReady = function () {
+            innerAlert("Document editor ready");
+        };
+
+        // the document is modified
+        var onDocumentStateChange = function (event) {
+            var title = document.title.replace(/\*$/g, "");
+            document.title = title + (event.data ? "*" : "");
+        };
+
+        // the user is trying to switch the document from the viewing into the editing mode
+        var onRequestEditRights = function () {
+            location.href = location.href.replace(RegExp("mode=view\&?", "i"), "");
+        };
+
+        // an error or some other specific event occurs
+        var onError = function (event) {
+            if (event)
+                innerAlert(event.data);
+        };
+
+        // the document is opened for editing with the old document.key value
+        var onOutdatedVersion = function (event) {
+            location.reload(true);
+        };
+
+        // replace the link to the document which contains a bookmark
+        var replaceActionLink = function(href, linkParam) {
+            var link;
+            var actionIndex = href.indexOf("&actionLink=");
+            if (actionIndex !== -1) {
+                var endIndex = href.indexOf("&", actionIndex + "&actionLink=".length);
+                if (endIndex !== -1) {
+                    link = href.substring(0, actionIndex) + href.substring(endIndex) + "&actionLink=" + encodeURIComponent(linkParam);
+                } else {
+                    link = href.substring(0, actionIndex) + "&actionLink=" + encodeURIComponent(linkParam);
+                }
+            } else {
+                link = href + "&actionLink=" + encodeURIComponent(linkParam);
+            }
+            return link;
+        }
+
+        // the user is trying to get link for opening the document which contains a bookmark, scrolling to the bookmark position
+        var onMakeActionLink = function (event) {
+            var actionData = event.data;
+            var linkParam = JSON.stringify(actionData);
+            docEditor.setActionLink(replaceActionLink(location.href, linkParam));  // set the link to the document which contains a bookmark
+        };
+
+        // the meta information of the document is changed via the meta command
+        var onMetaChange = function (event) {
+            if (event.data.favorite) {
+                var favorite = !!event.data.favorite;
+                var title = document.title.replace(/^\☆/g, "");
+                document.title = (favorite ? "☆" : "") + title;
+                docEditor.setFavorite(favorite);  // change the Favorite icon state
+            }
+
+            innerAlert("onMetaChange: " + JSON.stringify(event.data));
+        };
+
+        // the user is trying to insert an image by clicking the Image from Storage button
+        var onRequestInsertImage = function(event) {
+            docEditor.insertImage({  // insert an image into the file
+                "c": event.data.c, dataInsertImage
+            })
+        };
+
+        // the user is trying to select document for comparing by clicking the Document from Storage button
+        var onRequestSelectDocument = function(event) {
+            dataDocument.c = event.data.c;
+            docEditor.setRequestedDocument(dataDocument);  // select a document for comparing
+        };
+
+        // the user is trying to select recipients data by clicking the Mail merge button
+        var onRequestSelectSpreadsheet = function (event) {
+            dataSpreadsheet.c = event.data.c;
+            docEditor.setRequestedSpreadsheet(dataSpreadsheet); // insert recipient data for mail merge into the file
+        };
+
+        var onRequestSaveAs = function (event) {  //  the user is trying to save file by clicking Save Copy as... button
+            var title = event.data.title;
+            var url = event.data.url;
+            var data = {
+                title: title,
+                url: url
+            };
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", servers + "/onlyoffice/saveAs/" + file_id);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify(data));
+            xhr.onload = function () {
+                innerAlert(xhr.responseText);
+                innerAlert(JSON.parse(xhr.responseText).file, true);
+                window.open(servers + "/onlyoffice/download/" + JSON.parse(xhr.responseText).file_id);
+            }
+        };
+
+        var onRequestRename = function(event) { //  the user is trying to rename file by clicking Rename... button
+            innerAlert("onRequestRename: " + JSON.stringify(event.data));
+
+            var newfilename = event.data;
+            var data = {
+                newfilename: newfilename,
+                dockey: config.document.key,
+                ext: config.document.fileType
+            };
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", servers + "/onlyoffice/rename/" + file_id);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify(data));
+            xhr.onload = function () {
+                innerAlert(xhr.responseText);
+            }
+        };
+
+        var onRequestOpen = function (event) {  // user open external data source
+            innerAlert("onRequestOpen");
+            var windowName = event.data.windowName;
+            requestReference(event.data, function (data) {
+                if (data.error) {
+                    var winEditor = window.open("", windowName);
+                    winEditor.close();
+                    innerAlert(data.error, true);
+                    return;
+                }
+                var link = data.link;
+                window.open(link, windowName);
+            });
+        };
+
+        var onRequestReferenceData = function(event) {  // user refresh external data source
+            innerAlert("onRequestReferenceData");
+
+            requestReference(event.data, function (data) {
+                docEditor.setReferenceData(data);
+            });
+        };
+
+        var requestReference = function (data, callback) {
+            innerAlert(data);
+            data.directUrl = !!config.document.directUrl;
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", "reference");
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(JSON.stringify(data));
+            xhr.onload = function () {
+                innerAlert(xhr.responseText);
+                console.log(JSON.parse(xhr.responseText));
+                callback(JSON.parse(xhr.responseText));
+            }
+        };
+
+        function onRequestRestore(event) {
+          const query = new URLSearchParams(window.location.search)
+          const config = cfg
+          const payload = {
+            version: event.data.version,
+            userId: config.editorConfig.user.id
+          }
+          const request = new XMLHttpRequest()
+          request.open("PUT", servers + '/onlyoffice/restore/' + file_id)
+          request.send(JSON.stringify(payload))
+          request.onload = function () {
+            if (request.status !== 200) {
+              response = JSON.parse(request.response)
+              innerAlert(response.error)
+              return
+            }
+            onRequestHistory()
+          }
+        }
+
+        function onRequestHistory(){
+            const query = new URLSearchParams(window.location.search)
+            data = {
+                file_id: query.get('id')
+            }
+            const req = new XMLHttpRequest()
+            req.open("POST", servers + '/onlyoffice/historyobj/' + file_id)
+            req.send(JSON.stringify(data))
+            req.onload = function () {
+                if (req.status !== 200) {
+                    response = JSON.parse(req.response)
+                    innerAlert(response.error)
+                    return
+                }
+                hist = JSON.parse(req.response)
+                docEditor.refreshHistory(hist.history)
+            }
+        }
+
+        function onRequestHistoryData(event) {
+            var ver = event.data;
+            var histData = hist.historyData;
+            docEditor.setHistoryData(histData[ver - 1]);  // send the link to the document for viewing the version history
+        }
+
+        function onRequestHistoryClose(){
+            document.location.reload();
+        }
+
+        var connectEditor = function () {
+
+            config = cfg
+            config.width = "100%";
+            config.height = "100%";
+            config.events = {
+                'onAppReady': onAppReady,
+                'onDocumentStateChange': onDocumentStateChange,
+                'onError': onError,
+                'onOutdatedVersion': onOutdatedVersion,
+                'onMakeActionLink': onMakeActionLink,
+                'onMetaChange': onMetaChange,
+                'onRequestInsertImage': onRequestInsertImage,
+                'onRequestSelectDocument': onRequestSelectDocument,
+                "onRequestSelectSpreadsheet": onRequestSelectSpreadsheet,
+                'onRequestRestore': onRequestRestore,
+                'onRequestHistory': onRequestHistory,
+                'onRequestHistoryData': onRequestHistoryData,
+                'onRequestHistoryClose': onRequestHistoryClose
+            };
+
+
+
+            if (config.editorConfig.user.id) {
+                // add mentions for not anonymous users
+                config.events['onRequestUsers'] = function (event) {
+                    if (event && event.data){
+                        var c = event.data.c;
+                    }
+                    switch (c) {
+                        case "info":
+                            users = [];
+                            var allUsers = usersInfo;
+                            for (var i = 0; i < event.data.id.length; i++) {
+                                for (var j = 0; j < allUsers.length; j++) {
+                                    if (allUsers[j].id === event.data.id[i]) {
+                                        users.push(allUsers[j]);
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        case "protect":
+                            var users = usersForProtect;
+                            break;
+                        default:
+                            users = usersForMentions;
+                    }
+                    docEditor.setUsers({
+                        "c": c,
+                        "users": users,
+                    })
+                };
+                // the user is mentioned in a comment
+                config.events['onRequestSendNotify'] = function (event) {
+                    event.data.actionLink = replaceActionLink(location.href, JSON.stringify(event.data.actionLink));
+                    var data = JSON.stringify(event.data);
+                    innerAlert("onRequestSendNotify: " + data);
+                };
+                // prevent file renaming for anonymous users
+                config.events['onRequestRename'] = onRequestRename;
+                config.events['onRequestReferenceData'] = onRequestReferenceData;
+
+                // prevent switch the document from the viewing into the editing mode for anonymous users
+                config.events['onRequestEditRights'] = onRequestEditRights;
+                config.events['onRequestOpen'] = onRequestOpen;
+            }
+
+            if (config.editorConfig.createUrl) {
+                config.events.onRequestSaveAs = onRequestSaveAs;
+            };
+
+            if ((config.document.fileType === "docxf" || config.document.fileType === "oform")
+                && DocsAPI.DocEditor.version().split(".")[0] < 7) {
+                innerAlert("Please update ONLYOFFICE Docs to version 7.0 to work on fillable forms online.");
+                return;
+            }
+
+            docEditor = new DocsAPI.DocEditor("iframeEditor", config);
+
+            fixSize();
+        };
+
+        // get the editor sizes
+        var fixSize = function () {
+            var wrapEl = document.getElementsByClassName("form");
+            if (wrapEl.length) {
+                wrapEl[0].style.height = screen.availHeight + "px";
+                window.scrollTo(0, -1);
+                wrapEl[0].style.height = window.innerHeight + "px";
+            }
+        };
+
+        if (window.addEventListener) {
+            window.addEventListener("load", connectEditor);
+            window.addEventListener("resize", fixSize);
+        } else if (window.attachEvent) {
+            window.attachEvent("onload", connectEditor);
+            window.attachEvent("onresize", fixSize);
+        }
+
+    </script>
+</body>
+</html>

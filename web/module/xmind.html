@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>在线xmind</title>
+    <script type="text/javascript" src="../js/jq.min.js"></script>
+    <link rel="stylesheet" href="xmind/mind.css"/>
+    <script src="../js/md5.min.js"></script>
+    <script>
+        let title = "xmind";
+        let version = "0";
+        let mindData = '';
+        let params = window.location.href.split('&');
+        let servers = params[0].split('=')[1];
+        let file_id = params[1].split('=')[1];
+        let is_share = file_id.length > 10;
+        let get_url = servers + '/file/content/' + file_id;
+        let export_url = servers + '/file/export/xmind/' + file_id;
+        if (!is_share) {
+            get_url = servers + '/share/get/' + file_id;
+            export_url = servers + '/share/export/' + file_id;
+        }
+        window.parent.$.ajax({
+            type: "GET",
+            async: false,
+            url: get_url,
+            success: function (data) {
+                if (data['code'] === 0) {
+                    if (is_share) {
+                        window.parent.document.querySelectorAll('.window.xmind>.titbar>span>.title')[0].innerText = data['msg'];
+                    }
+                    document.title = data['msg'];
+                    mindData = JSON.stringify(data['data']);
+                } else {
+                    window.parent.$.Toast(data['msg'], 'error');
+                    return;
+                }
+            }
+        });
+    </script>
+</head>
+<body ng-app="kityminderDemo" ng-controller="MainController">
+    <kityminder-editor on-init="initEditor(editor, minder)"></kityminder-editor>
+    <script src="xmind/mind.js"></script>
+</body>
+<script type="text/javascript">
+    if (localStorage.getItem('transparent') === '1') {$('body')[0].style.backgroundColor = '#00000000';}
+</script>
+</html>

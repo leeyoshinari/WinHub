@@ -12,6 +12,8 @@ from mycloud.auth_middleware import auth
 from mycloud.responses import StreamResponse
 from common.results import Result
 from common.logging import logger
+from common.xmind import read_xmind, generate_xmind8
+from common.sheet import read_sheet
 import settings
 
 
@@ -46,6 +48,18 @@ async def get_share_file(file_id: int, request: Request):
                     res.data = f.read()
                 res.msg = result['name']
                 return res
+            if result["format"] == 'xmind':
+                res = Result()
+                xmind = read_xmind(result['path'])
+                res.data = xmind
+                res.msg = result['name']
+                return res
+            if result["format"] == 'sheet':
+                res = Result()
+                sheet = read_sheet(result['path'])
+                res.data = sheet
+                res.msg = result['name']
+                return res
             else:
                 if os.path.exists(result['path']):
                     headers = {'Content-Disposition': f'inline;filename="{result["name"]}"', 'Cache-Control': 'no-store'}
@@ -65,6 +79,9 @@ async def export_share_file(file_id: int, request: Request):
         hh = models.SessionBase(ip=request.headers.get('x-real-ip', ''), lang=request.headers.get('lang', 'en'), username='')
         result = await views.open_share_file(file_id, hh)
         if result['type'] == 0:
+            if result["format"] == 'xmind':
+                file_path = generate_xmind8(result['file_id'], result['name'], result['path'])
+                result['path'] = file_path
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
                        'Content-Disposition': f'inline;filename="{result["name"]}"'}
             return StreamResponse(read_file(result['path']), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)

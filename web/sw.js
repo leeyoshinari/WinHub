@@ -1,7 +1,10 @@
-const CACHE_NAME = 'sw-0';
+const CACHE_NAME = 'winhub';
 const staticFileExtensions = ['/img/', '/css/', '/js/', '.html', '.json', '/module/', 'head.js', 'sw.js'];
+const excludeFiles = ['/background.jpg', '/avatar.jpg'];
 const regex = new RegExp(`(${staticFileExtensions.join('|').replace(/\./g, '\\.')})`, 'i');
-const urlsToCache = ['']
+const excludeRegex = new RegExp(`(${excludeFiles.join('|').replace(/\./g, '\\.')})`, 'i');
+const urlsToCache = [''];
+
 // 安装事件
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -39,7 +42,7 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && regex.test(networkResponse.url) && networkResponse.type === 'basic') {
+        if (networkResponse && networkResponse.status === 200 && regex.test(networkResponse.url) && !excludeRegex.test(networkResponse.url) && networkResponse.type === 'basic') {
           const clonedResponse = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, clonedResponse);

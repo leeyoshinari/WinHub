@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>卡拉OK</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script type="text/javascript" src="../../js/jq.min.js"></script>
+    <link rel="stylesheet" href="../toast/toast.style.css">
+    <script type="text/javascript" src="../toast/toast.script.js"></script>
+</head>
+<body>
+<div>
+    <div style="display: flex; flex-direction: column; justify-content: flex-start; align-items: center;">
+        <p style="width: 50%;">主要用于从视频中提取出音频。上传的视频文件处理完成后，请下载处理后的音频和视频，然后使用人声和伴奏分离软件对音频进行处理，得到处理后的人声音频和伴奏音频，修改文件名字后上传至系统。</p>
+        <div style="margin: 10px 0;">
+            <input id="file-input" type="file" accept=".mp4" style="display: none;">
+            <span style="font-weight: bold;">视频预处理：</span><a href="#" id="file-upload" style="text-decoration: none;">上传视频文件</a>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: space-between; margin: 10px 0;">
+            <label style="width: 100px;">原视频文件：</label><input id="video-name" type="text" readonly disabled style="width: 300px;">
+            <a href="#" id="deal-video" style="text-decoration: none; width: 100px; margin-left: 16px;">开始处理</a>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: space-between; margin: 10px 0;">
+            <label style="width: 100px;">音频文件：</label><input id="mp3-name" type="text" readonly disabled style="width: 300px;">
+            <a href="#" style="text-decoration: none; width: 100px; margin-left: 16px;" target="_blank" id="audio-down">下载</a>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: space-between; margin: 10px 0;">
+            <label style="width: 100px;">视频文件：</label><input id="mp4-name" type="text" readonly disabled style="width: 300px;">
+            <a href="#" style="text-decoration: none; width: 100px; margin-left: 16px;" target="_blank" id="video-down">下载</a>
+        </div>
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: flex-start; align-items: center; margin-top: 3rem;">
+        <p style="width: 50%;">主要用于将其他视频格式转成 mp4 格式。</p>
+        <div style="margin: 10px 0;">
+            <input id="file-input-video" type="file" accept="video/*" style="display: none;">
+            <span style="font-weight: bold;">视频转mp4：</span><a href="#" id="file-upload-video" style="text-decoration: none;">上传视频文件</a>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: space-between; margin: 10px 0;">
+            <label style="width: 100px;">原视频文件：</label><input id="video-name-video" type="text" readonly disabled style="width: 300px;">
+            <a href="#" id="deal-video-video" style="text-decoration: none; width: 100px; margin-left: 16px;">开始处理</a>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: space-between; margin: 10px 0;">
+            <label style="width: 100px;">视频文件：</label><input id="mp4-name-video" type="text" readonly disabled style="width: 300px;">
+            <a href="#" style="text-decoration: none; width: 100px; margin-left: 16px;" target="_blank" id="audio-down-video">下载</a>
+        </div>
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: flex-start; align-items: center; margin-top: 3rem;">
+        <p style="width: 50%;">主要用于将其他音频格式转成 mp3 格式。如果分离人声和伴奏后的音频格式不是 mp3，需要进行格式转换。</p>
+        <div style="margin: 10px 0;">
+            <input id="file-input-audio" type="file" accept="audio/*" style="display: none;">
+            <span style="font-weight: bold;">音频转mp3：</span><a href="#" id="file-upload-audio" style="text-decoration: none;">上传音频文件</a>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: space-between; margin: 10px 0;">
+            <label style="width: 100px;">原音频文件：</label><input id="video-name-audio" type="text" readonly disabled style="width: 300px;">
+            <a href="#" id="deal-video-audio" style="text-decoration: none; width: 100px; margin-left: 16px;">开始处理</a>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: space-between; margin: 10px 0;">
+            <label style="width: 100px;">音频文件：</label><input id="mp3-name-audio" type="text" readonly disabled style="width: 300px;">
+            <a href="#" style="text-decoration: none; width: 100px; margin-left: 16px;" target="_blank" id="audio-down-audio">下载</a>
+        </div>
+    </div>
+</div>
+<div class="modal_cover"><div class="modal_gif"></div></div>
+</body>
+<script>
+    const server = localStorage.getItem("server");
+    document.getElementById("file-upload").addEventListener('click', () => {
+        let fileUpload_input = document.getElementById("file-input");
+        fileUpload_input.click();
+        fileUpload_input.onchange = function (event) {
+            let files = event.target.files;
+            let total_files = files.length;
+            if (total_files < 1) {
+                return;
+            }
+            show_modal_cover();
+            let success = 0;
+            let failure = 0;
+            for (let i=0; i<total_files; i++) {
+                let form_data = new FormData();
+                form_data.append("file", files[i]);
+                form_data.append("index", (i + 1).toString());
+
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", server + "/karaoke/upload/video");
+                xhr.setRequestHeader("processData", "false");
+                xhr.setRequestHeader("lang", localStorage.getItem('lang'));
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if(xhr.status === 200) {
+                            let res = JSON.parse(xhr.responseText);
+                            if (res.code === 0) {
+                                success += 1;
+                                document.getElementById("video-name").value = res.data;
+                            } else {
+                                failure += 1;
+                                $.Toast(res.msg, 'error');
+                            }
+                            if(success + failure === total_files) {close_modal_cover();}
+                        }
+                    }
+                    fileUpload_input.value = '';
+                }
+                xhr.send(form_data);
+            }
+        }
+    })
+    document.getElementById("file-upload-video").addEventListener('click', () => {
+        let fileUpload_input = document.getElementById("file-input-video");
+        fileUpload_input.click();
+        fileUpload_input.onchange = function (event) {
+            let files = event.target.files;
+            let total_files = files.length;
+            if (total_files < 1) {
+                return;
+            }
+            show_modal_cover();
+            for (let i=0; i<total_files; i++) {
+                let form_data = new FormData();
+                form_data.append("file", files[i]);
+                form_data.append("index", (i + 1).toString());
+
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", server + "/karaoke/upload/video");
+                xhr.setRequestHeader("processData", "false");
+                xhr.setRequestHeader("lang", localStorage.getItem('lang'));
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if(xhr.status === 200) {
+                            let res = JSON.parse(xhr.responseText);
+                            if (res.code === 0) {
+                                document.getElementById("video-name-video").value = res.data;
+                            } else {
+                                $.Toast(res.msg, 'error');
+                            }
+                        }
+                    }
+                    fileUpload_input.value = '';
+                    close_modal_cover();
+                }
+                xhr.send(form_data);
+            }
+        }
+    })
+    document.getElementById("file-upload-audio").addEventListener('click', () => {
+        let fileUpload_input = document.getElementById("file-input-audio");
+        fileUpload_input.click();
+        fileUpload_input.onchange = function (event) {
+            let files = event.target.files;
+            let total_files = files.length;
+            if (total_files < 1) {
+                return;
+            }
+            show_modal_cover();
+            for (let i=0; i<total_files; i++) {
+                let form_data = new FormData();
+                form_data.append("file", files[i]);
+                form_data.append("index", (i + 1).toString());
+
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", server + "/karaoke/upload/video");
+                xhr.setRequestHeader("processData", "false");
+                xhr.setRequestHeader("lang", localStorage.getItem('lang'));
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if(xhr.status === 200) {
+                            let res = JSON.parse(xhr.responseText);
+                            if (res.code === 0) {
+                                document.getElementById("video-name-audio").value = res.data;
+                            } else {
+                                $.Toast(res.msg, 'error');
+                            }
+                        }
+                    }
+                    fileUpload_input.value = '';
+                    close_modal_cover();
+                }
+                xhr.send(form_data);
+            }
+        }
+    })
+    document.getElementById("deal-video").addEventListener('click', () => {
+        let file_name = document.getElementById("video-name").value;
+        if (file_name === null || file_name === '' || file_name === undefined) {
+            $.Toast('请先上传视频文件 ~', 'error');
+            return;
+        }
+        show_modal_cover();
+        $.ajax({
+            type: "GET",
+            url: server + "/karaoke/deal/video/" + file_name,
+            success: function (data) {
+                if (data.code === 0) {
+                    document.getElementById("mp3-name").value = data['data']['mp3'];
+                    document.getElementById("mp4-name").value = data['data']['video'];
+                    document.getElementById("audio-down").href = server + "/karaoke/tmp/" + data['data']['mp3'];
+                    document.getElementById("video-down").href = server + "/karaoke/tmp/" + data['data']['video'];
+                } else {
+                    $.Toast(data.msg, 'error');
+                }
+                close_modal_cover();
+            }
+        })
+    })
+    document.getElementById("deal-video-audio").addEventListener('click', () => {
+        let file_name = document.getElementById("video-name-audio").value;
+        if (file_name === null || file_name === '' || file_name === undefined) {
+            $.Toast('请先上传音频频文件 ~', 'error');
+            return;
+        }
+        show_modal_cover();
+        $.ajax({
+            type: "GET",
+            url: server + "/karaoke/convert/audio/" + file_name,
+            success: function (data) {
+                if (data.code === 0) {
+                    document.getElementById("mp3-name-audio").value = data['data']['mp3'];
+                    document.getElementById("audio-down-audio").href = server + "/karaoke/tmp/" + data['data']['mp3'];
+                } else {
+                    $.Toast(data.msg, 'error');
+                }
+                close_modal_cover();
+            }
+        })
+    })
+    document.getElementById("deal-video-video").addEventListener('click', () => {
+        let file_name = document.getElementById("video-name-video").value;
+        if (file_name === null || file_name === '' || file_name === undefined) {
+            $.Toast('请先上传视频文件 ~', 'error');
+            return;
+        }
+        show_modal_cover();
+        $.ajax({
+            type: "GET",
+            url: server + "/karaoke/convert/video/" + file_name,
+            success: function (data) {
+                if (data.code === 0) {
+                    document.getElementById("mp4-name-video").value = data['data']['mp4'];
+                    document.getElementById("audio-down-video").href = server + "/karaoke/tmp/" + data['data']['mp4'];
+                } else {
+                    $.Toast(data.msg, 'error');
+                }
+                close_modal_cover();
+            }
+        })
+    })
+    function show_modal_cover() {
+        document.getElementsByClassName('modal_cover')[0].style.display = 'flex';
+        document.getElementsByClassName('modal_cover')[0].getElementsByClassName('modal_gif')[0].style.display = 'flex';
+    }
+
+    function close_modal_cover() {
+        document.getElementsByClassName('modal_cover')[0].style.display = 'none';
+        document.getElementsByClassName('modal_cover')[0].getElementsByClassName('modal_gif')[0].style.display = 'none';
+    }
+</script>
+</html>

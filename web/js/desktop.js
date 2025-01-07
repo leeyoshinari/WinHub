@@ -1,3 +1,4 @@
+// Some codes of this file are based on code from [https://github.com/tjy-gitnub/win12], which is licensed under the [EPL-2.0]. See [https://github.com/tjy-gitnub/win12] for details.
 const default_icon = 'img/files/none.svg';
 let icons = {};
 $.ajax({type: 'GET', url: 'icon.json', success: function (data){icons = data;}})
@@ -14,21 +15,11 @@ document.querySelectorAll(`list.focs`).forEach(li => {
     })
 });
 // 禁止拖拽图片
-$('img').on('dragstart', () => {
-    return false;
-});
+$('img').on('dragstart', () => {return false;});
 // 右键菜单
-$('html').on('contextmenu', () => {
-    return false;
-});
-function stop(e) {
-    e.stopPropagation();
-    return false;
-}
-$('input,textarea,*[contenteditable=true]').on('contextmenu', (e) => {
-    stop(e);
-    return true;
-});
+$('html').on('contextmenu', () => {return false;});
+function stop(e) {e.stopPropagation();return false;}
+$('input,textarea,*[contenteditable=true]').on('contextmenu', (e) => {stop(e);return true;});
 let nomax = { 'calc': 0 /* 其实，计算器是可以最大化的...*/};
 let nomin = {};
 let topmost = [];
@@ -73,25 +64,46 @@ let cms = {
         }
     ],
     'desktop': [
-        ['<i class="bi bi-arrow-clockwise"></i> '+i18next.t('refresh'), `$('#desktop').css('opacity','0');setTimeout(()=>{$('#desktop').css('opacity','1');},100);`],
-        ],
+        arg => { return ['<i class="bi bi-arrow-clockwise"></i> '+i18next.t('refresh'), `window.location.reload();`];}
+    ],
     'desktop.icon': [
         function (arg) {
-            return ['<i class="bi bi-folder2-open"></i> 打开', 'openapp(`' + arg[0] + '`)']
+            return ['<i class="bi bi-folder2-open"></i> '+i18next.t('desktop.menu.open'), 'openapp(`' + arg[0] + '`)']
+        }
+    ],
+    'desktop.file': [
+        arg => {
+            return ['<i class="bi bi-folder2-open"></i> '+i18next.t('desktop.menu.open'), 'apps.explorer.open_file(`' + arg[1] + '`, `' + arg[2] + '`)']
+        },
+        arg => {
+            return ['<i class="bi bi-escape"></i> '+i18next.t('explore.window.file.tool.shortcuts.origin.path'), 'apps.explorer.open_origin_path(`' + arg[1] + '`)']
+        },
+        arg => {
+            return ['<i class="bi bi-trash3"></i> '+i18next.t('explore.window.file.tool.shortcuts.delete'), 'apps.explorer.delete_shortcuts(`' + arg[0] + '`)']
         }
     ],
     'explorer.folder': [
         arg => {
-            return ['<i class="bi bi-arrow-up-right-square"></i> '+i18next.t('tab.open'), `apps.explorer.newtab('${arg}');`];
+            return ['<i class="bi bi-arrow-up-right-square"></i> '+i18next.t('tab.open'), `apps.explorer.newtab('${arg[0]}', '${arg[1]}');`];
         },
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-trash3"></i> '+i18next.t('setting.window.shell.server.list.action.delete'), `apps.explorer.del('${arg}')`];
+                return ['<i class="bi bi-trash3"></i> '+i18next.t('setting.window.shell.server.list.action.delete'), `apps.explorer.del('${arg[1]}')`];
             return 'null';
         },
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
-                return ['<i class="bi bi-input-cursor-text"></i> '+i18next.t('explore.window.file.tool.rename.title'), `apps.explorer.rename('${arg}')`];
+                return ['<i class="bi bi-input-cursor-text"></i> '+i18next.t('explore.window.file.tool.rename.title'), `apps.explorer.rename('${arg[1]}')`];
+            return 'null';
+        },
+        arg => {
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
+                return ['<i class="bi bi-arrow-repeat"></i> '+i18next.t('explore.window.file.tool.backup.title'), `apps.explorer.syncing('${arg[1]}', 1)`];
+            return 'null';
+        },
+        arg => {
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
+                return ['<i class="bi bi-x-circle-fill"></i> '+i18next.t('explore.window.file.tool.cancel.backup.title'), `apps.explorer.syncing('${arg[1]}', 0)`];
             return 'null';
         }
     ],
@@ -104,6 +116,11 @@ let cms = {
         arg => {
             if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
                 return ['<i class="bi bi-input-cursor-text"></i> '+i18next.t('explore.window.file.tool.rename.title'), `apps.explorer.rename('${arg}')`];
+            return 'null';
+        },
+        arg => {
+            if ($('#win-explorer>.path>.tit>.path>div.text').length > 1)
+                return ['<i class="bi bi-house-door-fill"></i> '+i18next.t('explore.window.file.tool.shortcuts.add'), `apps.explorer.add_shortcuts('${arg}')`];
             return 'null';
         }
     ],
@@ -129,6 +146,16 @@ let cms = {
             return ['<i class="bi bi-x"></i> '+i18next.t('tab.close'), `m_tab.close('explorer',${arg})`];
         }
     ],
+    'search.folder': [
+        arg => {
+            return ['<i class="bi bi-arrow-up-right-square"></i> '+i18next.t('tab.open'), `apps.explorer.newtab('${arg[0]}', '${arg[1]}');`];
+        }
+    ],
+    'search.file': [
+        arg => {
+            return ['<i class="bi bi-escape"></i> '+i18next.t('explore.window.file.tool.shortcuts.origin.path'), 'apps.explorer.open_search_origin_path(`' + arg + '`)']
+        }
+    ],
     'edge.tab': [
         arg => {
             return ['<i class="bi bi-pencil-square"></i> '+i18next.t('tab.rename'), `apps.edge.c_rename(${arg})`];
@@ -141,7 +168,6 @@ let cms = {
 window.onkeydown = function (event) {
     if (event.keyCode === 116/*F5被按下(刷新)*/) {
         event.preventDefault();/*取消默认刷新行为*/
-        $('#desktop').css('opacity', '0'); setTimeout(() => { $('#desktop').css('opacity', '1'); }, 10);
     }
 }
 
@@ -287,11 +313,6 @@ function hidedp(force = false) {
     }, 100);
 }
 
-// 悬停提示
-document.querySelectorAll('*[win12_title]:not(.notip)').forEach(a => {
-    a.addEventListener('mouseenter', showdescp);
-    a.addEventListener('mouseleave', hidedescp);
-})
 function showdescp(e) {
     $(e.target).attr('data-descp', 'waiting');
     setTimeout(() => {
@@ -339,6 +360,11 @@ let nts = {
         btn: [{ type: 'main', text: 'submit', js: 'apps.explorer.download_online();' },
             { type: 'detail', text: 'cancel', js: 'closenotice();' }]
     },
+    'selectedFiles': {
+        cnt: `<p class="tit"></p><div id="selected-file"></div>`,
+        btn: [{ type: 'main', text: 'submit', js: 'apps.explorer.download_selected();' },
+            { type: 'detail', text: 'cancel', js: 'closenotice();' }]
+    },
     'uploadResult': {
         cnt: `<p class="tit"></p><list class="upload-result"></list>`,
         btn: [{ type: 'main', text: 'submit', js: 'closenotice();' }]}
@@ -358,6 +384,13 @@ function shownotice(name) {
     }
     if (name === 'uploadResult') {
         $('#notice>.cnt>p')[0].innerText = i18next.t('terminal.page.upload.result.tips');
+    }
+    if (name === 'downloader') {
+        $('#notice')[0].style.top = '30%';
+        $('#notice>.cnt>p')[0].innerText = i18next.t('explore.window.file.tool.downloader.window.title1');
+        $('#notice>.cnt>input')[0].placeholder = i18next.t('explore.window.file.tool.downloader.window.placeholder1');
+        $('#notice>.cnt>p')[1].innerText = i18next.t('explore.window.file.tool.downloader.window.title2');
+        $('#notice>.cnt>input')[1].placeholder = i18next.t('explore.window.file.tool.downloader.window.placeholder2');
     }
     setTimeout(() => {
         $('#notice-back').addClass('show');
@@ -382,7 +415,7 @@ let apps = {
                 css_link.setAttribute('href', 'css/setting.css');
                 $('.window.setting')[0].appendChild(css_link);
             }
-            $('#win-setting>.menu>list>a.user')[0].click();
+            $('#win-setting>.menu>list>a.system')[0].click();
         },
         page: (name) => {
             $('#win-setting>.page>.cnt.' + name).scrollTop(0);
@@ -391,6 +424,7 @@ let apps = {
             $('#win-setting>.menu>list>a.check').removeClass('check');
             $('#win-setting>.menu>list>a.' + name).addClass('check');
             if (name === 'user') {
+                $('#win-setting>.page>.cnt.user>div>a>img')[0].src = 'img/pictures/' + document.cookie.split('u=')[1].split(';')[0] +'/avatar.jpg';
                 $('#win-setting>.page>.cnt.user>div>a>div>p')[0].innerText = nickName;
                 $('#win-setting>.page>.cnt.user>div>a>div>p')[1].innerText = document.cookie.split('u=')[1].split(';')[0];
             }
@@ -538,24 +572,29 @@ let apps = {
             apps.explorer.checkHistory(apps.explorer.tabs[c][0]);
         },
         reset: (clear = true) => {
-            $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = `<p class="class"><img src="img/explorer/disk.svg" alt=""> ${i18next.t('explore.window.file.disk.title')} </p><div class="group"></div>`;
+            $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
+            $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = `<p class="class"><img src="img/explorer/disk.svg" alt="disk.svg" loading="lazy"> ${i18next.t('explore.window.file.disk.title')} </p><div class="group"></div>`;
             $('#win-explorer>.page>.menu>.card>list>a')[0].className ='check';
             $('#win-explorer>.page>.menu>.card>list>a')[0].querySelector('span').style.display='flex';
             $('#win-explorer>.page>.menu>.card>list>a')[1].className = '';
             $('#win-explorer>.page>.menu>.card>list>a')[1].querySelector('span').style.display='none';
             $('#win-explorer>.page>.menu>.card>list>a')[2].className = '';
             $('#win-explorer>.page>.menu>.card>list>a')[2].querySelector('span').style.display='none';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].className = '';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].querySelector('span').style.display='none';
             $('#win-explorer>.page>.main')[0].style.display = 'flex';
             $('#win-explorer>.page>.main-share')[0].style.display = 'none';
             $('#win-explorer>.page>.main-download')[0].style.display = 'none';
             $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'none';
-            $('#win-explorer>.path>.search')[0].style.display = 'flex';
+            $('#win-explorer>.path>.search')[0].style.display = 'none';
             $('#win-explorer>.path>.search>input')[0].value = '';
             $('#win-explorer>.path>.back')[0].classList.remove('disabled');
+            $('#win-explorer>.path>.goback')[0].classList.remove('disabled');
             $('#win-explorer>.path>.back').attr('onclick', 'apps.explorer.reset()');
+            $('#win-explorer>.path>.goback').attr('onclick', 'apps.explorer.reset()');
             $('#win-explorer>.path>.tit')[0].id = '';
             $('#win-explorer>.path>.tit')[0].innerHTML = '<div class="icon" style="background-image: url(\'img/explorer/thispc.svg\')"></div><div class="path"><div class="text" onclick="apps.explorer.reset()">' + i18next.t('computer') +'</div><div class="arrow">&gt;</div></div>';
-            m_tab.rename('explorer', '<img src="img/explorer/thispc.svg" alt=""> ' + i18next.t('computer'));
+            m_tab.rename('explorer', '<img src="img/explorer/thispc.svg" alt="thispc.svg" loading="lazy"> ' + i18next.t('computer'));
             apps.explorer.tabs[apps.explorer.now][2] = '';
             apps.explorer.tabs[apps.explorer.now][3] = '';
             document.getElementById("all_files").checked = false;
@@ -564,16 +603,24 @@ let apps = {
                 apps.explorer.delHistory(apps.explorer.tabs[apps.explorer.now][0]);
                 apps.explorer.pushHistory(apps.explorer.tabs[apps.explorer.now][0], i18next.t('computer'));
             }
-            let disk_group = '<a class="a item act" ondblclick="" oncontextmenu=""><img src="img/explorer/diskwin.svg" alt=""><div><p class="name">' + i18next.t('explore.window.file.disk.name') + ' (C:)</p><div class="bar"><div class="content" style="width: 1%;"></div></div><p class="info">520 MB' + i18next.t('explore.window.file.disk.size') + '521 MB</p></div></a>';
+            let disk_group = '<a class="a item act" ondblclick="" oncontextmenu=""><img src="img/explorer/diskwin.svg" alt="diskwin.svg" loading="lazy"><div><p class="name">' + i18next.t('explore.window.file.disk.name') + ' (C:)</p><div class="bar"><div class="content" style="width: 1%;"></div></div><p class="info">520 MB' + i18next.t('explore.window.file.disk.size') + '521 MB</p></div></a>';
             $.get(server + '/folder/getDisk').then(res => {
                 res.data.forEach(c => {
-                    disk_group = disk_group + '<a class="a item act" ondblclick="apps.explorer.goto(\'' + c['disk'] + ':\'' + ',\'' + c['disk'] + '\')" ontouchend="apps.explorer.goto(\'' + c['disk'] + ':\'' + ',\'' + c['disk'] + '\')" oncontextmenu="showcm(event,\'explorer.folder\',\'' + c['disk'] + ':\');return stop(event);"><img src="img/explorer/disk.svg"><div><p class="name">' + i18next.t('explore.window.file.disk.name') + ' (' + c['disk'] + ':)</p><div class="bar"><div class="content" style="width: ' + c['used'] + '%;"></div></div><p class="info">' + c['free'] + i18next.t('explore.window.file.disk.size') + c['total'] + '</p></div></a>';
+                    disk_group = disk_group + '<a class="a item act" ondblclick="apps.explorer.goto(\'' + c['disk'] + ':\'' + ',\'' + c['disk'] + '\')" ontouchend="apps.explorer.goto(\'' + c['disk'] + ':\'' + ',\'' + c['disk'] + '\')"><img src="img/explorer/disk.svg" alt="disk.svg" loading="lazy"><div><p class="name">' + i18next.t('explore.window.file.disk.name') + ' (' + c['disk'] + ':)</p><div class="bar"><div class="content" style="width: ' + c['used'] + '%;"></div></div><p class="info">' + c['free'] + i18next.t('explore.window.file.disk.size') + c['total'] + '</p></div></a>';
                 });
                 document.getElementsByClassName('group')[0].innerHTML = disk_group;
                 if (localStorage.getItem('transparent') === '1') {
                     $('#win-explorer>.page>.main>.content>.view>.group>.item').addClass('transparent');
                 } else {
                     $('#win-explorer>.page>.main>.content>.view>.group>.item').removeClass('transparent');
+                }
+                if (res.data[0]['enableOnlyoffice'] === '1') {
+                    $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[2].style.display = 'none';
+                    $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[4].style.display = 'none';
+                } else {
+                    $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[3].style.display = 'none';
+                    $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[5].style.display = 'none';
+                    $('#win-explorer>.page>.main>.tool>.dropdown-container>.dropdown-list>li')[6].style.display = 'none';
                 }
             });
         },
@@ -587,10 +634,13 @@ let apps = {
             $('#win-explorer>.page>.menu>.card>list>a')[1].querySelector('span').style.display='flex';
             $('#win-explorer>.page>.menu>.card>list>a')[2].className ='';
             $('#win-explorer>.page>.menu>.card>list>a')[2].querySelector('span').style.display='none';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].className ='';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].querySelector('span').style.display='none';
             $('#win-explorer>.path>.search')[0].style.display = 'none';
             $('#win-explorer>.path>.search>input')[0].value = '';
             $('#win-explorer>.path>.back')[0].classList.add('disabled');
-            m_tab.rename('explorer', '<img src="img/explorer/rb.png" alt=""> '+i18next.t('explore.window.menu.garbage.title'));
+            $('#win-explorer>.path>.goback')[0].classList.add('disabled');
+            m_tab.rename('explorer', '<img src="img/explorer/rb.png" alt="rb.png" loading="lazy"> '+i18next.t('explore.window.menu.garbage.title'));
             document.getElementById("all_files").checked = false;
             let sort_field = 'update_time';
             let sort_type = 'desc';
@@ -614,15 +664,16 @@ let apps = {
             } else {
                 let ht = '';
                 $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
+                $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                 for(let i=0; i<tmp.length; i++) {
                     if(tmp[i]['folder_type'] === 'folder') {
                         ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${tmp[i]['name']}', '${tmp[i]['id']}')">
-                            <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
+                            <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                             <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
                     } else {
                         let f_src = icons[tmp[i]['format']] || default_icon;
                         ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')">
-                            <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
+                            <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="file" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
                             <span style="width: 10%;">${tmp[i]['size']}</span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
                     }
                 }
@@ -647,8 +698,10 @@ let apps = {
             }
         },
         share_list: () => {
-            $('#win-explorer>.page>.menu>.card>list>a')[2].className ='check';
-            $('#win-explorer>.page>.menu>.card>list>a')[2].querySelector('span').style.display='flex';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].className ='check';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].querySelector('span').style.display='flex';
+            $('#win-explorer>.page>.menu>.card>list>a')[2].className = '';
+            $('#win-explorer>.page>.menu>.card>list>a')[2].querySelector('span').style.display='none';
             $('#win-explorer>.page>.menu>.card>list>a')[1].className = '';
             $('#win-explorer>.page>.menu>.card>list>a')[1].querySelector('span').style.display='none';
             $('#win-explorer>.page>.menu>.card>list>a')[0].className = '';
@@ -659,6 +712,7 @@ let apps = {
             $('#win-explorer>.page>.main-download')[0].style.display = 'none';
             $('#win-explorer>.page>.main-share')[0].style.display = 'flex';
             $('#win-explorer>.path>.back')[0].classList.add('disabled');
+            $('#win-explorer>.path>.goback')[0].classList.add('disabled');
             m_tab.rename('explorer', '<img src="img/explorer/share.svg" alt="share.svg" loading="lazy"> '+i18next.t('explore.window.menu.share.title'));
             $.ajax({
                 type: 'GET',
@@ -674,7 +728,7 @@ let apps = {
                             data['data'].forEach(item => {
                                 let f_src = icons[item['format']] || default_icon;
                                 ht += `<div class="row" style="padding-left: 5px;"><div class="a item act file" style="cursor: auto;">
-                            <span style="width: 38%;" onclick="apps.explorer.open_share('${item['id']}','${item['format']}');"><img style="float: left;" src="${f_src}" alt="">${item['name']}</span>
+                            <span style="width: 38%;" onclick="apps.explorer.open_share('${item['id']}','${item['format']}');"><img style="float: left;" src="${f_src}" alt="file" loading="lazy">${item['name']}</span>
                             <span style="width: 12%;">${item['times']}</span><span style="width: 10%;">${item['total_times']}</span><span style="width: 20%;">${item['create_time']}</span>
                             <span style="width: 20%;"><a style="cursor: pointer; color: blue;" onclick="delete_file([${item['id']}], 'folder', 0, 3);">${i18next.t('setting.window.shell.server.list.action.delete')}</a><a style="margin-left: 10px; cursor: pointer; color: blue;" onclick="apps.explorer.open_share('${item['id']}','${item['format']}',false);">${i18next.t('explore.window.file.share.list.view.link')}</a></span></div></div>`;
                             })
@@ -691,6 +745,15 @@ let apps = {
             switch (share_format) {
                 case 'md':
                     share_url = '/' + window.location.href.split('/')[3] + '/module/md.html?server=' + server + '&id=' + share_id;
+                    break;
+                case 'xmind':
+                    share_url = '/' + window.location.href.split('/')[3] + '/module/xmind.html?server=' + server + '&id=' + share_id;
+                    break;
+                case 'sheet':
+                    share_url = '/' + window.location.href.split('/')[3] + '/module/sheet.html?server=' + server + '&id=' + share_id + '&lang=' + lang;
+                    break;
+                case 'docu':
+                    share_url = '/' + window.location.href.split('/')[3] + '/module/document.html?server=' + server + '&id=' + share_id + '&lang=' + lang;
                     break;
                 case 'py':
                     share_url = '/' + window.location.href.split('/')[3] + '/module/python.html?server=' + server + '&id=' + share_id;
@@ -712,6 +775,58 @@ let apps = {
                 alert(url_t);
             }
         },
+        download_list: () => {
+            $('#win-explorer>.page>.menu>.card>list>a')[2].className ='check';
+            $('#win-explorer>.page>.menu>.card>list>a')[2].querySelector('span').style.display='flex';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].className = '';
+            $('#win-explorer>.page>.menu>.card>list>a')[3].querySelector('span').style.display='none';
+            $('#win-explorer>.page>.menu>.card>list>a')[1].className = '';
+            $('#win-explorer>.page>.menu>.card>list>a')[1].querySelector('span').style.display='none';
+            $('#win-explorer>.page>.menu>.card>list>a')[0].className = '';
+            $('#win-explorer>.page>.menu>.card>list>a')[0].querySelector('span').style.display='none';
+            $('#win-explorer>.path>.search')[0].style.display = 'none';
+            $('#win-explorer>.path>.search>input')[0].value = '';
+            $('#win-explorer>.page>.main')[0].style.display = 'none';
+            $('#win-explorer>.page>.main-share')[0].style.display = 'none';
+            $('#win-explorer>.page>.main-download')[0].style.display = 'flex';
+            $('#win-explorer>.path>.back')[0].classList.add('disabled');
+            $('#win-explorer>.path>.goback')[0].classList.add('disabled');
+            m_tab.rename('explorer', '<img src="img/explorer/download.svg" alt="share.svg" loading="lazy"> '+i18next.t('explore.window.menu.download.title'));
+            $.ajax({
+                type: 'GET',
+                url: server + '/download/list',
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        if (data['data'].length === 0) {
+                            $('#win-explorer>.page>.main-download>.content>.header')[0].style.display = 'none';
+                            $('#win-explorer>.page>.main-download>.content>.view')[0].innerHTML = '<p class="info">'+i18next.t('explore.window.file.list.empty.tips')+'</p>';
+                        } else {
+                            $('#win-explorer>.page>.main-download>.content>.header')[0].style.display = 'flex';
+                            let ht = '';
+                            data['data'].forEach(item => {
+                                ht += `<div class="row" style="padding-left: 5px;"><div class="a item act file" style="cursor: auto;">
+                            <span style="width: 33%;" onclick="">${item['name']}</span><span style="width: 10%;">${item['total_size']}</span>
+                            <span style="width: 10%;">${item['progress']}%</span><span style="width: 10%;">${item['status']}</span><span style="width: 10%;">${item['download_speed']}</span>
+                            <span style="width: 10%;">${item['eta']}</span>`;
+                                if (item['status'] === 'active') {
+                                    ht += `<span style="width: 15%;"><a style="cursor: pointer; color: blue;" onclick="update_download_status('${item['gid']}', 'pause');">${i18next.t('explore.window.file.download.list.action.pause')}</a>`;
+                                    // ht += `<a style="cursor: pointer; color: blue; margin-left: 10px;" onclick="update_download_status('${item['gid']}', 'cancel');">${i18next.t('explore.window.file.download.list.action.cancel')}</a>`;
+                                } else if (item['status'] === 'paused') {
+                                    ht += `<span style="width: 15%;"><a style="cursor: pointer; color: blue;" onclick="update_download_status('${item['gid']}', 'continue');">${i18next.t('explore.window.file.download.list.action.unpause')}</a>`;
+                                    ht += `<a style="cursor: pointer; color: blue; margin-left: 10px;" onclick="update_download_status('${item['gid']}', 'cancel');">${i18next.t('explore.window.file.download.list.action.cancel')}</a>`;
+                                } else {
+                                    ht += `<span style="width: 15%;"><a style="cursor: pointer; color: blue;" onclick="update_download_status('${item['gid']}', 'remove');">${i18next.t('explore.window.file.download.list.action.remove')}</a>`;
+                                }
+                                ht += `</span></div></div>`;
+                            })
+                            $('#win-explorer>.page>.main-download>.content>.view')[0].innerHTML = ht;
+                        }
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                }
+            })
+        },
         open_file: (file_id,filename) => {
             let filenames = filename.split('.');
             let format = filenames[filenames.length - 1].toLowerCase();
@@ -725,6 +840,9 @@ let apps = {
                 case 'mp4':
                     apps.explorer.open_video(file_id, filename);
                     break;
+                case 'mp3':
+                    open_music(file_id);
+                    break;
                 case 'jpg':
                 case 'jpeg':
                 case 'png':
@@ -732,8 +850,32 @@ let apps = {
                 case 'gif':
                     apps.explorer.open_picture(file_id, filename);
                     break
+                case 'xmind':
+                    open_xmind(file_id);
+                    break;
+                case 'sheet':
+                    open_sheet(file_id);
+                    break;
+                case 'docu':
+                    open_document(file_id, filename);
+                    break;
                 case 'py':
                     open_python(file_id);
+                    break;
+                case 'docx':
+                case 'doc':
+                    open_office(file_id, 'word');
+                    break;
+                case 'xlsx':
+                case 'xls':
+                    open_office(file_id, 'excel');
+                    break;
+                case 'pptx':
+                case 'ppt':
+                    open_office(file_id, 'powerpoint');
+                    break;
+                case 'torrent':
+                    open_torrent(file_id);
                     break;
                 default:
                     apps.explorer.download(file_id);
@@ -768,6 +910,8 @@ let apps = {
                     sort_type = item.className;
                 }
             })
+            $('#win-explorer>.path>.search')[0].style.display = 'flex';
+            $('#win-explorer>.path>.search>input')[0].value = '';
             document.querySelector('#win-explorer>.page>.main>.tool').style.display = 'flex';
             document.querySelectorAll('#win-explorer>.page>.main>.tool>.asd').forEach(item => {
                 item.style.display='flex';
@@ -776,15 +920,15 @@ let apps = {
                 item.style.display='none';
             })
             if (path_id === 'C') {
-                m_tab.rename('explorer', '<img src="img/explorer/diskwin.svg" style="margin-top:2.5px" alt="">' + pathl[pathl.length - 1]);
+                m_tab.rename('explorer', '<img src="img/explorer/diskwin.svg" style="margin-top:2.5px" alt="diskwin.svg" loading="lazy">' + pathl[pathl.length - 1]);
                 return;
             }
             else if (pathlid[pathlid.length - 1].length === 1) {
-                m_tab.rename('explorer', '<img src="img/explorer/disk.svg" alt="">' + pathl[pathl.length - 1]);
+                m_tab.rename('explorer', '<img src="img/explorer/disk.svg" alt="disk.svg" loading="lazy">' + pathl[pathl.length - 1]);
                 tmp = queryAllFiles(pathlid[pathlid.length - 1], "", sort_field, sort_type);
             }
             else {
-                m_tab.rename('explorer', '<img src="img/explorer/folder.svg" alt="">' + pathl[pathl.length - 1]);
+                m_tab.rename('explorer', '<img src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">' + pathl[pathl.length - 1]);
                 tmp = queryAllFiles(pathlid[pathlid.length - 1], "", sort_field, sort_type);
             }
             apps.explorer.tabs[apps.explorer.now][2] = path;
@@ -801,21 +945,44 @@ let apps = {
                 $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = '<p class="info">'+i18next.t('explore.window.file.list.empty.tips')+'</p>';
             } else {
                 let ht = '';
-                $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
-                for(let i=0; i<tmp.length; i++) {
-                    if(tmp[i]['folder_type'] === 'folder') {
-                        ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')" oncontextmenu="showcm(event,'explorer.folder','${path_id}/${tmp[i]['id']}');return stop(event);">
-                            <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
-                            <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
-                    } else {
-                        let f_src = icons[tmp[i]['format']] || default_icon;
-                        ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'explorer.file','${path_id}/${tmp[i]['id']}','${tmp[i]['format']}');return stop(event);">
-                            <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
-                            <span style="width: 10%;">${tmp[i]['size']}</span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
+                if ($('.list_view>img')[0].src.indexOf("list_view.svg") > 0) {
+                    $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'none';
+                    $('#win-explorer>.page>.main>.content>.view').addClass("icon-view");
+                    for (let i = 0; i < tmp.length; i++) {
+                        if (tmp[i]['folder_type'] === 'folder') {
+                            ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a touchs files" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')"><img src="img/explorer/folder.svg" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
+                        } else {
+                            let f_src = icons[tmp[i]['format']] || default_icon;
+                            switch (tmp[i]['format']) {
+                                case 'jpg':
+                                case 'jpeg':
+                                case 'png':
+                                case 'bmp':
+                                case 'gif':
+                                    f_src = server + "/file/download/" + tmp[i]['id'];
+                                    break;
+                            }
+                            ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a touchs act file" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')"><img src="${f_src}" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
+                        }
+                    }
+                } else {
+                    $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
+                    $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
+                    for (let i = 0; i < tmp.length; i++) {
+                        if (tmp[i]['folder_type'] === 'folder') {
+                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item touchs files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')" oncontextmenu="showcm(event,'explorer.folder',['${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}']);return stop(event);">
+                                <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
+                                <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
+                        } else {
+                            let f_src = icons[tmp[i]['format']] || default_icon;
+                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act touchs file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'explorer.file','${path_id}/${tmp[i]['id']}');return stop(event);">
+                                <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="file" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
+                                <span style="width: 10%;">${tmp[i]['size']}</span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
+                        }
                     }
                 }
                 $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = ht;
-                document.querySelectorAll('.a.item').forEach(item => {
+                document.querySelectorAll('.a.touchs').forEach(item => {
                     item.addEventListener('touchstart', function (e) {
                         startClientX = e.touches[0].clientX;
                         startClientY = e.touches[0].clientY;
@@ -872,20 +1039,84 @@ let apps = {
         rename: (path) => {
             let pathl = path.split('/');
             let name = pathl[pathl.length - 1];
-            let element = document.querySelector('#f' + name).querySelectorAll('span')[0];
-            let old_name = element.innerText;
-            element.innerHTML = element.querySelector("img").outerHTML;
-            let input = document.createElement("input");
-            input.id = "new_name";
-            input.className = "input";
-            input.value = old_name;
-            input.style.width = element.clientWidth - 35 + 'px';
-            element.appendChild(input);
-            element.appendChild(add_button_to_input(name, old_name));
-            setTimeout(() => { $("#new_name").focus(); $("#new_name").select(); }, 200);
-            element.classList.add("change");
-            let input_ = document.getElementById("new_name");
-            input_.addEventListener("keyup", function (event) {if (event.key === "Enter") {rename_file_and_folder(name, old_name);}});
+            if ($('.list_view>img')[0].src.indexOf("list_view.svg") > 0) {
+                let element = document.querySelector('#f' + name).querySelectorAll('div')[0];
+                let old_name = element.innerText;
+                element.innerHTML = '';
+                let input = document.createElement("input");
+                input.id = "new_name";
+                input.className = "input";
+                input.value = old_name;
+                input.style.width = '100%';
+                element.appendChild(input);
+                setTimeout(() => {$("#new_name").focus(); $("#new_name").select();}, 200);
+                element.classList.add("change");
+                let input_ = document.getElementById("new_name");
+                input_.addEventListener("keyup", function (event) {if (event.key === "Enter") {rename_file_and_folder(name, old_name);}});
+            } else {
+                let element = document.querySelector('#f' + name).querySelectorAll('span')[0];
+                let old_name = element.innerText;
+                element.innerHTML = element.querySelector("img").outerHTML;
+                let input = document.createElement("input");
+                input.id = "new_name";
+                input.className = "input";
+                input.value = old_name;
+                input.style.width = element.clientWidth - 35 + 'px';
+                element.appendChild(input);
+                element.appendChild(add_button_to_input(name, old_name));
+                setTimeout(() => {$("#new_name").focus(); $("#new_name").select();}, 200);
+                element.classList.add("change");
+                let input_ = document.getElementById("new_name");
+                input_.addEventListener("keyup", function (event) {if (event.key === "Enter") {rename_file_and_folder(name, old_name);}});
+            }
+        },
+        syncing: (path, is_backup) => {
+            let pathl = path.split('/');
+            let name = pathl[pathl.length - 1];
+            $.ajax({
+                type: 'GET',
+                url: server + '/syncing/set/' + name + '/' + is_backup,
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        $.Toast(data['msg'], 'success');
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                }
+            })
+        },
+        manual_backup: () => {
+            if ($('.dp.app-color.backup')[0].classList.contains('show')) {
+                $('.dp.app-color.backup').toggleClass('show');
+                return;
+            }
+            $.ajax({
+                type: 'GET',
+                url: server + '/syncing/start',
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        $.Toast(data['msg'], 'success');
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                }
+            })
+            $.ajax({
+                type: 'GET',
+                url: server + '/syncing/list',
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        let s = '';
+                        data['data'].forEach(item => {
+                            s += `<div><div style="width: 20%;">${item['name']}</div><div style="width: 20%;">${item['create_time']}</div><div style="width: 20%;">${item['update_time']}</div><div style="width: 30%;"><a href="javascript:void(0);" onclick="apps.explorer.open_origin_path_folder(${item['id']});return false;" style="color:blue;">${i18next.t('setting.window.shell.server.list.action.open')}</a><a href="javascript:void(0);" onclick="apps.explorer.syncing('${item['id']}', 0);return false;" style="color:blue;margin-left:15px;">${i18next.t('explore.window.file.tool.cancel.backup.title')}</a></div></div><br />`;
+                        })
+                        $('.server-item.backup')[0].innerHTML = s;
+                        $('.dp.app-color.backup').toggleClass('show');
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                }
+            })
         },
         copy: (file_id) => {
             show_modal_cover();
@@ -978,9 +1209,159 @@ let apps = {
                 data: JSON.stringify(post_data),
                 contentType: 'application/json',
                 success: function (data) {
+                    closenotice();
+                    close_modal_cover();
+                    if (data['code'] === 0) {
+                        if (data['data'] && data['total'] > 0) {
+                            shownotice("selectedFiles");
+                            let ht = "";
+                            data['data'].forEach(item => {
+                                ht += `<div style="margin: 8px 0 8px 0;display: flex;flex-direction: row;justify-content: space-between;flex-wrap: nowrap;"><div style="width:80%;"><input name="options" type="radio" value="${item['gid']},${item['index']},${item['folder']}" id="${item['index']}"><span style="margin-left:5px;">${item['name']}</span></div><span>${item['size']}</span></div>`;
+                            })
+                            $('#notice>.cnt>p')[0].innerText = i18next.t('explore.window.file.tool.downloader.window.selected');
+                            document.getElementById("selected-file").innerHTML = ht;
+                            $('#notice>.btns>.detail').attr("onclick", `update_download_status('${data['data'][0]['gid']}', 'cancel,remove', false);closenotice();`);
+                        } else {
+                            $.Toast(data['msg'], 'success');
+                        }
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                }
+            })
+        },
+        download_selected: () => {
+            show_modal_cover(true, false);
+            let selectedRadio = document.querySelector('input[name="options"]:checked');
+            let files = selectedRadio.value.split(',');
+            let post_data = {
+                gid: files[0],
+                folder: files[2],
+                index: files[1]
+            }
+            $.ajax({
+                type: 'POST',
+                url: server + '/download/selected',
+                data: JSON.stringify(post_data),
+                contentType: 'application/json',
+                success: function (data) {
                     if (data['code'] === 0) {
                         $.Toast(data['msg'], 'success');
                         closenotice();
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                    close_modal_cover();
+                }
+            })
+        },
+        get_shortcuts: () => {
+            $.ajax({
+                type: 'GET',
+                url: server + '/file/shortcuts',
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        let desktop = document.getElementById("desktop");
+                        data.data.forEach(item => {
+                            let parent_div = document.createElement('div');
+                            parent_div.className = 'b';
+                            parent_div.setAttribute('ondblclick', `apps.explorer.open_file('${item.file_id}', '${item.name}');`);
+                            parent_div.setAttribute('ontouchstart', `apps.explorer.open_file('${item.file_id}', '${item.name}');`);
+                            parent_div.setAttribute('win12_title', item.name);
+                            parent_div.setAttribute('oncontextmenu', `return showcm(event,'desktop.file',['${item.id}','${item.file_id}','${item.name}']);`);
+                            parent_div.setAttribute('appname', item.name);
+                            parent_div.setAttribute('data-descp', 'hide');
+                            let file_src = icons[item.format] || default_icon;
+                            parent_div.innerHTML = `<img src="${file_src}" alt="dfault" loading="lazy"><p>${item.name}</p>`;
+                            desktop.appendChild(parent_div);
+                        })
+                        document.querySelectorAll('*[win12_title]:not(.notip)').forEach(a => {
+                            a.addEventListener('mouseenter', showdescp);
+                            a.addEventListener('mouseleave', hidedescp);
+                        })
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                        document.querySelectorAll('*[win12_title]:not(.notip)').forEach(a => {
+                            a.addEventListener('mouseenter', showdescp);
+                            a.addEventListener('mouseleave', hidedescp);
+                        })
+                    }
+                    close_modal_cover();
+                }
+            })
+        },
+        add_shortcuts: (files) => {
+            let pathl = files.split('/');
+            show_modal_cover(true, false);
+            $.ajax({
+                type: 'GET',
+                url: server + '/file/shortcuts/save/' + pathl[pathl.length - 1],
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        $.Toast(data['msg'], 'success');
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                    close_modal_cover();
+                }
+            })
+        },
+        delete_shortcuts: (file_id) => {
+            show_modal_cover(true, false);
+            $.ajax({
+                type: 'GET',
+                url: server + '/file/shortcuts/delete/' + file_id,
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        $.Toast(data['msg'], 'success');
+                        window.location.reload();
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                    close_modal_cover();
+                }
+            })
+        },
+        open_search_origin_path: (file_id) => {
+            show_modal_cover(true, false);
+            $.ajax({
+                type: 'GET',
+                url: server + '/file/path/' + file_id,
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        apps.explorer.goto(data.data.name,data.data.id);
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                    close_modal_cover();
+                }
+            })
+        },
+        open_origin_path: (file_id) => {
+            show_modal_cover(true, false);
+            $.ajax({
+                type: 'GET',
+                url: server + '/file/path/' + file_id,
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        openapp('explorer');
+                        apps.explorer.goto(data.data.name,data.data.id);
+                    } else {
+                        $.Toast(data['msg'], 'error');
+                    }
+                    close_modal_cover();
+                }
+            })
+        },
+        open_origin_path_folder: (folder_id) => {
+            show_modal_cover(true, false);
+            $.ajax({
+                type: 'GET',
+                url: server + '/folder/path/' + folder_id,
+                success: function (data) {
+                    if (data['code'] === 0) {
+                        openapp('explorer');
+                        apps.explorer.goto(data.data.name,data.data.id);
                     } else {
                         $.Toast(data['msg'], 'error');
                     }
@@ -1037,6 +1418,15 @@ let apps = {
             $('#win-image>.my_video')[0].src = server + '/file/download/' + file_id;
             let viewer = new Viewer(document.querySelectorAll('#win-image>.my_video')[0], {viewed() {},});
         },
+        change_view: () => {
+            let view_url = $('.list_view>img')[0].src;
+            if (view_url.indexOf("list_view.svg") > 0) {
+                $('.list_view>img')[0].src = 'img/explorer/icon_view.svg';
+            } else {
+                $('.list_view>img')[0].src = 'img/explorer/list_view.svg';
+            }
+            apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, $('#win-explorer>.path>.tit')[0].id);
+        },
         history: [],
         historypt: [],
         initHistory: (tab) => {
@@ -1050,30 +1440,24 @@ let apps = {
         // topHistory: (tab) => {
         //     return apps.explorer.history[tab][apps.explorer.historypt[tab]];
         // },
-        popHistory: (tab) => {
-            apps.explorer.historypt[tab]--;
-            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
-        },
-        incHistory: (tab) => {
-            apps.explorer.historypt[tab]++;
-            return apps.explorer.history[tab][apps.explorer.historypt[tab]];
-        },
+        // popHistory: (tab) => {
+        //     apps.explorer.historypt[tab]--;
+        //     return apps.explorer.history[tab][apps.explorer.historypt[tab]];
+        // },
+        // incHistory: (tab) => {
+        //     apps.explorer.historypt[tab]++;
+        //     return apps.explorer.history[tab][apps.explorer.historypt[tab]];
+        // },
         delHistory: (tab) => {
             apps.explorer.history[tab].splice(apps.explorer.historypt[tab] + 1, apps.explorer.history[tab].length - 1 - apps.explorer.historypt[tab]);
         },
-        historyIsEmpty: (tab) => {
-            return apps.explorer.historypt[tab] <= 0;
-        },
+        // historyIsEmpty: (tab) => {
+        //     return apps.explorer.historypt[tab] <= 0;
+        // },
         historyIsFull: (tab) => {
             return apps.explorer.historypt[tab] >= apps.explorer.history[tab].length - 1;
         },
         checkHistory: (tab) => {
-            if (apps.explorer.historyIsEmpty(tab)) {
-                $('#win-explorer>.path>.back').addClass('disabled');
-            }
-            else {
-                $('#win-explorer>.path>.back').removeClass('disabled');
-            }
             if (apps.explorer.historyIsFull(tab)) {
                 $('#win-explorer>.path>.front').addClass('disabled');
             }
@@ -1081,10 +1465,10 @@ let apps = {
                 $('#win-explorer>.path>.front').removeClass('disabled');
             }
         },
-        back: (tab) => {
-            apps.explorer.goto(apps.explorer.popHistory(tab), false);
-            apps.explorer.checkHistory(tab);
-        },
+        // back: (tab) => {
+        //     apps.explorer.goto(apps.explorer.popHistory(tab), false);
+        //     apps.explorer.checkHistory(tab);
+        // },
         // front: (tab) => {
         //     apps.explorer.goto(apps.explorer.incHistory(tab), false);
         //     apps.explorer.checkHistory(tab);
@@ -1126,7 +1510,16 @@ let apps = {
     },
     markdown: {init: () => {return null;}},
     video: {init: () => {return null;}},
+    music: {init: () => {return null;}},
+    chat: {init: () => {return null;}},
+    karaoke: {init: () => {return null;}},
+    xmind: {init: () => {return null;}},
+    sheet: {init: () => {return null;}},
+    word: {init: () => {return null;}},
+    excel: {init: () => {return null;}},
     game: {init: () => {return null;}},
+    powerpoint: {init: () => {return null;}},
+    docu: {init: () => {return null;}},
     picture: {init: () => {return null;}},
     pythonEditor: {init: () => {return null;}},
     python: {
@@ -1330,7 +1723,7 @@ Type "help", "copyright", "credits" or "license" for more information.
         tab: (c) => {
             $('#win-edge>iframe.show').removeClass('show');
             $('#win-edge>iframe.' + apps.edge.tabs[c][0]).addClass('show');
-            $('#win-edge>.tool>input.url').val($('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src') == 'module/edge/mainpage.html' ? '' : $('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src'));
+            $('#win-edge>.tool>input.url').val($('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src') === 'module/edge/mainpage.html' ? '' : $('#win-edge>iframe.' + apps.edge.tabs[c][0]).attr('src'));
             $('#win-edge>.tool>input.rename').removeClass('show');
             apps.edge.checkHistory(apps.edge.tabs[apps.edge.now][0]);
         },
@@ -1438,6 +1831,9 @@ Type "help", "copyright", "credits" or "license" for more information.
             apps.edge.goto(apps.edge.incHistory(tab), false);
             apps.edge.checkHistory(tab);
         }
+    },
+    taskmgr: {
+        init: () => {}
     }
 }
 
@@ -1471,9 +1867,10 @@ for (let i = 1; i <= daysum; i++) {
     }
     $('#datebox>.cont>.body')[0].innerHTML += `<p>${i}</p>`;
 }
-
+apps.explorer.get_shortcuts();
 // 应用与窗口
-let other_img = ['video', 'picture', 'markdown', 'game', 'sheet', 'docu', 'word', 'excel', 'powerpoint', 'pythonEditor']
+let other_img = ['taskmgr', 'video', 'picture', 'markdown', 'xmind', 'game', 'sheet', 'docu', 'word', 'excel', 'powerpoint', 'pythonEditor']
+let onlyoffice_width = {word: 600, excel: 736, powerpoint: 600};
 function openapp(name) {
     if ($('#taskbar>.' + name).length !== 0) {
         if ($('.window.' + name).hasClass('min')) {
@@ -1489,7 +1886,7 @@ function openapp(name) {
     $('.window.' + name).addClass('load');
     showwin(name);
     $('#taskbar').attr('count', Number($('#taskbar').attr('count')) + 1);
-    $('#taskbar').append(`<a class="${name}" onclick="taskbarclick(\'${name}\')" win12_title="${$(`.window.${name}>.titbar>span>.title`).text()}" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"><img src="${source_src}" alt=""></a>`);
+    $('#taskbar').append(`<a class="${name}" onclick="taskbarclick(\'${name}\')" win12_title="${$(`.window.${name}>.titbar>span>.title`).text()}" onmouseenter="showdescp(event)" onmouseleave="hidedescp(event)"><img src="${source_src}" alt="default" loading="lazy"></a>`);
     if ($('#taskbar').attr('count') === '1') {
         $('#taskbar').css('display', 'flex');
     }
@@ -1510,6 +1907,7 @@ function openapp(name) {
     apps[tmp].init();
     $('.window.' + name).removeClass('load');
     if (name === 'setting') {
+        $('#win-setting>.menu>.user>img')[0].src = 'img/pictures/' + document.cookie.split('u=')[1].split(';')[0] +'/avatar.jpg';
         $('#win-setting>.menu>.user>div>p')[0].innerText = nickName;
     }
 }
@@ -1597,6 +1995,9 @@ function maxwin(name, trigger = true) {
     else {
         $('#dock-box').removeClass('hide')
     }
+    setTimeout(() => {if (name === 'word' || name === 'excel' || name === 'powerpoint') {
+        $('.window.' + name + '>.titbar')[0].style.width = Number($('.window.' + name).css('width').split('px')[0]) - onlyoffice_width[name] + 'px';
+    }},500);
 }
 function minwin(name) {
     if ($('.window.' + name).hasClass('min')) {
@@ -1761,6 +2162,9 @@ function resizing(win, e, arg) {
         else {
             win.style.height = minHeight + 'px';
         }
+    }
+    if (win.classList.value.indexOf('word') > 0 || win.classList.value.indexOf('excel') > 0 || win.classList.value.indexOf('powerpoint') > 0) {
+        win.getElementsByClassName('titbar')[0].style.width = Number(win.style.width.split('px')[0]) - 736 + 'px';
     }
 }
 let wo = [];
@@ -2274,17 +2678,40 @@ document.getElementById('search-file').addEventListener("keyup", function (event
                 $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = '<p class="info">搜索结果为空。</p>';
             } else {
                 let ht = '';
-                $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
-                for (let i = 0; i < tmp.length; i++) {
-                    if(tmp[i]['folder_type'] === 'folder') {
-                        ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${tmp[i]['name']}', '${tmp[i]['id']}')" oncontextmenu="showcm(event,'explorer.folder','${tmp[i]['id']}');return stop(event);">
-                            <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
+                if ($('.list_view>img')[0].src.indexOf("list_view.svg") > 0) {
+                    $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'none';
+                    $('#win-explorer>.page>.main>.content>.view').addClass("icon-view");
+                    for (let i = 0; i < tmp.length; i++) {
+                        if (tmp[i]['folder_type'] === 'folder') {
+                            ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a files" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')"><img src="img/explorer/folder.svg" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
+                        } else {
+                            let f_src = icons[tmp[i]['format']] || default_icon;
+                            switch (tmp[i]['format']) {
+                                case 'jpg':
+                                case 'jpeg':
+                                case 'png':
+                                case 'bmp':
+                                case 'gif':
+                                    f_src = server + "/file/download/" + tmp[i]['id'];
+                                    break;
+                            }
+                            ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a act file" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')"><img src="${f_src}" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
+                        }
+                    }
+                } else {
+                    $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
+                    $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
+                    for (let i = 0; i < tmp.length; i++) {
+                        if (tmp[i]['folder_type'] === 'folder') {
+                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${tmp[i]['name']}', '${tmp[i]['id']}')" oncontextmenu="showcm(event,'search.folder',['${tmp[i]['name']}', '${tmp[i]['id']}']);return stop(event);">
+                            <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                             <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
-                    } else {
-                        let f_src = icons[tmp[i]['format']] || default_icon;
-                        ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'explorer.file','${tmp[i]['id']}','${tmp[i]['format']}');return stop(event);">
-                            <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
+                        } else {
+                            let f_src = icons[tmp[i]['format']] || default_icon;
+                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'search.file','${tmp[i]['id']}');return stop(event);">
+                            <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="file" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
                             <span style="width: 10%;">${tmp[i]['size']}</span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
+                        }
                     }
                 }
                 $('#win-explorer>.page>.main>.content>.view')[0].innerHTML = ht;
@@ -2321,7 +2748,7 @@ function move_files() {
     }
     $.get(server + '/folder/getDisk').then(res => {
         res.data.forEach(c => {
-            root_disk = root_disk + `<ul class="domtree"><li onclick="get_folders('move${c['disk']}')"><img src="img/explorer/disk.svg" alt="">${c['disk']}:</li><ul id="move${c['disk']}"></ul></ul>`;
+            root_disk = root_disk + `<ul class="domtree"><li onclick="get_folders('move${c['disk']}')"><img src="img/explorer/disk.svg" alt="disk.svg" loading="lazy">${c['disk']}:</li><ul id="move${c['disk']}"></ul></ul>`;
         });
         $('#notice>.cnt').html(`
                 <p class="tit">${i18next.t('explore.window.file.tool.move.window.title')}</p>
@@ -2409,7 +2836,7 @@ function get_folders(folder_id) {
             if (data['code'] === 0) {
                 let s = '';
                 data['data']['folder'].forEach(item => {
-                    s = s + `<li onclick="get_folders('move${item['id']}')"><img src="img/explorer/folder.svg" alt="">${item['name']}</li><ul id="move${item['id']}"></ul>`;
+                    s = s + `<li onclick="get_folders('move${item['id']}')"><img src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${item['name']}</li><ul id="move${item['id']}"></ul>`;
                 })
                 document.getElementById(folder_id).innerHTML = s;
                 let folder_name = document.getElementById('folder_name');
@@ -2534,6 +2961,7 @@ function upload_file() {
             let xhr = new XMLHttpRequest();
             xhr.open("POST", server + "/file/upload");
             xhr.setRequestHeader("processData", "false");
+            xhr.setRequestHeader("lang", localStorage.getItem('lang'));
             // xhr.upload.onprogress = function(event) {
             //     if (event.lengthComputable) {}};
             // xhr.onload = function(event) {}
@@ -2587,7 +3015,7 @@ function upload_file() {
     }
 }
 
-function upload_back_img() {
+function upload_back_img(img_type) {
     let fileUpload_input = document.getElementById("back-img-input");
     fileUpload_input.click();
     fileUpload_input.onchange = function (event) {
@@ -2597,6 +3025,7 @@ function upload_back_img() {
         for (let i=0; i<total_files; i++) {
             let form_data = new FormData();
             form_data.append("file", files[i]);
+            form_data.append("imgType", img_type);
             let file_type = files[i].type;
             if (file_type.indexOf('jpg') === -1 && file_type.indexOf('jpeg') === -1) {
                 $.Toast(i18next.t('msg.upload.file.image.error1'), "error");
@@ -2605,13 +3034,16 @@ function upload_back_img() {
             let xhr = new XMLHttpRequest();
             xhr.open("POST", server + "/file/uploadImage");
             xhr.setRequestHeader("processData", "false");
+            xhr.setRequestHeader("lang", localStorage.getItem('lang'));
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if(xhr.status === 200) {
                         let res = JSON.parse(xhr.responseText);
                         if (res['code'] === 0) {
                             $.Toast(res['msg'], 'success');
-                            document.body.style.backgroundImage='url("' + server + '/file/background/getImage")';
+                            if (img_type === 1) {
+                                document.body.style.backgroundImage='url("img/pictures/' + document.cookie.split('u=')[1].split(';')[0] + '/background.jpg")';
+                            }
                         } else {
                             $.Toast(res['msg'], 'error');
                         }
@@ -2707,6 +3139,20 @@ function modify_nickname() {
     })
 }
 
+function clear_tmp_path() {
+    $.ajax({
+        type: "GET",
+        url: server + '/system/clean/temporary/files',
+        success: function (data) {
+            if (data['code'] === 0) {
+                $.Toast(data['msg'], 'success');
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
+}
+
 function close_video() {$('.my_video').attr('src', '');}
 
 let txt_interval = null;
@@ -2768,12 +3214,122 @@ function save_text_file(file_id, data, is_code=true) {
     })
 }
 
+function create_meeting_code(chat_mode) {
+    $.ajax({
+        type: "GET",
+        url: server + '/chat/create/' + chat_mode,
+        success: function (data) {
+            if (data['code'] === 0) {
+                document.getElementById("meeting-code-" + chat_mode).value = data['data'];
+                $.Toast(data['msg'], 'success');
+            }
+        }
+    })
+}
+
+function join_meeting(chat_mode) {
+    let code = document.getElementById("meeting-code-" + chat_mode).value.trim();
+    if (!code || code === "") {
+        $.Toast(i18next.t("chat.code.placeholder"), "error");
+        return;
+    }
+    $.ajax({
+        type: "GET",
+        url: server + '/chat/auth/' + chat_mode + '/' + code,
+        success: function (data) {
+            if (data['code'] === 0) {
+                openapp('chat');
+                $('.window.chat>.titbar>span>.title')[0].innerText = i18next.t('chat.title');
+                let html_str = 'chat';
+                if (chat_mode === 0) {
+                    html_str = 'voice';
+                    $('.window.chat>.titbar>span>.title')[0].innerText = i18next.t('chat.voice.title');
+                }
+                document.getElementsByClassName("chat")[0].style.display = 'block';
+                document.getElementById("iframe_chat").src = 'module/' + html_str + '.html?server=' + server + '&code=' + code + chat_mode;
+                $('.window.chat>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_chat").src='about:blank';hidewin('chat');`);
+            } else {
+                $.Toast(data['msg'], 'error');
+                return;
+            }
+        }
+    })
+}
+
+function open_torrent(file_id) {
+    show_modal_cover(true, false);
+    $.ajax({
+        type: 'GET',
+        url: server + '/download/torrent/open/' + file_id,
+        success: function (data) {
+            if (data['code'] === 0) {
+                shownotice("selectedFiles");
+                let ht = "";
+                data['data'].forEach(item => {
+                    ht += `<div style="margin: 8px 0 8px 0;display: flex;flex-direction: row;justify-content: space-between;flex-wrap: nowrap;"><div style="width:80%;"><input name="options" type="radio" value="${item['gid']},${item['index']},${item['folder']}" id="${item['index']}"><span style="margin-left:5px;">${item['name']}</span></div><span>${item['size']}</span></div>`;
+                })
+                $('#notice>.cnt>p')[0].innerText = i18next.t('explore.window.file.tool.downloader.window.selected');
+                document.getElementById("selected-file").innerHTML = ht;
+                $('#notice>.btns>.detail').attr("onclick", `update_download_status('${data['data'][0]['gid']}', 'cancel,remove', false);closenotice();`);
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+            close_modal_cover();
+        }
+    })
+}
+
+function open_music(file_id) {
+    $('.window.music>.titbar>span>.title')[0].innerText = i18next.t('music');
+    openapp('music');
+    document.getElementsByClassName("music")[0].style.display = 'block';
+    document.getElementById("iframe_music").src = 'module/music.html?server=' + server + '&id=' + file_id;
+    $('.window.music>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_music").src = 'about:blank';hidewin('music');`);
+}
+
+function open_karaoke() {
+    $('.window.karaoke>.titbar>span>.title')[0].innerText = i18next.t('karaoke');
+    openapp('karaoke');
+    document.getElementsByClassName("karaoke")[0].style.display = 'block';
+    document.getElementById("iframe_karaoke").src = 'module/karaoke/index.html?server=' + server;
+    $('.window.karaoke>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_karaoke").src = 'about:blank';hidewin('karaoke');`);
+}
+
 function open_md(file_id) {
     openapp('markdown');
     document.getElementsByClassName("markdown")[0].style.display = 'block';
     document.getElementById("iframe_markdown").src = 'module/md.html?server=' + server + '&id=' + file_id;
     $('.window.markdown>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_markdown").contentWindow.close_md_editor('${file_id}');hidewin('markdown');`);
     $('.window.markdown>.titbar>div>.wbtg.export').attr("onclick", `window.open('${server}/file/export/md/${file_id}')`);
+}
+
+function open_xmind(file_id) {
+    openapp('xmind');
+    document.getElementsByClassName("xmind")[0].style.display = 'block';
+    document.getElementById("iframe_xmind").src = 'module/xmind.html?server=' + server + '&id=' + file_id;
+    $('.window.xmind>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_xmind").contentWindow.close_xmind_editor('${file_id}');hidewin('xmind');`);
+}
+
+function open_sheet(file_id) {
+    openapp('sheet');
+    document.getElementsByClassName("sheet")[0].style.display = 'block';
+    document.getElementById("iframe_sheet").src = 'module/sheet.html?server=' + server + '&id=' + file_id + '&lang=' + lang;
+    $('.window.sheet>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_sheet").contentWindow.close_sheet_editor('${file_id}');hidewin('sheet');`);
+}
+
+function open_office(file_id, name) {
+    openapp(name);
+    document.getElementsByClassName(name)[0].style.display = 'block';
+    document.getElementById("iframe_" + name).src = 'module/onlyoffice.html?server=' + server + '&id=' + file_id + '&lang=' + lang;
+    $('.window.'+name+'>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_${name}").src = 'about:blank';hidewin('${name}');`);
+    $('.window.' + name + '>.titbar')[0].style.width = Number($('.window.' + name).css('width').split('px')[0]) - onlyoffice_width[name] + 'px';
+}
+
+function open_system_resource(name) {
+    openapp(name);
+    document.getElementById("iframe_" + name).src = 'module/systemResource/index.html?server=' + server + '&lang=' + lang;
+    $('.window.taskmgr').css('height', 480);
+    $('.window.taskmgr>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_taskmgr").src = 'about:blank';hidewin('taskmgr');`);
 }
 
 function open_python(file_id) {
@@ -2783,10 +3339,18 @@ function open_python(file_id) {
     $('.window.pythonEditor>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_pythonEditor").contentWindow.close_python_editor('${file_id}');hidewin('pythonEditor');`);
 }
 
+function open_document(file_id, file_name) {
+    openapp('docu');
+    document.getElementsByClassName("docu")[0].style.display = 'block';
+    document.getElementById("iframe_docu").src = 'module/document.html?server=' + server + '&id=' + file_id + '&lang=' + lang;
+    $('.window.docu>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_docu").contentWindow.close_document_editor('${file_id}');hidewin('docu');`);
+    $('#win-docu>a')[0].download = file_name.replace('docu', 'html');
+}
+
 function open_game(game_type) {
-    $('.window.game>.titbar>span>span')[0].innerText = i18next.t('game.title');
+    $('.window.game>.titbar>span>span')[0].innerText = i18next.t('setting.window.game');
     openapp('game');
-    $('.window.game>.titbar>img').attr('src', 'img/explorer/'+ game_type +'.png')
+    $('.window.game>.titbar>img').attr('src', 'img/setting/'+ game_type +'.svg')
     document.getElementsByClassName("game")[0].style.display = 'block';
     let width = 0;
     let height = 0;
@@ -2814,18 +3378,119 @@ function open_game(game_type) {
     $('.window.game')[0].style.top = (document.body.clientHeight - height - 50) / 2 + 'px';
     document.getElementById("iframe_game").src = 'module/' + game_type +'/index.html?server=' + server;
     $('.window.game>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_game").src = 'about:blank';hidewin('game');`);
-    closenotice();
 }
 
-function open_game_center() {
-    $('#notice>.cnt').html(`
-            <div style="height: 50px;"><p class="tit" style="margin:0;font-size: x-large; float: left;">${i18next.t('game')}</p><a class="a wbtg" onclick="closenotice();"><i class="bi bi-x-lg"></i></a></div>
-            <div class="game-center"><div class="game-list" onclick="open_game('snake')"><img src="img/explorer/snake.png" alt=""><p>${i18next.t('game.snake')}</p></div>
-            <div class="game-list" onclick="open_game('tetris')"><img src="img/explorer/tetris.png" alt=""><p>${i18next.t('game.tetris')}</p></div>
-            <div class="game-list" onclick="open_game('rings')"><img src="img/explorer/rings.png" alt=""><p>${i18next.t('game.rings')}</p></div></div>
-    `);
-    $('#notice>.btns')[0].style.display = 'none';
-    $('#notice-back').addClass('show');
-    $('#notice')[0].style.width = '50%';
-    $('#notice')[0].style.height = $('#notice-back')[0].clientHeight * 0.8 + 'px';
+function get_server_list(event) {
+    if ($('.dp.app-color.server')[0].classList.contains('show')) {
+        $('.dp.app-color.server').toggleClass('show');
+        return;
+    }
+    $.ajax({
+        type: 'GET',
+        url: server + '/server/get',
+        success: function (data) {
+            if (data['code'] === 0) {
+                let s = '';
+                data['data'].forEach(item => {
+                    s += `<div><div style="width: 16%;">${item['host']}</div><div>${item['port']}</div><div>${item['user']}</div><div style="width: 21%;">${item['system']}</div><div>${item['cpu']}${i18next.t('setting.window.shell.server.list.cpu.core')}</div><div>${item['mem']}G</div><div>${item['disk']}</div><div style="width:15%;"><a href="module/terminal.html?id=${item['id']}&host=${item['host']}&lang=${lang}" style="color:blue;">${i18next.t('setting.window.shell.server.list.action.open')}</a><a href="javascript:void(0);" onclick="delete_server(${item['id']});return false;" style="color:blue;margin-left:15px;">${i18next.t('setting.window.shell.server.list.action.delete')}</a></div></div><br />`;
+                })
+                $('.server-item')[0].innerHTML = s;
+                $('.dp.app-color.server').toggleClass('show');
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
+}
+
+function add_server() {
+    let c = new Date().getTime().toString();
+    if (!$('#server-host')[0].value || !$('#server-pwd')[0].value) {
+        $.Toast(i18next.t('msg.server.add.error1'), "error");
+        return;
+    }
+    let post_data = {
+        t: c,
+        host: $('#server-host')[0].value,
+        port: $('#server-port')[0].value,
+        user: $('#server-user')[0].value,
+        pwd: parse_pwd($('#server-pwd')[0].value, c)
+    }
+    show_modal_cover();
+    $.ajax({
+        type: 'POST',
+        url: server + '/server/add',
+        data: JSON.stringify(post_data),
+        contentType: 'application/json',
+        success: function (data) {
+            if (data['code'] === 0) {
+                $.Toast(data['msg'], 'success');
+                closenotice();
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+            close_modal_cover();
+        }
+    })
+}
+
+function delete_server(host_id) {
+    $.ajax({
+        type: 'GET',
+        url: server + '/server/delete/' + host_id,
+        success: function (data) {
+            if (data['code'] === 0) {
+                get_server_list(null);
+                $.Toast(data['msg'], 'success');
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
+}
+
+function update_download_status(gid, action, flag=true) {
+    let post_data = {gid: gid, status: action}
+    $.ajax({
+        type: 'POST',
+        url: server + '/download/status/update',
+        data: JSON.stringify(post_data),
+        contentType: 'application/json',
+        success: function (data) {
+            if (data['code'] === 0) {
+                if (flag) {
+                    $.Toast(data['msg'], 'success');
+                    apps.explorer.download_list();
+                }
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
+}
+
+function get_system_info(event) {
+    if ($('.dp.app-color.about')[0].classList.contains('show')) {
+        $('.dp.app-color.about').toggleClass('show');
+        return;
+    }
+    $.ajax({
+        type: 'GET',
+        url: server + '/system/detail',
+        success: function (data) {
+            if (data['code'] === 0) {
+                $('.system>.setting-list>.about>div:nth-child(1)>span')[1].innerText = `${data.data.os_name}`;
+                $('.system>.setting-list>.about>div:nth-child(2)>span')[1].innerText = `${data.data.os_version}`;
+                $('.system>.setting-list>.about>div:nth-child(3)>span')[1].innerText = `${data.data.os_arch}${i18next.t("setting.window.system.about.system.type.bits")}${data.data.machine}${i18next.t("setting.window.system.about.system.type.cpu")}`;
+                $('.system>.setting-list>.about>div:nth-child(4)>span')[1].innerText = `${data.data.cpu_model}`;
+                $('.system>.setting-list>.about>div:nth-child(5)>span')[1].innerText = `${data.data.cpu_core} ${i18next.t("setting.window.system.about.system.cpu.core.num")}`;
+                $('.system>.setting-list>.about>div:nth-child(6)>span')[1].innerText = `${data.data.memory} GB`;
+                $('.system>.setting-list>.about>div:nth-child(7)>span')[1].innerText = `${data.data.disk}`;
+                $('.system>.setting-list>.about>div:nth-child(8)>span')[1].innerText = `${data.data.run_time}`;
+                $('.dp.app-color.about').toggleClass('show');
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
 }

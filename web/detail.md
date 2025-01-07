@@ -6,7 +6,9 @@
 - Supports online editing functions of txt, markdown, xmind, sheet, and document
 - Support online editing and running of python scripts
 - Support add desktop shortcuts for files
+- Support auto-backup of all files in the specified folder
 - Support remote connection to Linux server
+- Support peer-to-peer video chat and screen sharing (based on WebRTC)
 - Music player, supports playing music from this cloud-drive (Server) and local (Client)
 - Karaoke, supports building your own song library
 - Integrate aria2, and support multiple download protocols such as HTTP, FTP, BitTorrent, etc.

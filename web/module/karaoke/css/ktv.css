@@ -1,0 +1,136 @@
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+.top-tips {
+    top: 10px;
+    position: fixed;
+    width: 100%;
+    font-size: large;
+    font-weight: 600;
+    color: wheat;
+    z-index: 9;
+}
+
+.video-container {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    position: absolute;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.setting {
+    top: 47%;
+    position: absolute;
+    height: 70px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: moccasin;
+    border-radius: 13px;
+}
+
+.setting .setting-img {
+    height: 30px;
+    width: 30px;
+    cursor: pointer;
+}
+
+.setting .setting-list {
+    display: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin: 8px;
+}
+
+.setting .setting-list div{
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.setting .setting-list div img{
+    height: 30px;
+}
+
+.volume-setting {
+    left: 180px;
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    background-color: lightpink;
+}
+
+.volume-setting>div {
+    margin: 7px 5px;
+    height: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 1px 9px;
+}
+
+.volume-box {
+    width: 139px;
+}
+.mkpgb-area {
+    position: relative;
+    cursor: pointer;
+    height: 100%;
+}
+.mkpgb-bar {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    margin-top: -1px;
+    border-radius: 2px;
+    background-color: #808284;
+    overflow: hidden;
+}
+.mkpgb-cur {
+    position: absolute;
+    background-color: #D8D8D8;
+    width: 0;
+    height: 8px;
+    top: 50%;
+    margin-top: -1px;
+    border-radius: 2px;
+    transition: all 0.25s ease;
+    -webkit-transition: all 0.25s ease;
+    -moz-transition: all 0.25s ease;
+    -o-transition: all 0.25s ease;
+    -ms-transition: all 0.25s ease;
+}
+.mkpgb-dot {
+    width: 16px;
+    height: 16px;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    position: absolute;
+    left: 0px;
+    margin-left: -5px;
+    top: 50%;
+    margin-top: -5px;
+    transition: all 0.25s ease;
+    -webkit-transition: all 0.25s ease;
+    -moz-transition: all 0.25s ease;
+    -o-transition: all 0.25s ease;
+    -ms-transition: all 0.25s ease;
+}

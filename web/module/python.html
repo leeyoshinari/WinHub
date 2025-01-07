@@ -29,7 +29,7 @@
     if (!is_share) {
         get_url = servers + '/share/get/' + file_id;
     }
-    $.ajax({
+    window.parent.$.ajax({
         type: "GET",
         async: false,
         url: get_url,
@@ -64,6 +64,9 @@
                 });
                 editor.setValue(data['data']);
                 old_md5 = md5(data['data']);
+            } else {
+                window.parent.$.Toast(data['msg'], 'error');
+                return;
             }
         }
     });

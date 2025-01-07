@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡拉OK</title>
+    <link rel="stylesheet" href="css/ktv.css">
+    <link rel="stylesheet" href="../toast/toast.style.css">
+    <script type="text/javascript" src="../../js/jq.min.js"></script>
+    <script type="text/javascript" src="../toast/toast.script.js"></script>
+</head>
+<body>
+<div class="top-tips"><div style="text-align: center;" id="playing-text"></div></div>
+<div class="video-container">
+    <video id="myVideo" controls preload="auto">
+        <source src="" type="video/mp4">
+        你的浏览器不支持视频标签。
+    </video>
+    <audio style="display: none;" id="vocals" controls preload="auto">
+        <source src="" type="audio/mpeg">
+        你的浏览器不支持音频标签。
+    </audio>
+    <audio style="display: none;" id="accompaniment" controls preload="auto">
+        <source src="" type="audio/mpeg">
+        你的浏览器不支持音频标签。
+    </audio>
+    <audio style="display: none;" id="interruption" controls preload="auto">
+        <source src="" type="audio/mpeg">
+        你的浏览器不支持音频标签。
+    </audio>
+</div>
+<div class="setting">
+    <div class="setting-img"><img id="expand-img" src="img/expand.svg" alt="expand.svg"></div>
+    <div class="setting-list">
+        <div id="switchVocal"><img src="img/vocals.svg" alt="vocals.svg"><span>原唱</span></div>
+        <div onclick="reSing();"><img src="img/re-sing.svg" alt="re-sing.svg"><span>重唱</span></div>
+        <div id="next-song"><img src="img/next_song.svg" alt="next_song.svg"><span>切歌</span></div>
+        <div id="change-volume"><img src="img/volume.svg" alt="volume.svg"><span>调音</span></div>
+    </div>
+</div>
+<div class="volume-setting">
+    <div><div>原唱音量：</div><div class="volume-box">
+        <div id="volume-vocals-progress" class="mkpgb-area">
+            <div class="mkpgb-bar"></div>
+            <div class="mkpgb-cur" style="width: 60%;"></div>
+            <div class="mkpgb-dot" style="left: 60%;"></div>
+        </div>
+    </div></div>
+    <div><div>伴奏音量：</div><div class="volume-box">
+        <div id="volume-acc-progress" class="mkpgb-area">
+            <div class="mkpgb-bar"></div>
+            <div class="mkpgb-cur" style="width: 60%;"></div>
+            <div class="mkpgb-dot" style="left: 60%;"></div>
+        </div></div>
+    </div>
+</div>
+</body>
+<script type="text/javascript" src="js/ktv.js"></script>
+</html>

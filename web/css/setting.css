@@ -56,7 +56,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 15px;
 }
 
 #win-setting>.menu>.user>div {
@@ -67,20 +66,19 @@
     white-space: nowrap;
 }
 
-#win-setting>.menu>.user>svg {
+#win-setting>.menu>.user>img {
     background-color: var(--hover-b);
-    /* box-shadow: 0 0 10px var(--sd); */
+    box-shadow: 0 0 10px var(--sd);
     width: 60px;
     min-width: 60px;
     height: 60px;
     border-radius: 50%;
-    padding: 11px;
 }
 
 #win-setting>.menu>list {
     padding-bottom: 50px !important;
     margin-left: 5px;
-    margin-top: 50px;
+    margin-top: 11px;
     height: calc(100% - 138px);
     overflow-y: auto;
     padding-right: 10px;
@@ -175,6 +173,11 @@
     filter: saturate(130%) brightness(1.1);
 }
 
+.setting-list>*>img {
+    height: 20px;
+    margin: 10px 20px 10px 5px;
+}
+
 .setting-list>*>div>p:first-child {
     font-size: 19px;
     margin:  3px 0 0 0;
@@ -205,7 +208,7 @@
     right: 5px;
 }
 
-.setting-list>a {cursor: pointer;}
+.setting-list>a {cursor: pointer; align-items: center;}
 .setting-list>a.dp.show {
     /* border-bottom: none; */
     border-bottom-left-radius: 0;
@@ -277,4 +280,27 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.languageSelect {
+    width: 135px;
+    height: 30px;
+    text-align: left;
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    position: absolute;
+    right: 25px;
+}
+
+.system>.setting-list>.about>div {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: 5px;
+}
+
+.system>.setting-list>.about>div>.about-label  {
+    width: 180px;
+    font-weight: 600;
 }

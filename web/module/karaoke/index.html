@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Karaoke</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script type="text/javascript" src="js/qrcode.min.js"></script>
+    <script type="text/javascript" src="js/fenye.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="head">
+        <div style="display: flex; align-items: center;">
+            <input id="file-input" type="file" multiple accept=".mp3, .mp4" style="display: none;">
+            <input id="file-search" type="text" style="height: 30px; margin-left: 2px; margin-right: 8px;" placeholder="" autocomplete="off" class="i18n_p" key="karaoke.search.placeholder">
+            <a href="./tool.html" id="pre-mp4" target="_blank" class="i18n" key="karaoke.pre.deal.video">视频预处理</a>
+            <a href="#" id="file-upload" class="i18n" key="karaoke.upload.file">上传文件</a>
+            <a href="#" id="generate_code" class="i18n" key="karaoke.scan.code">手机点歌</a>
+            <div class="qrcode"><div id="qrcode"></div></div>
+            <a href="#" target="_blank" id="start-sing" class="i18n" key="karaoke.start.sing">开始K歌</a>
+        </div>
+        <div style="display: flex; align-items: center; margin-top: 1rem;">
+            <a href="#" onclick="get_song_list()" class="i18n" key="karaoke.song.list">曲库列表</a>
+            <a href="#" onclick="get_history_list('history')" class="i18n" key="karaoke.sing.history.list">K歌历史</a>
+            <a href="#" onclick="get_history_list('usually')" class="i18n" key="karaoke.sing.history.usually.list">常点的歌</a>
+            <a href="#" target="_blank" id="control-center">控制台</a>
+        </div>
+    </div>
+    <div style="margin-top: 3rem;">
+        <table style="display: none;">
+            <thead>
+                <tr>
+                    <th style="width: 40%;" class="i18n" key="explore.window.file.list.header.name">名称</th>
+                    <th style="width: 30%;" id="create-time" class="i18n" key="explore.window.file.list.header.create.time">创建时间</th>
+                    <th style="width: 15%;" class="i18n" key="setting.window.shell.server.list.action">操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="fenye"><ul id="paging" class="pagination"></ul></div>
+</div>
+<div class="modal_cover"><div class="modal_gif"></div></div>
+</body>
+<script type="text/javascript" src="js/index.js"></script>
+</html>

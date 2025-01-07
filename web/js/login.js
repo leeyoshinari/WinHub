@@ -22,16 +22,7 @@ function login_sys(evn) {
         success: function (data) {
             if (data['code'] === 0) {
                 nickName = data['data'];
-                $('#loginback').addClass('close');
-                $('#loginback').css('opacity', '0');
-                $('#loginback').css('display', 'none');
-                $('#dock-box').css('display', 'flex');
-                $('#desktop').css('display', 'flex');
-                window.clearInterval(qwq);
-                this.onclick = null;
-                evn.id = 'login';
-                evn.innerText = i18next.t('login.button.text');
-                document.body.style.backgroundImage='url("' + server + '/file/background/getImage")';
+                window.location.reload();
             } else {
                 $.Toast(data['msg'], 'error');
                 window.clearInterval(qwq);
@@ -39,8 +30,8 @@ function login_sys(evn) {
                 evn.innerText = i18next.t('login.button.text');
             }
         },
-        error: function () {
-            $.Toast('请重试 ~', 'error');
+        error: function (error) {
+            $.Toast(error, 'error');
             window.clearInterval(qwq);
             evn.id = 'login';
             evn.innerText = i18next.t('login.button.text');

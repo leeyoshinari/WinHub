@@ -1,3 +1,4 @@
+/* Some codes of this file are based on code from [https://github.com/tjy-gitnub/win12], which is licensed under the [EPL-2.0]. See [https://github.com/tjy-gitnub/win12] for details.*/
 @import "./bootstrap-icons.css";
 @import "./base.css";
 
@@ -1441,21 +1442,4 @@ iframe {
 .my_video {
     height: 100%;
     width: 100%;
-}
-
-.game-center {
-    display: flex;
-    align-content: space-between;
-    justify-content: flex-start;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-.game-list {
-    margin: 2%;
-    cursor: pointer;
-    text-align: center;
-}
-.game-list img {
-    width: 61px;
-    height: 61px;
 }

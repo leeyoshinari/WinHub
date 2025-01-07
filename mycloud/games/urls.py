@@ -21,4 +21,3 @@ async def get_rank(game_type: str, hh: models.SessionBase = Depends(auth)):
 async def set_score(query: models.GamesScoreInfo, hh: models.SessionBase = Depends(auth)):
     result = await views.set_score(query, hh)
     return result
-
