@@ -13,6 +13,7 @@ else:
     path = os.path.dirname(os.path.abspath(__file__))
 cfg = configparser.ConfigParser()
 config_path = os.path.join(path, 'config.conf')
+version_path = os.path.join(path, '__version__')
 cfg.read(config_path, encoding='utf-8')
 TOKENs = {}
 
@@ -41,6 +42,8 @@ if ENABLE_BACKUP == 1 and not os.path.exists(BACKUP_PATH):
 if not os.path.exists(KARAOKE_PATH):
     os.mkdir(KARAOKE_PATH)
 
+with open(version_path, 'r') as f:
+    SYSTEM_VERSION = float(f.read().strip().replace('v', ''))
 
 TORTOISE_ORM = {
     "connections": {"default": get_config("dbUrl")},

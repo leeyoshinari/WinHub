@@ -45,3 +45,21 @@ async def get_network_detail(hh: models.SessionBase = Depends(auth)):
 async def clean_temporary_file(hh: models.SessionBase = Depends(auth)):
     result = await views.remove_tmp_folder(hh)
     return result
+
+
+@router.get("/version", summary="Get newest version (获取最新版本)")
+async def get_version(hh: models.SessionBase = Depends(auth)):
+    result = await views.get_new_version(hh)
+    return result
+
+
+@router.get("/update", summary="Update System (更新系统)")
+async def update_system(hh: models.SessionBase = Depends(auth)):
+    result = await views.update_system(hh)
+    return result
+
+
+@router.get("/resatrt", summary="Restart System (重启系统)")
+async def restart_system(hh: models.SessionBase = Depends(auth)):
+    result = await views.restart_system(hh)
+    return result

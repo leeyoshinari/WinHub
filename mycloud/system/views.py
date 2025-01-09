@@ -4,12 +4,15 @@
 
 import os
 import time
+import json
 import shutil
 import subprocess
 import traceback
 import socket
+import signal
 import platform
 import psutil
+import requests
 import settings
 from mycloud import models
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
@@ -182,6 +185,61 @@ async def remove_tmp_folder(hh: models.SessionBase) -> Result:
         logger.error(traceback.format_exc())
         result.code = 1
         result.msg = Msg.Delete.get_text(hh.lang) + Msg.Failure.get_text(hh.lang)
+    return result
+
+
+async def get_new_version(hh: models.SessionBase) -> Result:
+    result = Result()
+    try:
+        res = requests.get("https://api.github.com/repos/leeyoshinari/WinHub/releases", timeout=15)
+        if res.status_code == 200:
+            res_json = json.loads(res.text)
+            latest_version = float(res_json[0]['name'])
+            if latest_version < settings.SYSTEM_VERSION:
+                result.data = 1
+            else:
+                result.data = 0
+        result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
+    except:
+        logger.error(traceback.format_exc())
+        result.code = 1
+        result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
+    return result
+
+
+async def update_system(hh: models.SessionBase) -> Result:
+    result = Result()
+    try:
+        # repo = git.Repo(settings.path)
+        # if repo.is_dirty():
+        #     logger.warning(Msg.SystemUpdateGitNoPush.get_text(hh.lang))
+        #     repo.git.reset('--hard', 'origin/main')
+        # origin = repo.remotes.origin
+        # git_res = origin.pull()
+        result.msg = f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
+    except:
+        logger.error(traceback.format_exc())
+        result.code = 1
+        result.msg = f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
+    return result
+
+
+async def restart_system(hh: models.SessionBase) -> Result:
+    result = Result()
+    try:
+        if platform.system() == "Windows":
+            subprocess.run(['sc', 'stop', 'python'], check=True, capture_output=True, text=True)
+            subprocess.run(['sc', 'start', 'python'], check=True, capture_output=True, text=True)
+        else:
+            os.kill(os.getppid(), signal.SIGHUP)
+        result.msg = f"{Msg.SystemRestartInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
+    except:
+        logger.error(traceback.format_exc())
+        result.code = 1
+        result.msg = f"{Msg.SystemRestartInfo.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
     return result
 
 
