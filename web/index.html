@@ -112,7 +112,7 @@
 		} else {
 			$('#loginback').css('opacity', '1');
 			$('#loginback').css('display', 'flex');
-			document.getElementById('loginback').style.backgroundImage='url("img/pictures/undefined/background.jpg")';
+			document.getElementById('loginback').style.backgroundImage=`url("img/pictures/${localStorage.getItem("usernmae")}/login.jpg")`;
 		}
 	</script>
 	<div id="cm" tabindex="-1"><input class="foc"><list></list></div>
@@ -156,6 +156,7 @@
 						</a>
 					</div>
 					<div class="setting-list">
+						<a class="dp" onclick="logout();"><icon></icon><div><p class="i18n" key="setting.window.account.logout">退出登录</p><p></p></div><i class="bi bi-chevron-right"></i></a>
 						<a class="dp modify-nickname" onclick="$('.dp.modify-nickname').toggleClass('show');">
 							<icon></icon><div><p class="i18n" key="setting.window.account.modify.nickname"></p><p class="i18n" key="setting.window.account.modify.nickname.tips"></p></div><i class="bi bi-chevron-down"></i></a>
 						<div class="dp modify-nickname">
@@ -164,7 +165,8 @@
 						</div>
 						<a class="dp app-color" onclick="upload_back_img(0);">
 							<icon></icon><div><p class="i18n" key="setting.window.account.user.img"></p><p class="i18n" key="setting.window.account.user.img.tips"></p></div><i class="bi bi-chevron-right"></i></a>
-						<input type="file" name="filename" id="user-img-upload" accept=".jpg" style="display: none">
+						<a class="dp app-color" onclick="upload_back_img(2);">
+							<icon></icon><div><p class="i18n" key="setting.window.account.login.img"></p><p class="i18n" key="setting.window.account.login.img.tips"></p></div><i class="bi bi-chevron-right"></i></a>
 						<a class="dp modify-pwd" onclick="$('.dp.modify-pwd').toggleClass('show');">
 							<icon></icon><div><p class="i18n" key="setting.window.account.modify.pwd"></p><p class="i18n" key="setting.window.account.modify.pwd.tips"></p></div><i class="bi bi-chevron-down"></i></a>
 						<div class="dp modify-pwd">
@@ -172,8 +174,6 @@
 							<label class="i18n" key="setting.window.account.modify.new.pwd.again"></label><input type="password" id="setting-pwd2" style="margin-right: 2%;">
 							<a class="i18n" onclick="modify_pwd();" style="cursor: pointer; color: blue;" key="submit">确定</a>
 						</div>
-						<a class="dp" onclick="logout();">
-							<icon></icon><div><p class="i18n" key="setting.window.account.logout">退出登录</p><p></p></div><i class="bi bi-chevron-right"></i></a>
 					</div>
 				</div>
 				<div class="cnt appearance">

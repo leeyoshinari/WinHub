@@ -7,7 +7,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from tortoise.contrib.fastapi import register_tortoise
 from common.calc import modify_prefix, modify_sw
 from common.scheduler import scheduler
-import settings
+from settings import PREFIX, TORTOISE_ORM, HOST, PORT
 import mycloud.user.urls as user_urls
 import mycloud.folders.urls as folder_urls
 import mycloud.files.urls as file_urls
@@ -23,10 +23,9 @@ import mycloud.backup.urls as backup_urls
 import mycloud.chat.urls as chat_urls
 
 
-prefix = settings.get_config("prefix")
 app = FastAPI(docs_url=None, redoc_url=None, root_path='/api/openapi')
-register_tortoise(app=app, config=settings.TORTOISE_ORM)
-modify_prefix(prefix)   # 将后端的 prefix 写入前端变量中
+register_tortoise(app=app, config=TORTOISE_ORM)
+modify_prefix(PREFIX)   # 将后端的 prefix 写入前端变量中
 modify_sw()     # 修改 sw.js 文件中的缓存版本号
 
 
@@ -34,28 +33,28 @@ async def startup_event():
     scheduler.start()
 
 
-@app.get(prefix + "/swagger-ui", include_in_schema=False)
+@app.get(PREFIX + "/swagger-ui", include_in_schema=False)
 async def get_docs():
     return get_swagger_ui_html(openapi_url='/api/openapi/openapi.json', title='Windows swagger-ui',
                                swagger_js_url='/Windows/js/swagger-ui-bundle.js', swagger_css_url='/Windows/css/swagger-ui.css')
 
 
-app.include_router(user_urls.router, prefix=prefix)
-app.include_router(folder_urls.router, prefix=prefix)
-app.include_router(file_urls.router, prefix=prefix)
-app.include_router(ssh_urls.router, prefix=prefix)
-app.include_router(music_urls.router, prefix=prefix)
-app.include_router(share_urls.router, prefix=prefix)
-app.include_router(downloader_urls.router, prefix=prefix)
-app.include_router(onlyoffice_urls.router, prefix=prefix)
-app.include_router(game_urls.router, prefix=prefix)
-app.include_router(system_urls.router, prefix=prefix)
-app.include_router(karaoke_urls.router, prefix=prefix)
-app.include_router(backup_urls.router, prefix=prefix)
-app.include_router(chat_urls.router, prefix=prefix)
+app.include_router(user_urls.router, prefix=PREFIX)
+app.include_router(folder_urls.router, prefix=PREFIX)
+app.include_router(file_urls.router, prefix=PREFIX)
+app.include_router(ssh_urls.router, prefix=PREFIX)
+app.include_router(music_urls.router, prefix=PREFIX)
+app.include_router(share_urls.router, prefix=PREFIX)
+app.include_router(downloader_urls.router, prefix=PREFIX)
+app.include_router(onlyoffice_urls.router, prefix=PREFIX)
+app.include_router(game_urls.router, prefix=PREFIX)
+app.include_router(system_urls.router, prefix=PREFIX)
+app.include_router(karaoke_urls.router, prefix=PREFIX)
+app.include_router(backup_urls.router, prefix=PREFIX)
+app.include_router(chat_urls.router, prefix=PREFIX)
 app.add_event_handler("startup", startup_event)
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app="main:app", host=settings.get_config('host'), port=int(settings.get_config('port')), reload=False)
+    uvicorn.run(app="main:app", host=HOST, port=PORT, reload=False)

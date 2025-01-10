@@ -11,7 +11,7 @@ import subprocess
 import threading
 import traceback
 from urllib.parse import urlparse
-import settings
+from settings import TMP_PATH
 from mycloud import models
 from common.results import Result
 from common.messages import Msg
@@ -52,7 +52,7 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        gid = aria2c_downloader.add_http_task(query.url, settings.TMP_PATH, query.cookie)
+        gid = aria2c_downloader.add_http_task(query.url, TMP_PATH, query.cookie)
         res = aria2c_downloader.get_completed_task_info(gid)
         completed_length = res['completedLength']
         start_time = time.time()
@@ -110,7 +110,7 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        gid = aria2c_downloader.add_bt_task(query.url, settings.TMP_PATH)
+        gid = aria2c_downloader.add_bt_task(query.url, TMP_PATH)
         res = aria2c_downloader.get_completed_task_info(gid)
         while res['status'] != 'complete':
             logger.info(res)
@@ -139,7 +139,7 @@ async def open_torrent(file_id: str, hh: models.SessionBase) -> Result:
     try:
         file = await models.Files.get(id=file_id).select_related('parent')
         folder_path = await file.parent.get_all_path()
-        gid = aria2c_downloader.add_bt_file(base64.b64encode(open(os.path.join(folder_path, file.name), 'rb').read()).decode('ascii'), settings.TMP_PATH)
+        gid = aria2c_downloader.add_bt_file(base64.b64encode(open(os.path.join(folder_path, file.name), 'rb').read()).decode('ascii'), TMP_PATH)
         res = aria2c_downloader.get_completed_task_info(gid)
         new_gid = res['gid']
         file_list = aria2c_downloader.get_file_list(new_gid)
@@ -250,12 +250,12 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
     result = Result()
     try:
         url_parse = urlparse(query.url)
-        file_name = os.path.join(settings.TMP_PATH, f"{url_parse.path[1:].replace('/', '-')}.mp4")
+        file_name = os.path.join(TMP_PATH, f"{url_parse.path[1:].replace('/', '-')}.mp4")
         cmd = ['ffmpeg', '-i', query.url, '-c', 'copy', file_name]
         if query.cookie:
             cmd = ['ffmpeg', '-headers', f'Cookie: {query.cookie}', '-i', query.url, '-c', 'copy', file_name]
         threading.Thread(target=run_async_write_m3u8_to_db, args=(cmd, query.parent_id, file_name,)).start()
-        result.msg = Msg.Download.get_text(hh.lang).format(file_name.replace(settings.TMP_PATH, ''))
+        result.msg = Msg.Download.get_text(hh.lang).format(file_name.replace(TMP_PATH, ''))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, query.parent_id, hh.username, hh.ip))
     except:
         logger.error(traceback.format_exc())

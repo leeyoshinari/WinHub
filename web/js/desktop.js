@@ -3038,9 +3038,6 @@ function upload_back_img(img_type) {
                         let res = JSON.parse(xhr.responseText);
                         if (res['code'] === 0) {
                             $.Toast(res['msg'], 'success');
-                            if (img_type === 1) {
-                                document.body.style.backgroundImage='url("img/pictures/' + document.cookie.split('u=')[1].split(';')[0] + '/background.jpg")';
-                            }
                         } else {
                             $.Toast(res['msg'], 'error');
                         }

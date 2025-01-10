@@ -13,8 +13,8 @@ import signal
 import platform
 import psutil
 import requests
-import settings
 from mycloud import models
+from settings import TMP_PATH, SYSTEM_VERSION
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
 from common.results import Result
 from common.messages import Msg
@@ -168,16 +168,16 @@ async def get_net_info(hh: models.SessionBase) -> Result:
 async def remove_tmp_folder(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        for root, _, files in os.walk(settings.TMP_PATH):
+        for root, _, files in os.walk(TMP_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
                 os.remove(file_path)
                 log_str = f"{Msg.Delete.get_text(hh.lang).format(file_path)}{Msg.Success.get_text(hh.lang)}"
                 logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
 
-        folders = os.listdir(settings.TMP_PATH)
+        folders = os.listdir(TMP_PATH)
         for folder in folders:
-            shutil.rmtree(os.path.join(settings.TMP_PATH, folder))
+            shutil.rmtree(os.path.join(TMP_PATH, folder))
             log_str = f"{Msg.Delete.get_text(hh.lang).format(folder)}{Msg.Success.get_text(hh.lang)}"
             logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
         result.msg = Msg.Delete.get_text(hh.lang).format('') + Msg.Success.get_text(hh.lang)
@@ -195,7 +195,7 @@ async def get_new_version(hh: models.SessionBase) -> Result:
         if res.status_code == 200:
             res_json = json.loads(res.text)
             latest_version = float(res_json[0]['name'])
-            if latest_version < settings.SYSTEM_VERSION:
+            if latest_version < SYSTEM_VERSION:
                 result.data = 1
             else:
                 result.data = 0
@@ -211,12 +211,6 @@ async def get_new_version(hh: models.SessionBase) -> Result:
 async def update_system(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        # repo = git.Repo(settings.path)
-        # if repo.is_dirty():
-        #     logger.warning(Msg.SystemUpdateGitNoPush.get_text(hh.lang))
-        #     repo.git.reset('--hard', 'origin/main')
-        # origin = repo.remotes.origin
-        # git_res = origin.pull()
         result.msg = f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:

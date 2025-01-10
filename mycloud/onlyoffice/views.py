@@ -16,11 +16,11 @@ from common.messages import Msg
 from mycloud import models
 from mycloud.onlyoffice.configuration.configuration import ConfigurationManager
 from mycloud.onlyoffice.utils import docManager, fileUtils, users, jwtManager, historyManager, trackManager
-import settings
+from settings import PREFIX, TOKENs, ONLYOFFICE_SERVER
 
 
-onlyoffice_server = settings.get_config("onlyOfficeServer")
-server_prefix = settings.get_config("prefix")
+onlyoffice_server = ONLYOFFICE_SERVER
+server_prefix = PREFIX
 config_manager = ConfigurationManager()
 
 
@@ -119,7 +119,7 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
             'document': {
                 'file_id': file_id,
                 'title': filename,
-                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={settings.TOKENs[hh.username]}&"
+                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&"
                        f"u={hh.username}&lang={hh.lang}",
                 'fileType': ext[1:],
                 'key': docKey,
@@ -150,7 +150,7 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
                 'actionLink': actionLink,
                 'mode': mode,
                 'lang': hh.lang,
-                'callbackUrl': f"{request_host}{server_prefix}/onlyoffice/track/{file_id}?token={settings.TOKENs[hh.username]}&u={hh.username}&lang={hh.lang}",
+                'callbackUrl': f"{request_host}{server_prefix}/onlyoffice/track/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&lang={hh.lang}",
                 # 'coEditing': {"mode": "strict", "change": False} if edMode == 'view' and user.id == 'uid-0' else None,
                 'createUrl': createUrl,
                 'templates': [],
@@ -308,7 +308,7 @@ async def history_obj(file_id: str, request: Request, body: str, hh: models.Sess
         folder_path = await file.parent.get_all_path()
         storage_path = docManager.getStoragePath(file_id, file_id)
         doc_key = docManager.generateFileKey(os.path.join(folder_path, file.name))
-        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={settings.TOKENs[hh.username]}&u={hh.username}&lang={hh.lang}"
+        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&lang={hh.lang}"
         response = historyManager.getHistoryObject(storage_path, file.name, doc_key, file_url, False, file_id, request_host)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.HistoryRecord.get_text(hh.lang), file_id, hh.username, hh.ip))
         return json.dumps(response, ensure_ascii=False)

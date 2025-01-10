@@ -16,15 +16,14 @@
 
 """
 
-
 import os
 import shutil
 import re
 import requests
+from settings import ONLYOFFICE_SERVER
 from mycloud.onlyoffice.configuration.configuration import ConfigurationManager
 from mycloud.onlyoffice.format.format import FormatManager
 from . import fileUtils
-import settings
 
 
 config_manager = ConfigurationManager()
@@ -94,7 +93,7 @@ def getCorrectName(filename, file_id: str):
 
 # get server url
 def getServerUrl():
-    return settings.get_config("onlyOfficeServer")
+    return ONLYOFFICE_SERVER
 
 
 # get absolute URL to the document storage service

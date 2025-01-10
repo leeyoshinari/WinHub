@@ -5,7 +5,7 @@
 import os
 import shutil
 import traceback
-import settings
+from settings import ENABLE_BACKUP, ROOT_PATH, BACKUP_PATH, BACKUP_INTERVAL
 from mycloud import models
 from common.results import Result
 from common.messages import Msg
@@ -15,7 +15,7 @@ from common.scheduler import scheduler, get_schedule_time
 
 async def start_backup(hh: models.SessionBase) -> Result:
     result = Result()
-    if settings.ENABLE_BACKUP != 1:
+    if ENABLE_BACKUP != 1:
         result.code = 1
         result.msg = Msg.SyncDataNo.get_text(hh.lang)
         return result
@@ -36,10 +36,10 @@ async def start_sync(username: str = None):
         folder_path = await folder.get_all_path()
         if username and f"/{username}" not in folder_path:
             continue
-        for k, v in settings.ROOT_PATH.items():
+        for k, v in ROOT_PATH.items():
             if folder_path.startswith(v):
                 relative_path = folder_path[len(v) + 1:]
-                target_path = os.path.join(settings.BACKUP_PATH, k, relative_path)
+                target_path = os.path.join(BACKUP_PATH, k, relative_path)
                 if not os.path.exists(target_path):
                     os.makedirs(target_path, exist_ok=True)
                 logger.info(f"Syncing {folder_path}")
@@ -48,7 +48,7 @@ async def start_sync(username: str = None):
 
 async def index_backup(hh: models.SessionBase) -> Result:
     result = Result()
-    if settings.ENABLE_BACKUP != 1:
+    if ENABLE_BACKUP != 1:
         result.code = 1
         result.msg = Msg.SyncDataNo.get_text(hh.lang)
         return result
@@ -68,7 +68,7 @@ async def index_backup(hh: models.SessionBase) -> Result:
 
 async def add_backup(folder_id: str, is_backup: int, hh: models.SessionBase) -> Result:
     result = Result()
-    if settings.ENABLE_BACKUP != 1:
+    if ENABLE_BACKUP != 1:
         result.code = 1
         result.msg = Msg.SyncDataNo.get_text(hh.lang)
         return result
@@ -113,5 +113,5 @@ def sync_data(source_path: str, target_path: str):
                 shutil.rmtree(target_dir)
 
 
-if settings.ENABLE_BACKUP == 1:
-    scheduler.add_job(start_sync, 'interval', days=settings.BACKUP_INTERVAL, start_date=get_schedule_time())
+if ENABLE_BACKUP == 1:
+    scheduler.add_job(start_sync, 'interval', days=BACKUP_INTERVAL, start_date=get_schedule_time())

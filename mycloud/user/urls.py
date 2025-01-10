@@ -15,7 +15,7 @@ from common.calc import str_md5, parse_pwd
 from common.results import Result
 from common.logging import logger
 from common.messages import Msg
-import settings
+from settings import BASE_PATH, TOKENs, ROOT_PATH
 
 
 router = APIRouter(prefix='/user', tags=['user (用户管理)'], responses={404: {'description': 'Not found'}})
@@ -25,7 +25,7 @@ router = APIRouter(prefix='/user', tags=['user (用户管理)'], responses={404:
 async def get_status(request: Request):
     username = request.cookies.get("u", 's')
     token = request.cookies.get("token", None)
-    if not username or username not in settings.TOKENs or token != settings.TOKENs[username]:
+    if not username or username not in TOKENs or token != TOKENs[username]:
         return Result(code=-1)
     user = await models.User.get(username=username)
     return Result(data=user.nickname)
@@ -53,7 +53,7 @@ async def create_user(username: str, nickname: str, password: str, password1: st
         async with transactions.in_transaction():
             password = str_md5(password)
             user = await models.User.create(nickname=nickname, username=username, password=password)
-            for k, v in settings.ROOT_PATH.items():
+            for k, v in ROOT_PATH.items():
                 folder = await models.Catalog.filter(id=k)
                 if not folder:
                     await models.Catalog.create(id=k, parent=None, name=v)
@@ -63,12 +63,14 @@ async def create_user(username: str, nickname: str, password: str, password1: st
                 user_path = os.path.join(v, user.username)
                 if not os.path.exists(user_path):
                     os.mkdir(user_path)
-            back_path = os.path.join(settings.path, 'web/img/pictures', user.username)
+            back_path = os.path.join(BASE_PATH, 'web/img/pictures', user.username)
             if not os.path.exists(back_path):
                 os.mkdir(back_path)
-            source_file = os.path.join(settings.path, 'web/img/pictures/undefined/background.jpg')
+            source_file = os.path.join(BASE_PATH, 'web/img/pictures/undefined/background.jpg')
             target_file = os.path.join(back_path, 'background.jpg')
+            login_file = os.path.join(back_path, 'login.jpg')
             shutil.copy(source_file, target_file)
+            shutil.copy(source_file, login_file)
         result.msg = f"{Msg.CreateUser.get_text(lang).format(user.username)}{Msg.Success.get_text(lang)}"
         logger.info(f"{result.msg}, IP: {request.headers.get('x-real-ip', '')}")
     except:
@@ -122,7 +124,7 @@ async def login(query: models.UserBase, request: Request, response: Response):
     try:
         user = await models.User.get(username=query.username, password=str_md5(parse_pwd(query.password, query.t)))
         if user:
-            for k, v in settings.ROOT_PATH.items():
+            for k, v in ROOT_PATH.items():
                 folder = await models.Catalog.filter(id=k)
                 if not folder:
                     await models.Catalog.create(id=k, parent=None, name=v)
@@ -134,7 +136,7 @@ async def login(query: models.UserBase, request: Request, response: Response):
                     os.mkdir(user_path)
             pwd_str = f'{time.time()}_{user.username}_{int(time.time())}_{user.nickname}'
             token = str_md5(pwd_str)
-            settings.TOKENs.update({user.username: token})
+            TOKENs.update({user.username: token})
             response.set_cookie('u', user.username)
             response.set_cookie('t', str(int(time.time() / 1000)))
             response.set_cookie('token', token)
@@ -158,6 +160,6 @@ async def login(query: models.UserBase, request: Request, response: Response):
 
 @router.get("/logout", summary="Logout (退出登陆)")
 async def logout(hh: models.SessionBase = Depends(auth)):
-    settings.TOKENs.pop(hh.username, 0)
+    TOKENs.pop(hh.username, 0)
     logger.info(f"{Msg.Logout.get_text(hh.lang).format(hh.username)}{Msg.Success.get_text(hh.lang)}, IP: {hh.ip}")
     return Result()

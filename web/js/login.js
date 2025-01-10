@@ -22,6 +22,7 @@ function login_sys(evn) {
         success: function (data) {
             if (data['code'] === 0) {
                 nickName = data['data'];
+                localStorage.setItem("username", $('#username')[0].value);
                 window.location.reload();
             } else {
                 $.Toast(data['msg'], 'error');

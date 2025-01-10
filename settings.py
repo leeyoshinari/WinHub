@@ -6,27 +6,36 @@ import os
 import sys
 import json
 import configparser
+import tzlocal
+
 
 if hasattr(sys, 'frozen'):
-    path = os.path.dirname(sys.executable)
+    BASE_PATH = os.path.dirname(sys.executable)
 else:
-    path = os.path.dirname(os.path.abspath(__file__))
+    BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 cfg = configparser.ConfigParser()
-config_path = os.path.join(path, 'config.conf')
-version_path = os.path.join(path, '__version__')
+config_path = os.path.join(BASE_PATH, 'config.conf')
+version_path = os.path.join(BASE_PATH, '__version__')
 cfg.read(config_path, encoding='utf-8')
 TOKENs = {}
 
 
 def get_config(key):
+    value = os.environ.get(key, None)
+    if value is not None:
+        return value
     return cfg.get('default', key, fallback="")
 
 
+PREFIX = get_config("prefix")
+HOST = get_config("host")
+PORT = int(get_config("port"))
 TRACKER_URL = get_config("trackerUrls")
 ROOT_PATH = json.loads(get_config("rootPath"))
-TMP_PATH = os.path.join(path, 'tmp')
-KTV_TMP_PATH = os.path.join(TMP_PATH, 'ktv')
-KARAOKE_PATH = os.path.join(ROOT_PATH['D'], 'karaoke_ktv')
+ENABLE_ONLYOFFICE = get_config("enableOnlyoffice")
+ONLYOFFICE_SERVER = get_config("onlyOfficeServer")
+ONLYOFFICE_SECRET = get_config("onlyOfficeSecret")
+ONLYOFFICE_HISTORY_PATH = get_config("historyVersionPath")
 ENABLE_BACKUP = int(get_config("enableBackup"))
 BACKUP_PATH = get_config("backupPath")
 BACKUP_INTERVAL = int(get_config("backupInterval"))
@@ -34,6 +43,10 @@ WEBRTC_STUN = get_config("STUN")
 WEBRTC_TURN = get_config("TURN")
 WEBRTC_USER = get_config("TURNUserName")
 WEBRTC_CRED = get_config("credential")
+LOGGER_LEVEL = get_config("level")
+TMP_PATH = os.path.join(BASE_PATH, 'tmp')
+KTV_TMP_PATH = os.path.join(TMP_PATH, 'ktv')
+KARAOKE_PATH = os.path.join(ROOT_PATH['D'], 'karaoke_ktv')
 
 if not os.path.exists(TMP_PATH):
     os.mkdir(TMP_PATH)
@@ -53,7 +66,7 @@ TORTOISE_ORM = {
             "default_connection": "default"
         }
     },
-    "timezone": "Asia/Shanghai"
+    "timezone": str(tzlocal.get_localzone())
 }
 
 CONTENT_TYPE = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': 'image/bmp', 'png': 'image/png', 'pdf': 'application/pdf',

@@ -10,7 +10,7 @@ from tortoise.expressions import Q
 from tortoise.exceptions import DoesNotExist
 from mycloud import models
 from mycloud.onlyoffice.views import remove
-from settings import get_config, ROOT_PATH
+from settings import ROOT_PATH, ENABLE_ONLYOFFICE
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
@@ -24,7 +24,7 @@ async def get_disk_usage(hh: models.SessionBase) -> Result:
         for k, v in ROOT_PATH.items():
             info = shutil.disk_usage(v)
             data.append({'disk': k, 'total': beauty_size(info.total), 'free': beauty_size(info.free),
-                         'used': round(info.used / info.total * 100, 2), 'enableOnlyoffice': get_config("enableOnlyoffice")})
+                         'used': round(info.used / info.total * 100, 2), 'enableOnlyoffice': ENABLE_ONLYOFFICE})
         result.data = data
         result.total = len(result.data)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"

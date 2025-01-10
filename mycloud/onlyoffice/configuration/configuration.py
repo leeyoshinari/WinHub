@@ -16,7 +16,7 @@
 
 from pathlib import Path
 from urllib.parse import ParseResult, urlparse, urljoin
-import settings
+from settings import ONLYOFFICE_SERVER, ONLYOFFICE_SECRET, ONLYOFFICE_HISTORY_PATH
 
 
 class ConfigurationManager:
@@ -26,7 +26,7 @@ class ConfigurationManager:
         return self.version
 
     def document_server_public_url(self) -> ParseResult:
-        url = (settings.get_config('onlyOfficeServer'))
+        url = (ONLYOFFICE_SERVER)
         return urlparse(url)
 
     def document_server_private_url(self) -> ParseResult:
@@ -61,20 +61,19 @@ class ConfigurationManager:
         return urlparse(url)
 
     def jwt_secret(self) -> str:
-        return settings.get_config("onlyOfficeSecret")
+        return ONLYOFFICE_SECRET
 
     def jwt_header(self) -> str:
         return 'Authorization'
 
     def jwt_use_for_request(self) -> bool:
-        return  True
+        return True
 
     def ssl_verify_peer_mode_enabled(self) -> bool:
-        return  False
+        return False
 
     def storage_path(self) -> Path:
-        storage_path = settings.get_config("historyVersionPath")
-        storage_directory = Path(storage_path)
+        storage_directory = Path(ONLYOFFICE_HISTORY_PATH)
         if storage_directory.is_absolute():
             return storage_directory
         file = Path(__file__)
