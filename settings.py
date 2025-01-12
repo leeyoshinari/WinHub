@@ -27,7 +27,8 @@ def get_config(key):
     return cfg.get('default', key, fallback="")
 
 
-PREFIX = get_config("winHubPrefix")
+FRONT_END_PREFIX = get_config("winHubFrontEndPrefix")
+PREFIX = get_config("winHubBackEndPrefix")
 HOST = get_config("winHubHost")
 PORT = int(get_config("winHubPort"))
 TRACKER_URL = get_config("winHubTrackerUrls")

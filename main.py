@@ -7,7 +7,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from tortoise.contrib.fastapi import register_tortoise
 from common.calc import modify_prefix, modify_sw, modify_manifest
 from common.scheduler import scheduler
-from settings import PREFIX, TORTOISE_ORM, HOST, PORT, PWA_URL
+from settings import PREFIX, TORTOISE_ORM, HOST, PORT, PWA_URL, FRONT_END_PREFIX
 import mycloud.user.urls as user_urls
 import mycloud.folders.urls as folder_urls
 import mycloud.files.urls as file_urls
@@ -37,7 +37,7 @@ async def startup_event():
 @app.get(PREFIX + "/swagger-ui", include_in_schema=False)
 async def get_docs():
     return get_swagger_ui_html(openapi_url='/api/openapi/openapi.json', title='Windows swagger-ui',
-                               swagger_js_url='/Windows/js/swagger-ui-bundle.js', swagger_css_url='/Windows/css/swagger-ui.css')
+                               swagger_js_url=f'{FRONT_END_PREFIX}/js/swagger-ui-bundle.js', swagger_css_url=f'{FRONT_END_PREFIX}/css/swagger-ui.css')
 
 
 app.include_router(user_urls.router, prefix=PREFIX)
