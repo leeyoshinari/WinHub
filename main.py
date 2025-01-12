@@ -5,9 +5,9 @@
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 from tortoise.contrib.fastapi import register_tortoise
-from common.calc import modify_prefix, modify_sw
+from common.calc import modify_prefix, modify_sw, modify_manifest
 from common.scheduler import scheduler
-from settings import PREFIX, TORTOISE_ORM, HOST, PORT
+from settings import PREFIX, TORTOISE_ORM, HOST, PORT, PWA_URL
 import mycloud.user.urls as user_urls
 import mycloud.folders.urls as folder_urls
 import mycloud.files.urls as file_urls
@@ -27,6 +27,7 @@ app = FastAPI(docs_url=None, redoc_url=None, root_path='/api/openapi')
 register_tortoise(app=app, config=TORTOISE_ORM)
 modify_prefix(PREFIX)   # 将后端的 prefix 写入前端变量中
 modify_sw()     # 修改 sw.js 文件中的缓存版本号
+modify_manifest(PWA_URL)    # 修改 manifest.json 文件中的 url
 
 
 async def startup_event():
