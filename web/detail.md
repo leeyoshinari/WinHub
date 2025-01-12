@@ -1,4 +1,4 @@
-# OneDrive
+# WinHub
 ## Function
 - Create, Delete, Rename, Move, and Export folders
 - Upload, Download, Create, Delete, Move, Rename, and Share files
@@ -13,6 +13,7 @@
 - Karaoke, supports building your own song library
 - Integrate aria2, and support multiple download protocols such as HTTP, FTP, BitTorrent, etc.
 - Add game center, supports Snake, tetris games (plans to support more games in the future).
+- Support restart and automatic update
 - Supports multiple languages and supports configuration of multiple languages
 - Single sign-on, data of different users is completely isolated
 - Support PWA, it can be installed on the mobile
@@ -151,17 +152,13 @@ Supports online editing of py files, and you can see the results directly on the
 ## Others
 1.Supports multiple platforms such as `Linux`, `Windows`, `MacOS`, etc. It is recommended to deploy on `Linux`.
 
-2.Cluster deployment and distributed storage are not supported. If you need cluster deployment and distributed storage, [Please click me](https://github.com/leeyoshinari/mycloud).
+2.Cluster deployment and distributed storage are not supported.
 
-3.The path of the background image of the login page is `web/img/pictures/undefined/background.jpg`. If you need to modify the login background image, you can directly replace this image. Note: the image name must be `background.jpg`.
+3.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
 
-4.The background image of the desktop is the same as the background image of the login page by default. If you need to modify it, you can upload it in `Setting->Personalized->Set background image`. After the upload is successful, clear the cache and refresh the page. Note: The image format must be `jpg`.
+4.All pages and operations have been adapted to the mobile phone as much as possible. Use the mobile browser to open the page and display it horizontally on the mobile phone, the user experience is still good.
 
-5.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
-
-6.All pages and operations have been adapted to the mobile phone as much as possible. Use the mobile browser to open the page and display it horizontally on the mobile phone, the user experience is still good.
-
-7.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
+5.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
 
 ## Deployment
 Recommended deployment solution:

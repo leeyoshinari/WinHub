@@ -19,6 +19,7 @@ A multi-functional platform integrating file storage, editing, communication, en
 - Karaoke, supports building your own song library
 - Integrate aria2, and support multiple download protocols such as HTTP, FTP, BitTorrent, etc.
 - Add game center, supports Snake, tetris games (plans to support more games in the future).
+- Support restart and automatic update
 - Supports multiple languages and supports configuration of multiple languages
 - Single sign-on, data of different users is completely isolated
 - Support PWA, it can be installed on the mobile
@@ -34,7 +35,8 @@ View detailed page style, [Please click me.](https://github.com/leeyoshinari/Win
 ## Deploy
 1.Clone `git clone https://github.com/leeyoshinari/WinHub.git` ；
 
-2.`cd WinHub`, and modify `config.conf`；
+2.`cd WinHub`, and check configuration in `config.conf`；<br>
+Note: If you need the restart and automatic update functions, you need to set the configuration that needs to be modified in `config.conf` as system environment variables. See below for configuration details
 
 3.Install third-party packages
 ```shell script
@@ -58,7 +60,7 @@ sh startup.sh
 7.Create user<br>
 In order to avoid malicious creation of users by others, the page does not open the entrance to create users. So, you can create a user in the API interface documentation, entering the `swagger-ui` page and finding the `createUser` interface.
 ```shell script
-http://IP:Port/配置文件中的prefix/swagger-ui
+http://IP:Port/ prefix IN config.conf /swagger-ui
 ```
 
 8.Configure and start `nginx`, the location configuration is as follows:<br>
@@ -108,6 +110,63 @@ If you don’t know nginx, please go to [nginx official website](http://nginx.or
 11.If you need to configure multiple languages, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
 
 12.If you want to know more, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
+
+
+## Configuration
+If the following configuration needs to be modified, it must be configured in the system environment variables. If the environment variables are not set, the configuration in `config.conf` will be used by default. After setting the environment variables, if it does not take effect, please reopen the command line or re-ssh the server.
+
+### winHubHost 和 winHubPort
+The IP and port that the service listens on.
+
+### winHubFrontEndPrefix
+The front-end prefix, is ​​the same as that in nginx, and is only used for swagger page. If prefix is ​​not needed, please set it to empty.
+
+### winHubBackEndPrefix
+The back-end prefix, is the same as that in nginx. If prefix is ​​not required, please set it to empty.
+
+### winHubDbUrl
+Database connection, only supports sqlite3 and MySQL.
+
+### winHubRootPath
+The root directory of each disk file, is configured as follows: all files in the D drive are placed in the `home/WinHub/data` directory, and all files in the E drive are placed in the `/opt/Windows/data` directory. The directories must exist.
+`{"D": "/home/WinHub/data", "E": "/opt/Windows/data", "F": "/data/data"}`
+
+### winHubPwaUrl
+The startup URL of PWA. If the prefix of the front-end is empty, then it can also be configured as empty. Otherwise, you need to configure the URL to use PWA. Note: PWA only supports the https protocol.
+
+### winHubEnableOnlyoffice
+Whether to enable OnlyOffice, 0: not enabled, 1: enabled
+
+### winHubOnlyOfficeServer 和 winHubOnlyOfficeSecret
+They are the URL of OnlyOffice and the jwt secret of OnlyOffice respectively.
+
+### winHubHistoryVersionPath
+The directory where historical versions of OnlyOffice files are stored during editing.
+
+### winHubEnableBackup
+Whether to enable the backup function, 0 is not enabled, 1 is enabled
+
+### winHubBackupPath
+Backup directory, must exist.
+
+### winHubBackupInterval
+Backup cycle, unit: day, that is, backup once every x days.
+
+### winHubTrackerUrls
+URL of available tracker, aria2c needs tracker to download BT seeds.
+
+### winHubSTUN
+STUN server address, mainly used for audio and video calls.
+
+### winHubTURN
+TURN server address, mainly used for audio and video calls.
+
+### winHubTURNUserName 和 winHubCredential
+Username and password for the TURN service
+
+### winHubLevel
+Log Level
+
 
 ## Others
 1.Supports multiple platforms such as `Linux`, `Windows`, `MacOS`, etc. It is recommended to deploy on `Linux`.

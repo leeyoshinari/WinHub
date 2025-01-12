@@ -1,4 +1,4 @@
-# OneDrive
+# WinHub
 [English Document](https://github.com/leeyoshinari/WinHub/blob/main/README.md)
 
 [更多内容详见博客](https://blog.ihuster.top/p/940241891.html)
@@ -17,6 +17,7 @@
 - 支持 KTV，自建曲库，想唱就唱
 - 集成 aria2，支持 HTTP、FTP、BitTorrent 等多种下载协议
 - 增加游戏中心，支持贪吃蛇、俄罗斯方块、套圈圈游戏（会陆续支持更多小游戏）
+- 支持重启，支持自动更新
 - 支持多语言，支持配置多语言
 - 单点登录，不同用户的数据完全隔离
 - 支持 PWA，可以“安装”到手机上
@@ -31,7 +32,8 @@
 ## 部署
 1、克隆 `git clone https://github.com/leeyoshinari/WinHub.git` ；
 
-2、进入目录 `cd WinHub`，修改配置文件`config.conf`；
+2、进入目录 `cd WinHub`，核对配置`config.conf`；<br>
+注意：如果你需要重启和自动更新的功能，那么你需要把 `config.conf` 中的需要修改的配置设置成系统环境变量。详细的配置请往下看。
 
 3、安装第三方包
 ```shell script
@@ -102,6 +104,60 @@ location /api/openapi {
 
 10、如果想把当前服务器上已有的文件导入系统中，可访问后台 api 接口页面，找到 `file/import` 接口，请求参数分别是需要导入的文件夹的绝对路径和目标的目录Id。
 
+## 配置解释
+以下配置，如果需要修改的话，一定要配置到系统环境变量中，如果没有设置环境变量，则默认会使用 `config.conf` 中的配置。设置环境变量后，如果没有生效，请重新打开命令行窗口或重新 ssh 服务器。
+
+### winHubHost 和 winHubPort
+后端服务监听的 ip 和 端口
+
+### winHubFrontEndPrefix
+前端 prefix，和 nginx 中的一样，只用于 swagger 页面展示。如果不需要 prefix，那么请配置为空。
+
+### winHubBackEndPrefix
+后端 prefix，nginx 中的配置要和这里的一样。如果不需要 prefix，那么请配置为空。
+
+### winHubDbUrl
+数据库连接，只支持 sqlite3 和 MySQL
+
+### winHubRootPath
+每个磁盘文件的根目录，如下配置，网盘的 D 盘里的文件全部放在 `home/WinHub/data` 目录里，网盘的 E 盘里的文件全部放在 `/opt/Windows/data` 目录里。这里配置的目录必须存在。
+`{"D": "/home/WinHub/data", "E": "/opt/Windows/data", "F": "/data/data"}`
+
+### winHubPwaUrl
+PWA 的启动 url，如果前端的 prefix 配置为空，那么这里也可以配置为空，否则就需要配置访问前端的 url。注意：PWA 只支持 https 协议。
+
+### winHubEnableOnlyoffice
+是否启用 OnlyOffice，0 不启用，1 启用
+
+### winHubOnlyOfficeServer 和 winHubOnlyOfficeSecret
+分别为 OnlyOffice 的访问地址和 OnlyOffice 的 jwt secret
+
+### winHubHistoryVersionPath
+OnlyOffice 文件编辑过程中的历史版本存放目录
+
+### winHubEnableBackup
+是否启用备份功能，0 不启用，1 启用
+
+### winHubBackupPath
+备份目录，必须存在
+
+### winHubBackupInterval
+备份周期，单位：天，即每隔x天备份一次
+
+### winHubTrackerUrls
+可用 tracker 获取连接，aria2c 下载 BT 种子需要 tracker
+
+### winHubSTUN
+STUN 服务器地址，主要用于音视频通话
+
+### winHubTURN
+TURN 服务器地址，主要用于音视频通话
+
+### winHubTURNUserName 和 winHubCredential
+TURN 服务的用户名和密码
+
+### winHubLevel
+日志级别
 
 ## 其他
 1、支持 `Linux`、`Windows`、`MacOS` 等多个平台，建议在 `Linux` 系统部署； 
