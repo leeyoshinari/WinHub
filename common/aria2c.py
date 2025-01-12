@@ -6,7 +6,7 @@ import time
 import subprocess
 import traceback
 import requests
-import settings
+from settings import TRACKER_URL
 from common.logging import logger
 
 
@@ -196,7 +196,7 @@ class Aria2Downloader:
 
 
 def get_tracker_list():
-    urls = settings.TRACKER_URL.split(',')
+    urls = TRACKER_URL.split(',')
     tracker = []
     for url in urls:
         try:

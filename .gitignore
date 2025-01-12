@@ -151,6 +151,8 @@ string/
 demo/
 highlight/
 tmp/
+WinHub*
+start
 # Pyre type checker
 .pyre/
 

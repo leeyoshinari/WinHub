@@ -1,5 +1,8 @@
 const server = '/mycloud';
 localStorage.setItem('server', server);
+if (!localStorage.getItem('username')) {
+    localStorage.setItem('username', 'undefined');
+}
 let nickName = '';
 function change_language(flag) {
     if (flag === 0){
@@ -27,13 +30,13 @@ function get_status() {
                 $('#loginback').css('display', 'none');
                 $('#dock-box').css('display', 'flex');
                 $('#desktop').css('display', 'flex');
-                document.body.style.backgroundImage = 'url("img/pictures/' + document.cookie.split('u=')[1].split(';')[0] + '/background.jpg")';
+                document.body.style.backgroundImage = `url("img/pictures/${localStorage.getItem("username")}/background.jpg")`;
             } else {
                 $('#loginback').css('opacity', '1');
                 $('#loginback').css('display', 'flex');
                 $('#dock-box').css('display', 'none');
                 $('#desktop').css('display', 'none');
-                document.getElementById('loginback').style.backgroundImage = 'url("img/pictures/undefined/background.jpg")';
+                document.getElementById('loginback').style.backgroundImage = `url("img/pictures/${localStorage.getItem("username")}/login.jpg")`;
             }
         },
         error: function (xhr, status, msg) {
@@ -42,7 +45,7 @@ function get_status() {
             $('#loginback').css('display', 'flex');
             $('#dock-box').css('display', 'none');
             $('#desktop').css('display', 'none');
-            document.getElementById('loginback').style.backgroundImage = 'url("img/pictures/undefined/background.jpg")';
+            document.getElementById('loginback').style.backgroundImage = `url("img/pictures/${localStorage.getItem("username")}/login.jpg")`;
         }
     })
 }

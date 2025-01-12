@@ -4,10 +4,10 @@
 
 import os
 import logging.handlers
-from settings import get_config, path
+from settings import BASE_PATH, LOGGER_LEVEL
 
-LEVEL = get_config("level")
-log_path = os.path.join(path, 'logs')
+
+log_path = os.path.join(BASE_PATH, 'logs')
 if not os.path.exists(log_path):
     os.mkdir(log_path)
 
@@ -21,7 +21,7 @@ log_level = {
 
 logger = logging.getLogger()
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(threadName)s - %(filename)s[line:%(lineno)d] - %(message)s')
-logger.setLevel(level=log_level.get(LEVEL))
+logger.setLevel(level=log_level.get(LOGGER_LEVEL))
 
 file_handler = logging.handlers.TimedRotatingFileHandler(
     os.path.join(log_path, 'access.log'), when='midnight', interval=1, backupCount=7)

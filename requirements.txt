@@ -16,3 +16,4 @@ PyJWT>=2.8.0
 msgspec>=0.18.6
 psutil>=6.0.0
 sse_starlette>=2.1.3
+tzlocal>=5.2

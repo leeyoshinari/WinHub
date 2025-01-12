@@ -12,7 +12,7 @@ from mycloud.responses import StreamResponse, MyResponse
 from common.results import Result
 from common.logging import logger
 from common.messages import Msg
-import settings
+from settings import CONTENT_TYPE
 
 
 router = APIRouter(prefix='/file', tags=['file (文件)'], responses={404: {'description': 'Not found'}})
@@ -83,7 +83,7 @@ async def download_file(file_id: str, hh: models.SessionBase = Depends(auth)):
         result = await views.download_file(file_id, hh)
         headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
                    'Content-Disposition': f'inline;filename="{result["name"]}"'}
-        return StreamResponse(read_file(result['path']), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+        return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
     except:
         logger.error(traceback.format_exc())
         return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
@@ -95,7 +95,7 @@ async def onlyoffice_file(file_id: str, hh: models.SessionBase = Depends(auth_ur
         result = await views.download_file(file_id, hh)
         headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
                    'Content-Disposition': f'inline;filename="{result["name"]}"'}
-        return StreamResponse(read_file(result['path']), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+        return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
     except:
         logger.error(traceback.format_exc())
         return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
@@ -141,9 +141,9 @@ async def upload_image(query: Request, hh: models.SessionBase = Depends(auth)):
 # @router.get("/background/getImage", summary="get image (获取用户背景图片)")
 # async def get_image(request: Request, hh: models.SessionBase = Depends(auth)):
 #     try:
-#         image_path = os.path.join(settings.path, 'mycloud/static_files', hh.username + '.jpg')
+#         image_path = os.path.join(path, 'mycloud/static_files', hh.username + '.jpg')
 #         if not os.path.exists(image_path):
-#             image_path = os.path.join(settings.path, 'mycloud/static_files', 'background.jpg')
+#             image_path = os.path.join(path, 'mycloud/static_files', 'background.jpg')
 #         last_modify_time = str(os.path.getmtime(image_path))
 #         if request.headers.get("if-modified-since", "") == last_modify_time:
 #             return MyResponse(status_code=304, media_type="image/jpeg")
@@ -177,7 +177,7 @@ async def play_video(file_id: str, request: Request, hh: models.SessionBase = De
         content_range = f"bytes {start_index}-{file_size-1}/{file_size}"
         headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(file_size - start_index),
                    'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{result["name"]}"'}
-        return StreamResponse(read_file(result['path'], start_index=start_index), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=206)
+        return StreamResponse(read_file(result['path'], start_index=start_index), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=206)
     except:
         logger.error(traceback.format_exc())
         return Result(code=1, msg=Msg.VideoError.get_text(hh.lang))
@@ -189,7 +189,7 @@ async def export_file(file_id: str, hh: models.SessionBase = Depends(auth)):
         result = await views.export_xmind_file(file_id, hh)
         headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
                    'Content-Disposition': f'inline;filename="{result["name"]}"'}
-        return StreamResponse(read_file(result['path']), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+        return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
     except:
         logger.error(traceback.format_exc())
         return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
@@ -200,7 +200,7 @@ async def md2html(file_id: str, hh: models.SessionBase = Depends(auth)):
     try:
         result = await views.markdown_to_html(file_id, hh)
         headers = {'Accept-Ranges': 'bytes', 'Content-Disposition': f'inline;filename="{result["name"]}"'}
-        return MyResponse(result['data'].encode('utf-8'), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+        return MyResponse(result['data'].encode('utf-8'), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
     except:
         logger.error(traceback.format_exc())
         return Result(code=1, msg=Msg.Failure.get_text(hh.lang))

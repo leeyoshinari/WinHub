@@ -3,7 +3,7 @@
 # @Author: leeyoshinari
 
 from fastapi import Request, HTTPException
-import settings
+from settings import TOKENs
 from mycloud.models import SessionBase
 
 
@@ -14,7 +14,7 @@ def auth(request: Request) -> SessionBase:
     lang = request.headers.get('lang', 'en')
     ip = request.headers.get('x-real-ip', '')
     token = request.cookies.get("token", None)
-    if not username or username not in settings.TOKENs or token != settings.TOKENs[username]:
+    if not username or username not in TOKENs or token != TOKENs[username]:
         raise HTTPException(status_code=401)
     return SessionBase(username=username, ip=ip, lang=lang)
 
@@ -25,7 +25,7 @@ def auth_url(request: Request) -> SessionBase:
     lang = request.query_params.get('lang', 'en')
     ip = request.headers.get('x-real-ip', '')
     token = request.query_params.get("token", None)
-    if not username or username not in settings.TOKENs or token != settings.TOKENs[username]:
+    if not username or username not in TOKENs or token != TOKENs[username]:
         raise HTTPException(status_code=401)
     return SessionBase(username=username, ip=ip, lang=lang)
 
@@ -40,7 +40,7 @@ def auth_uc(request: Request) -> SessionBase:
         username = request.cookies.get("u", 's')
         lang = request.headers.get('lang', 'en')
         token = request.cookies.get("token", None)
-    if not username or username not in settings.TOKENs or token != settings.TOKENs[username]:
+    if not username or username not in TOKENs or token != TOKENs[username]:
         raise HTTPException(status_code=401)
     return SessionBase(username=username, ip=ip, lang=lang)
 

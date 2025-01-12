@@ -17,7 +17,7 @@
 import os
 from msgspec.json import decode
 from msgspec import Struct
-from settings import path
+from settings import BASE_PATH
 
 
 class Format(Struct):
@@ -119,7 +119,7 @@ class FormatManager():
         return list(mapped)
 
     def all(self) -> list[Format]:
-        file_path = os.path.join(path, 'onlyoffice-formats.json')
+        file_path = os.path.join(BASE_PATH, 'onlyoffice-formats.json')
         with open(file_path, 'r', encoding='utf-8') as file:
             contents = file.read()
             return decode(contents, type=list[Format])

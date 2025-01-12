@@ -112,6 +112,15 @@ def modify_sw():
             f.writelines(lines)
 
 
+def modify_manifest(pwa_url):
+    if os.path.exists('web/manifest.json'):
+        with open('web/manifest.json', 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        lines[4] = f'    "start_url": "{pwa_url}",\n'
+        with open('web/manifest.json', 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+
 def parse_pwd(password: str, s: str):
     p = ''
     time_len = len(s)

@@ -1,5 +1,5 @@
 # WinHub
-Windows-style personal cloud-drive with supporting online editing.
+A multi-functional platform integrating file storage, editing, communication, entertainment and system management.
 
 [中文文档](https://github.com/leeyoshinari/WinHub/blob/main/README_zh.md)
 
@@ -19,6 +19,7 @@ Windows-style personal cloud-drive with supporting online editing.
 - Karaoke, supports building your own song library
 - Integrate aria2, and support multiple download protocols such as HTTP, FTP, BitTorrent, etc.
 - Add game center, supports Snake, tetris games (plans to support more games in the future).
+- Support restart and automatic update
 - Supports multiple languages and supports configuration of multiple languages
 - Single sign-on, data of different users is completely isolated
 - Support PWA, it can be installed on the mobile
@@ -32,14 +33,17 @@ View detailed page style, [Please click me.](https://github.com/leeyoshinari/Win
 - Front-end: html + js + css
 
 ## Deploy
-1.Clone `git clone https://github.com/leeyoshinari/WinHub.git` ；
+[See the blog for detailed deployment steps](https://blog.ihuster.top/p/940241891.html#%E9%83%A8%E7%BD%B2) <br>
+1.Clone `git clone https://github.com/leeyoshinari/WinHub.git` ;
 
-2.`cd WinHub`, and modify `config.conf`；
+2.`cd WinHub`, and check configuration in `config.conf`；<br>
+Note: If you need the restart and automatic update functions, you need to set the configuration that needs to be modified in `config.conf` as system environment variables. See below for configuration details.
 
 3.Install third-party packages
 ```shell script
 pip3 install -r requirements.txt
 ```
+Note: If you use Windows system, you need to install pywin32 package, run command: `pip install pywin32`。
 
 4.Initialize the database and execute the following commands in sequence
 ```shell script
@@ -57,7 +61,7 @@ sh startup.sh
 7.Create user<br>
 In order to avoid malicious creation of users by others, the page does not open the entrance to create users. So, you can create a user in the API interface documentation, entering the `swagger-ui` page and finding the `createUser` interface.
 ```shell script
-http://IP:Port/配置文件中的prefix/swagger-ui
+http://IP:Port/ prefix IN config.conf /swagger-ui
 ```
 
 8.Configure and start `nginx`, the location configuration is as follows:<br>
@@ -98,26 +102,75 @@ Usually nginx will limit the size of the request body, and you need to add `clie
 
 If you don’t know nginx, please go to [nginx official website](http://nginx.org/en/download.html) to download nginx and install it. After the installation is completed, replace the installed `nginx.conf` with the `nginx.conf` in this project, and then restart nginx.
 
-9.Page, the url is `http://IP:Port/Windows` (the IP and port are the IP and port set in Nginx. `Windows` is the name of the front-end configuration in step 7)
+9.Page, the url is `http://IP:Port/Windows` (the IP and port are the IP and port set in Nginx. `Windows` is the name of the front-end configuration in step 8)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/home.jpg)
 
-10.If you want to import existing files on the current server into the system, you can access the background api interface page and find the `file/import` interface. The request parameters are the absolute path of the folder to be imported and the Id of the target catalog.
 
-11.If you need to configure multiple languages, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
+## Configuration
+If the following configuration needs to be modified, it must be configured in the system environment variables. If the environment variables are not set, the configuration in `config.conf` will be used by default. After setting the environment variables, if it does not take effect, please reopen the command line or re-ssh the server.
 
-12.If you want to know more, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
+### winHubHost & winHubPort
+The IP and port that the service listens on.
+
+### winHubFrontEndPrefix
+The front-end prefix, is ​​the same as that in nginx, and is only used for swagger page. If prefix is ​​not needed, please set it to empty.
+
+### winHubBackEndPrefix
+The back-end prefix, is the same as that in nginx. If prefix is ​​not required, please set it to empty.
+
+### winHubDbUrl
+Database connection, only supports sqlite3 and MySQL.
+
+### winHubRootPath
+The root directory of each disk file, is configured as follows: all files in the D drive are placed in the `home/WinHub/data` directory, and all files in the E drive are placed in the `/opt/Windows/data` directory. The directories must exist.
+`{"D": "/home/WinHub/data", "E": "/opt/Windows/data", "F": "/data/data"}`
+
+### winHubPwaUrl
+The startup URL of PWA. If the prefix of the front-end is empty, then it can also be configured as empty. Otherwise, you need to configure the URL to use PWA. Note: PWA only supports the https protocol.
+
+### winHubEnableOnlyoffice
+Whether to enable OnlyOffice, 0: not enabled, 1: enabled
+
+### winHubOnlyOfficeServer & winHubOnlyOfficeSecret
+They are the URL of OnlyOffice and the jwt secret of OnlyOffice respectively.
+
+### winHubHistoryVersionPath
+The directory where historical versions of OnlyOffice files are stored during editing.
+
+### winHubEnableBackup
+Whether to enable the backup function, 0 is not enabled, 1 is enabled
+
+### winHubBackupPath
+Backup directory, must exist.
+
+### winHubBackupInterval
+Backup cycle, unit: day, that is, backup once every x days.
+
+### winHubTrackerUrls
+URL of available tracker, aria2c needs tracker to download BT seeds.
+
+### winHubSTUN
+STUN server address, mainly used for audio and video calls.
+
+### winHubTURN
+TURN server address, mainly used for audio and video calls.
+
+### winHubTURNUserName & winHubCredential
+Username and password for the TURN service
+
+### winHubLevel
+Log Level
+
 
 ## Others
 1.Supports multiple platforms such as `Linux`, `Windows`, `MacOS`, etc. It is recommended to deploy on `Linux`.
 
 2.Cluster deployment and distributed storage are not supported.
 
-3.The path of the background image of the login page is `web/img/pictures/undefined/background.jpg`. If you need to modify the login background image, you can directly replace this image. Note: the image name must be `background.jpg`.
+3.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
 
-4.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
-
-5.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
+4.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
 
 ## License
 This repository uses the GPL-2.0 License. When you use this repository, please comply with the terms of the GPL-2.0 License. Please respect our work results consciously.

@@ -10,7 +10,7 @@ from tortoise import transactions
 from tortoise.expressions import Q
 from tortoise.exceptions import DoesNotExist
 from mycloud import models
-from settings import path
+from settings import BASE_PATH
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
@@ -450,13 +450,15 @@ async def upload_image(query, hh: models.SessionBase) -> Result:
     result = Result()
     query = await query.form()
     img_type = query['imgType']
-    folder_path = os.path.join(path, 'web/img/pictures', hh.username)
+    folder_path = os.path.join(BASE_PATH, 'web/img/pictures', hh.username)
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
     if img_type == '1':
         file_path = os.path.join(folder_path, 'background.jpg')
-    else:
+    elif img_type == '0':
         file_path = os.path.join(folder_path, 'avatar.jpg')
+    else:
+        file_path = os.path.join(folder_path, 'login.jpg')
     data = query['file'].file
     try:
         with open(file_path, 'wb') as f:

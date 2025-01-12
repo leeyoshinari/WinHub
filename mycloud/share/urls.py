@@ -14,7 +14,7 @@ from common.results import Result
 from common.logging import logger
 from common.xmind import read_xmind, generate_xmind8
 from common.sheet import read_sheet
-import settings
+from settings import CONTENT_TYPE, HTML404
 
 
 router = APIRouter(prefix='/share', tags=['share (文件分享)'], responses={404: {'description': 'Not found'}})
@@ -63,14 +63,14 @@ async def get_share_file(file_id: int, request: Request):
             else:
                 if os.path.exists(result['path']):
                     headers = {'Content-Disposition': f'inline;filename="{result["name"]}"', 'Cache-Control': 'no-store'}
-                    return StreamResponse(read_file(result['path']), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+                    return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
                 else:
-                    return HTMLResponse(status_code=404, content=settings.HTML404)
+                    return HTMLResponse(status_code=404, content=HTML404)
         else:
-            return HTMLResponse(status_code=404, content=settings.HTML404)
+            return HTMLResponse(status_code=404, content=HTML404)
     except:
         logger.error(traceback.format_exc())
-        return HTMLResponse(status_code=404, content=settings.HTML404)
+        return HTMLResponse(status_code=404, content=HTML404)
 
 
 @router.get("/export/{file_id}", summary="Export file (导出文件)")
@@ -84,12 +84,12 @@ async def export_share_file(file_id: int, request: Request):
                 result['path'] = file_path
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
                        'Content-Disposition': f'inline;filename="{result["name"]}"'}
-            return StreamResponse(read_file(result['path']), media_type=settings.CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+            return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         else:
-            return HTMLResponse(status_code=404, content=settings.HTML404)
+            return HTMLResponse(status_code=404, content=HTML404)
     except:
         logger.error(traceback.format_exc())
-        return HTMLResponse(status_code=404, content=settings.HTML404)
+        return HTMLResponse(status_code=404, content=HTML404)
 
 
 @router.post("/delete", summary="Delete share (删除文件分享)")

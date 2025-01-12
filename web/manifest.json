@@ -1,6 +1,6 @@
 {
-    "name": "个人网盘",
-    "short_name": "个人网盘",
+    "name": "WinHub",
+    "short_name": "WinHub",
     "display": "standalone",
     "start_url": "/",
     "background_color": "#fff",
