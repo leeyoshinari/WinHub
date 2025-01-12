@@ -101,7 +101,7 @@ Usually nginx will limit the size of the request body, and you need to add `clie
 
 If you don’t know nginx, please go to [nginx official website](http://nginx.org/en/download.html) to download nginx and install it. After the installation is completed, replace the installed `nginx.conf` with the `nginx.conf` in this project, and then restart nginx.
 
-9.Page, the url is `http://IP:Port/Windows` (the IP and port are the IP and port set in Nginx. `Windows` is the name of the front-end configuration in step 7)
+9.Page, the url is `http://IP:Port/Windows` (the IP and port are the IP and port set in Nginx. `Windows` is the name of the front-end configuration in step 8)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/home.jpg)
 
@@ -115,7 +115,7 @@ If you don’t know nginx, please go to [nginx official website](http://nginx.or
 ## Configuration
 If the following configuration needs to be modified, it must be configured in the system environment variables. If the environment variables are not set, the configuration in `config.conf` will be used by default. After setting the environment variables, if it does not take effect, please reopen the command line or re-ssh the server.
 
-### winHubHost 和 winHubPort
+### winHubHost and winHubPort
 The IP and port that the service listens on.
 
 ### winHubFrontEndPrefix
@@ -137,7 +137,7 @@ The startup URL of PWA. If the prefix of the front-end is empty, then it can als
 ### winHubEnableOnlyoffice
 Whether to enable OnlyOffice, 0: not enabled, 1: enabled
 
-### winHubOnlyOfficeServer 和 winHubOnlyOfficeSecret
+### winHubOnlyOfficeServer and winHubOnlyOfficeSecret
 They are the URL of OnlyOffice and the jwt secret of OnlyOffice respectively.
 
 ### winHubHistoryVersionPath
@@ -161,7 +161,7 @@ STUN server address, mainly used for audio and video calls.
 ### winHubTURN
 TURN server address, mainly used for audio and video calls.
 
-### winHubTURNUserName 和 winHubCredential
+### winHubTURNUserName and winHubCredential
 Username and password for the TURN service
 
 ### winHubLevel
