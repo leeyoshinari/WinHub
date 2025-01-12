@@ -3601,7 +3601,7 @@ function get_update_log() {
                 openapp('about');
                 let html_str = '';
                 data['data']['body'].forEach(item => {
-                    html_str += `<details><summary><span>${item['version']}</span> - ${item['publish_date']}</summary><p style="padding-left:30px;">${item['body']}</p></details>`;
+                    html_str += `<details style="margin-bottom:7px;"><summary><span>${item['version']}</span> - ${item['publish_date']}</summary><p style="padding-left:30px;">${item['body']}</p></details>`;
                 })
                 $('.about>.content>.update>div')[0].innerHTML = html_str;
             } else {

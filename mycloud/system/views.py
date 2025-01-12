@@ -329,10 +329,9 @@ def get_linux_system_version() -> str:
 def parse_update_log(log_str: str):
     result = []
     try:
-        changed_str = log_str.split('##')[1]
-        result = changed_str.split('*')[1:]
+        result = log_str.split('- ')[1:]
     except:
-        logger.error(traceback.format_exc)
+        logger.error(traceback.format_exc())
     if len(result) > 0:
         result[0] = '· ' + result[0]
     return result
