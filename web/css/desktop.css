@@ -1357,6 +1357,13 @@ list>span.focs.cl {
     height: 100% !important;
 }
 
+.window>.content>.cnt {
+    padding: 0 20px 0 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 .wbtg {
     /* height: 100%; */
     height: 33px;
