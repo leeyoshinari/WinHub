@@ -30,79 +30,13 @@
 - 前端：html + js + css<br>
 
 ## 部署
-1、克隆 `git clone https://github.com/leeyoshinari/WinHub.git` ；
+1、[详细的部署步骤见博客](https://blog.ihuster.top/p/940241891.html#%E9%83%A8%E7%BD%B2)
 
-2、进入目录 `cd WinHub`，核对配置`config.conf`；<br>
-注意：如果你需要重启和自动更新的功能，那么你需要把 `config.conf` 中的需要修改的配置设置成系统环境变量。详细的配置请往下看。
+2、所有配置在 `config.conf` 中，详细的配置请往下看；
 
-3、安装第三方包
-```shell script
-pip3 install -r requirements.txt
-```
-特别注意：如果你使用的是 Windows 系统，那么还要安装 pywin32 包，执行 `pip install pywin32`。
-
-4、初始化数据库，依次执行下面命令；
-```shell script
-aerich init -t settings.TORTOISE_ORM
-aerich init-db
-```
-
-5、安装文件下载工具 [aria2](https://github.com/aria2/aria2/releases)，执行 `aria2c -v` 验证是否安装成功。
-
-6、启动服务；
-```shell script
-sh startup.sh
-```
-
-7、创建账号；
-为了避免被其他人恶意创建账号，页面未放开创建账号的入口；可以通过在API接口文档中创建用户，进入 swagger-ui 页面，找到 `createUser` 接口即可。
-```shell script
-http://IP:Port/配置文件中的prefix/swagger-ui
-```
-
-8、配置并启动 `nginx`，location相关配置如下：<br>
-（1）前端配置：前端文件在 `web` 目录里, `/Windows`可任意修改成你喜欢的名字
-```shell script
-location /Windows {
-    alias /home/WinHub/web/;
-    index  index.html;
-}
-```
-（2）后端请求：`proxy_pass`是配置文件`config.conf`中的 IP 和 端口, `/mycloud`必须和`config.conf`中的`prefix`一样
-```shell script
-location /mycloud {
-     proxy_pass  http://127.0.0.1:15200;
-     proxy_set_header Host $proxy_host;
-     proxy_set_header lang $http_lang;
-     proxy_set_header X-Real-IP $remote_addr;
-     proxy_set_header Upgrade $http_upgrade;
-	 proxy_set_header Connection $proxy_connection;
-     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-}
-```
-（3）在 `http` 模块中，需要添加一个映射关系
-```shell
-map $http_upgrade $proxy_connection {
-    default upgrade;
-    "" close;
-}
-```
-（4）Swagger 接口页面
-```shell
-location /api/openapi {
-    proxy_pass  http://127.0.0.1:15200;
-}
-```
-
-通常nginx会限制请求体大小，需要增加配置`client_max_body_size 4096M;`，还有其他超时时间的配置，可自行上网查找资料修改；
-
-如果你不了解 nginx，请先去[nginx 官方网站](http://nginx.org/en/download.html)下载对应系统的nginx安装包，并按照网上的教程安装。安装完成后用本项目中的`nginx.conf`替换掉安装完成后的`nginx.conf`，然后重启nginx即可。如果你使用的是`https`，直接修改端口并配置 ssl 即可。
-
-9、访问页面，url是 `http://IP:Port/Windows`（这里的 IP 和 端口是 Nginx 中设置的 IP 和 端口。`Windows`就是第8步中的前端配置的名字）
+3、访问页面，url是 `http://IP:Port/Windows`（这里的 IP 和 端口是 Nginx 中设置的 IP 和 端口。`Windows`就是第8步中的前端配置的名字）
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/home.jpg)
-
-10、如果想把当前服务器上已有的文件导入系统中，可访问后台 api 接口页面，找到 `file/import` 接口，请求参数分别是需要导入的文件夹的绝对路径和目标的目录Id。
 
 ## 配置解释
 以下配置，如果需要修改的话，一定要配置到系统环境变量中，如果没有设置环境变量，则默认会使用 `config.conf` 中的配置。设置环境变量后，如果没有生效，请重新打开命令行窗口或重新 ssh 服务器。

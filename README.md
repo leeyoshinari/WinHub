@@ -33,10 +33,11 @@ View detailed page style, [Please click me.](https://github.com/leeyoshinari/Win
 - Front-end: html + js + css
 
 ## Deploy
-1.Clone `git clone https://github.com/leeyoshinari/WinHub.git` ；
+[See the blog for detailed deployment steps](https://blog.ihuster.top/p/940241891.html#%E9%83%A8%E7%BD%B2) <br>
+1.Clone `git clone https://github.com/leeyoshinari/WinHub.git` ;
 
 2.`cd WinHub`, and check configuration in `config.conf`；<br>
-Note: If you need the restart and automatic update functions, you need to set the configuration that needs to be modified in `config.conf` as system environment variables. See below for configuration details
+Note: If you need the restart and automatic update functions, you need to set the configuration that needs to be modified in `config.conf` as system environment variables. See below for configuration details.
 
 3.Install third-party packages
 ```shell script
@@ -104,12 +105,6 @@ If you don’t know nginx, please go to [nginx official website](http://nginx.or
 9.Page, the url is `http://IP:Port/Windows` (the IP and port are the IP and port set in Nginx. `Windows` is the name of the front-end configuration in step 8)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/home.jpg)
-
-10.If you want to import existing files on the current server into the system, you can access the background api interface page and find the `file/import` interface. The request parameters are the absolute path of the folder to be imported and the Id of the target catalog.
-
-11.If you need to configure multiple languages, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
-
-12.If you want to know more, [Please click me](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md).
 
 
 ## Configuration
