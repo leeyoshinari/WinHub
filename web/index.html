@@ -112,7 +112,7 @@
 		} else {
 			$('#loginback').css('opacity', '1');
 			$('#loginback').css('display', 'flex');
-			document.getElementById('loginback').style.backgroundImage=`url("img/pictures/${localStorage.getItem("usernmae")}/login.jpg")`;
+			document.getElementById('loginback').style.backgroundImage=`url("img/pictures/${localStorage.getItem("username")}/login.jpg")`;
 		}
 	</script>
 	<div id="cm" tabindex="-1"><input class="foc"><list></list></div>
@@ -140,10 +140,11 @@
 				<list class="focs">
 					<a class="enable system" onclick="apps.setting.page('system')"><img src="img/system.svg" alt="system.svg" loading="lazy"><span class="i18n" key="setting.window.system"></span></a>
 					<a class="enable user" onclick="apps.setting.page('user')"><img src="img/setting/user.png" alt="user.png" loading="lazy"><span class="i18n" key="setting.window.account">账户</span></a>
-					<a class="enable appearance" onclick="apps.setting.page('appearance')"><img src="img/setting/personal.png" alt="personal.png" loading="lazy"><span class="i18n" key="setting.window.appearance">个性化</span></a>
+					<a class="enable appearance" onclick="apps.setting.page('appearance')"><img src="img/setting/personal.png" alt="personal.png" loading="lazy"><span class="i18n" key="setting.window.appearance"></span></a>
 					<a class="enable media" onclick="apps.setting.page('media')"><img src="img/files/video.svg" alt="video.svg" loading="lazy"><span class="i18n" key="setting.window.media"></span></a>
 					<a class="enable game" onclick="apps.setting.page('game')"><img src="img/game.png" alt="game.png" loading="lazy"><span class="i18n" key="setting.window.game"></span></a>
 					<a class="enable shell" onclick="apps.setting.page('shell')"><img src="img/terminal.svg" alt="terminal.svg" loading="lazy"><span class="i18n" key="setting.window.shell">Terminal</span></a>
+					<a class="enable update" onclick="apps.setting.page('update');get_update_status();"><img src="img/setting/update.png" alt="update.png" loading="lazy"><span class="i18n" key="setting.window.update"></span></a>
 				</list>
 			</div>
 			<div class="page">
@@ -260,6 +261,9 @@
 						<a class="dp app-color" onclick="openapp('edge');apps.edge.goto('https://blog.ihuster.top/p/940241891.html');">
 							<icon></icon><div><p class="i18n" key="setting.window.system.course"></p><p class="i18n" key="setting.window.system.course.tips"></p></div><i class="bi bi-chevron-right"></i>
 						</a>
+						<a class="dp app-color" onclick="restart_system(0);">
+							<icon></icon><div><p class="i18n" key="setting.window.system.restart"></p><p class="i18n" key="setting.window.system.restart.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
 						<a class="dp app-color" onclick="open_system_resource('taskmgr');">
 							<icon></icon><div><p class="i18n" key="setting.window.system.resource"></p><p class="i18n" key="setting.window.system.resource.tips"></p></div><i class="bi bi-chevron-right"></i>
 						</a>
@@ -303,6 +307,25 @@
 						</a>
 						<a class="dp app-color" onclick="open_game('rings')">
 							<img src="img/setting/rings.svg" alt="rings.svg" loading="lazy" /><div><p class="i18n" key="game.rings"></p><p class="i18n" key="game.rings.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+					</div>
+				</div>
+				<div class="cnt update">
+					<p class="title i18n" key="setting.window.update"></p>
+					<div class="lo">
+						<img src="img/setting/update.svg" alt="update.svg" loading="lazy">
+						<div class="update-main">
+							<div class="part"><p class="notice i18n" key="setting.window.update.check"></p><p class="detail"></p></div>
+							<div><a class="a button i18n" style="font-size:16px;margin-right:20px;" onclick="get_system_version();" key="setting.window.update.check.button"></a></div>
+						</div>
+					</div>
+					<div class="setting-list">
+						<div class="update-now"><icon>&#xE896;</icon><div><p class="i18n" key="setting.window.update.download"></p><p></p></div><div class="alr"><a class="a button disabled i18n" style="font-size:16px;margin-top:-7.5px;" onclick="download_latest_version();" key="setting.window.update.download.button"></a></div></div>
+						<a class="dp app-color" onclick="restart_system(1);">
+							<icon></icon><div><p class="i18n" key="setting.window.update.restart"></p><p class="i18n" key="setting.window.update.restart.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+						<a class="dp app-color" onclick="get_update_log();">
+							<icon></icon><div><p class="i18n" key="setting.window.update.log"></p><p class="i18n" key="setting.window.update.log.tips"></p></div><i class="bi bi-chevron-right"></i>
 						</a>
 					</div>
 				</div>
@@ -646,6 +669,17 @@
 				</div>
 			</div>
 		</div>
+	</div>
+	<div class="window about">
+		<div class="resize-bar"></div>
+		<div class="titbar"><img src="img/about.svg" alt="about.svg" class="icon" loading="lazy"><span><span class="title i18n" key="setting.window.update.log"></span><span class="save-status"></span></span>
+			<div>
+				<a class="a wbtg red" onclick="hidewin('about')"><i class="bi bi-x-lg"></i></a>
+				<a class="a wbtg max" onclick="maxwin('about')"><i class="bi bi-app"></i></a>
+				<a class="a wbtg" onclick="minwin('about')"><i class="bi bi-dash-lg"></i></a>
+			</div></div>
+		<div class="loadback"><img src="img/about.svg" alt="about.svg" class="icon" loading="lazy"></div>
+		<div class="content" id="win-about"><div class="cnt update" style="padding:0 20px 0 20px;"><h1 class="tit i18n" key="setting.window.update.log"></h1><div style="margin-left: 20px;"></div></div></div>
 	</div>
 	<div class="window markdown">
 		<div class="resize-bar"></div>

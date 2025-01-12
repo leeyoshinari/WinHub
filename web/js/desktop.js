@@ -1505,6 +1505,7 @@ let apps = {
             }, 200);
         }
     },
+    about: {init: () => {return null;}},
     markdown: {init: () => {return null;}},
     video: {init: () => {return null;}},
     music: {init: () => {return null;}},
@@ -3485,6 +3486,128 @@ function get_system_info(event) {
             } else {
                 $.Toast(data['msg'], 'error');
             }
+        }
+    })
+}
+
+function get_update_status() {
+    $.ajax({
+        type: 'GET',
+        url: server + '/system/update/status',
+        success: function (data) {
+            if (data['code'] === 0) {
+                switch(data['data']) {
+                    case 1:
+                        $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.version");
+                        $('.update>.setting-list>.update-now>.alr>.a')[0].classList.add("disabled");
+                        $('.update>.setting-list>.dp')[0].classList.add("disabled");
+                        break;
+                    case 2:
+                        $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.version.new");
+                        $('.update>.setting-list>.update-now>.alr>.a')[0].classList.remove("disabled");
+                        $('.update>.setting-list>.dp')[0].classList.add("disabled");
+                        break;
+                    case 3:
+                        $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.download.start");
+                        $('.update>.setting-list>.update-now>.alr>.a')[0].classList.add("disabled");
+                        $('.update>.setting-list>.dp')[0].classList.remove("disabled");
+                        break;
+                    default:
+                        $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.check");
+                        $('.update>.setting-list>.update-now>.alr>.a')[0].classList.add("disabled");
+                        $('.update>.setting-list>.dp')[0].classList.add("disabled");
+                        break;
+                }
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
+}
+
+function get_system_version() {
+    $('.update>.lo>img')[0].classList.add('rotating');
+    $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.checking");
+    $('.update>.lo>.update-main>div>.a')[0].classList.add("disabled");
+    $.ajax({
+        type: 'GET',
+        url: server + '/system/version',
+        success: function (data) {
+            if (data['code'] === 0) {
+                if (data['data']['is_new']) {
+                    $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.version.new");
+                    $('.update>.setting-list>.update-now>.alr>.a')[0].classList.remove("disabled");
+                } else {
+                    $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.version");
+                }
+                $('.update>.lo>.update-main>.part>.detail')[0].innerText = i18next.t("setting.window.update.date") + data['data']['check_time'];
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+            $('.update>.lo>.update-main>div>.a')[0].classList.remove("disabled");
+            $('.update>.lo>img')[0].classList.remove('rotating');
+        }
+    })
+}
+
+function download_latest_version() {
+    $('.update>.lo>img')[0].classList.add('rotating');
+    $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.downloading");
+    $('.update>.setting-list>.update-now>.alr>.a')[0].classList.add("disabled");
+    $('.update>.lo>.update-main>div>.a')[0].classList.add("disabled");
+    $.ajax({
+        type: 'GET',
+        url: server + '/system/update',
+        success: function (data) {
+            if (data['code'] === 0) {
+                $('.update>.setting-list>.dp')[0].classList.remove("disabled");
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+            $('.update>.lo>.update-main>div>.a')[0].classList.remove("disabled");
+            $('.update>.setting-list>.update-now>.alr>.a')[0].classList.remove("disabled");
+            $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.download.start");
+            $('.update>.lo>img')[0].classList.remove('rotating');
+        }
+    })
+}
+
+function restart_system(start_type) {
+    show_modal_cover();
+    $.ajax({
+        type: 'GET',
+        url: server + '/system/resatrt/' + start_type,
+        success: function (data) {
+            if (data['code'] === 0) {
+                setTimeout(() => {window.location.reload();}, 5000);
+            } else {
+                $.Toast(data['msg'], 'error');
+                close_modal_cover();
+            }
+        },
+        error: function(error) {
+            setTimeout(() => {window.location.reload();}, 5000);
+        }
+    })
+}
+
+function get_update_log() {
+    show_modal_cover();
+    $.ajax({
+        type: 'GET',
+        url: server + '/system/version',
+        success: function (data) {
+            if (data['code'] === 0) {
+                openapp('about');
+                let html_str = '';
+                data['data']['body'].forEach(item => {
+                    html_str += `<details><summary><span>${item['version']}</span> - ${item['publish_date']}</summary><p style="padding-left:30px;">${item['body']}</p></details>`;
+                })
+                $('.about>.content>.update>div')[0].innerHTML = html_str;
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+            close_modal_cover();
         }
     })
 }

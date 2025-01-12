@@ -1,5 +1,8 @@
 const server = '/mycloud';
 localStorage.setItem('server', server);
+if (!localStorage.getItem('username')) {
+    localStorage.setItem('username', 'undefined');
+}
 let nickName = '';
 function change_language(flag) {
     if (flag === 0){

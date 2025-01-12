@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from mycloud import models
 from mycloud.system import views
 from mycloud.auth_middleware import auth
+from common.results import Result
 
 
 router = APIRouter(prefix='/system', tags=['system (系统)'], responses={404: {'description': 'Not found'}})
@@ -47,6 +48,11 @@ async def clean_temporary_file(hh: models.SessionBase = Depends(auth)):
     return result
 
 
+@router.get("/update/status", summary="Get update status (获取更新状态)")
+async def get_update_status(hh: models.SessionBase = Depends(auth)):
+    return Result(code=0, data=views.get_update_status())
+
+
 @router.get("/version", summary="Get newest version (获取最新版本)")
 async def get_version(hh: models.SessionBase = Depends(auth)):
     result = await views.get_new_version(hh)
@@ -59,7 +65,7 @@ async def update_system(hh: models.SessionBase = Depends(auth)):
     return result
 
 
-@router.get("/resatrt", summary="Restart System (重启系统)")
-async def restart_system(hh: models.SessionBase = Depends(auth)):
-    result = await views.restart_system(hh)
+@router.get("/resatrt/{start_type}", summary="Restart System (重启系统)")
+async def restart_system(start_type: int, hh: models.SessionBase = Depends(auth)):
+    result = await views.restart_system(start_type, hh)
     return result

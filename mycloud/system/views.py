@@ -6,6 +6,7 @@ import os
 import time
 import json
 import shutil
+import zipfile
 import subprocess
 import traceback
 import socket
@@ -14,11 +15,15 @@ import platform
 import psutil
 import requests
 from mycloud import models
-from settings import TMP_PATH, SYSTEM_VERSION
+from settings import TMP_PATH, SYSTEM_VERSION, BASE_PATH, TIME_ZONE
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
+
+
+UPDATE_STATUE = 0   # 0-默认状态, 1-最新版本, 2-有新版本, 3-已更新,需要重启
+NEWEST_VERSION = ''
 
 
 async def get_system_info(hh: models.SessionBase) -> Result:
@@ -190,15 +195,21 @@ async def remove_tmp_folder(hh: models.SessionBase) -> Result:
 
 async def get_new_version(hh: models.SessionBase) -> Result:
     result = Result()
+    global UPDATE_STATUE
+    global NEWEST_VERSION
     try:
-        res = requests.get("https://api.github.com/repos/leeyoshinari/WinHub/releases", timeout=15)
+        res = requests.get("https://api.github.com/repos/leeyoshinari/WinHub/releases", timeout=30)
         if res.status_code == 200:
             res_json = json.loads(res.text)
-            latest_version = float(res_json[0]['name'])
-            if latest_version < SYSTEM_VERSION:
-                result.data = 1
-            else:
-                result.data = 0
+            latest_version = float(res_json[0]['name'].replace('v', ''))
+            current_version = float(SYSTEM_VERSION.replace('v', ''))
+            body = []
+            for v in res_json:
+                body.append({'version': v['name'], 'publish_date': v['published_at'].split('T')[0], 'body': '<br>· '.join(parse_update_log(v['body']))})
+            result.data = {'latest_version': res_json[0]['name'], 'current_version': SYSTEM_VERSION,
+                           'is_new': current_version < latest_version, 'body': body, 'check_time': time.strftime("%Y-%m-%d %H:%M:%S")}
+            UPDATE_STATUE = 2 if current_version < latest_version else 1
+            NEWEST_VERSION = res_json[0]['name']
         result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
@@ -210,8 +221,19 @@ async def get_new_version(hh: models.SessionBase) -> Result:
 
 async def update_system(hh: models.SessionBase) -> Result:
     result = Result()
+    global UPDATE_STATUE
+    global NEWEST_VERSION
     try:
+        version = NEWEST_VERSION.replace('v', '')
+        package_path = os.path.join(BASE_PATH, 'WinHub.zip')
+        res = requests.get(f"https://github.com/leeyoshinari/WinHub/archive/refs/tags/{version}.zip", stream=True, timeout=3600)
+        res.raise_for_status()
+        with open(package_path, 'wb') as f:
+            for chunk in res.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
         result.msg = f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        UPDATE_STATUE = 3
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
         logger.error(traceback.format_exc())
@@ -220,21 +242,54 @@ async def update_system(hh: models.SessionBase) -> Result:
     return result
 
 
-async def restart_system(hh: models.SessionBase) -> Result:
+async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        if platform.system() == "Windows":
-            subprocess.run(['sc', 'stop', 'python'], check=True, capture_output=True, text=True)
-            subprocess.run(['sc', 'start', 'python'], check=True, capture_output=True, text=True)
-        else:
-            os.kill(os.getppid(), signal.SIGHUP)
+        current_platform = platform.system().lower()
+        if start_type == 1:
+            package_path = os.path.join(BASE_PATH, 'WinHub.zip')
+            if os.path.exists(package_path):
+                tmp_name = 'WinHub-' + NEWEST_VERSION
+                with zipfile.ZipFile(package_path, 'r') as f:
+                    zip_files = f.namelist()
+                    tmp_name = zip_files[0][: zip_files[0].index('/')]
+                    f.extractall(BASE_PATH)
+                origin_path = os.path.join(BASE_PATH, tmp_name)
+                shutil.copytree(origin_path, BASE_PATH, dirs_exist_ok=True)
+                shutil.rmtree(origin_path)
+            # 安装第三方包
+            time.sleep(1)
+            if current_platform == "windows":
+                pip_command = ["pip", "install", "-r", "requirements.txt"]
+            else:
+                pip_command = ["pip3", "install", "-r", "requirements.txt"]
+            if TIME_ZONE == 'Asia/Shanghai':
+                pip_command += ["-i", "https://pypi.tuna.tsinghua.edu.cn/simple", "--trusted-host", "pypi.tuna.tsinghua.edu.cn"]
+            logger.info(f"Run pip command: {pip_command}, user: {hh.username}, IP: {hh.ip}")
+            subprocess.run(pip_command, check=True, capture_output=True, text=True)
+
+            # 更新数据库
+            aerich_command = ["aerich", "migrate"]
+            subprocess.run(aerich_command, check=True, capture_output=True, text=True)
+            time.sleep(1)
+            aerich_command = ["aerich", "upgrade"]
+            subprocess.run(aerich_command, check=True, capture_output=True, text=True)
+            logger.info(f"DataBase update, user: {hh.username}, IP: {hh.ip}")
         result.msg = f"{Msg.SystemRestartInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
+        if current_platform == "windows":
+            subprocess.run(['sc', 'stop', 'WinHubService'], check=True, capture_output=True, text=True)
+        else:
+            os.kill(os.getppid(), signal.SIGHUP)
     except:
         logger.error(traceback.format_exc())
         result.code = 1
         result.msg = f"{Msg.SystemRestartInfo.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
     return result
+
+
+def get_update_status():
+    return UPDATE_STATUE
 
 
 def get_windows_cpu_model() -> str:
@@ -268,6 +323,18 @@ def get_linux_system_version() -> str:
         system_a = exec_cmd('uname -s')[0]  # system kernel version
         system_r = exec_cmd('uname -r')[0]
         result = f"{system_a.strip()} {system_r.strip()}"
+    return result
+
+
+def parse_update_log(log_str: str):
+    result = []
+    try:
+        changed_str = log_str.split('##')[1]
+        result = changed_str.split('*')[1:]
+    except:
+        logger.error(traceback.format_exc)
+    if len(result) > 0:
+        result[0] = '· ' + result[0]
     return result
 
 

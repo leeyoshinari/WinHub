@@ -3,11 +3,16 @@
 # @Author: leeyoshinari
 
 import os
-import sys
+import time
 import subprocess
 from win32serviceutil import ServiceFramework, HandleCommandLine
 import win32service
 import win32event
+import servicemanager
+
+
+def get_variable(key):
+    return os.environ.get(key, '')
 
 
 class MyService(ServiceFramework):
@@ -24,14 +29,43 @@ class MyService(ServiceFramework):
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         win32event.SetEvent(self.hWaitStop)
         if self.process:
-            self.process.terminate()  # 尝试优雅地终止进程
-            self.process.wait()     # 等待进程结束
+            self.process.terminate()
+            self.process.wait()
+        
+        self.restart_service()
 
     def SvcDoRun(self):
-        self.ReportServiceStatus(win32service.SERVICE_RUNNING)
-        script_path = os.path.join(os.path.dirname(__file__), "main.py")
-        self.process = subprocess.Popen([sys.executable, script_path])
-        win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)
+        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE, servicemanager.PYS_SERVICE_STARTED, (self._svc_name_, ''))
+        while True:
+            rc = win32event.WaitForSingleObject(self.hWaitStop, 30000)
+            if rc == win32event.WAIT_OBJECT_0:
+                servicemanager.LogInfoMsg("WinHubService - STOPPED!")
+                break
+            else:
+                try:
+                    if not self.process or self.process.poll() is not None:
+                        project_path = os.path.dirname(os.path.abspath(__file__))
+                        command = ["uvicorn", "main:app", "--host", f"{get_variable('host')}", "--port", f"{get_variable('port')}"]
+                        self.process = subprocess.Popen(command, cwd=project_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        servicemanager.LogInfoMsg("WinHubService - Started!")
+                except Exception as e:
+                    servicemanager.LogErrorMsg(f"WinHubService - Error starting process: {e}")
+                    break
+                if self.process.poll() is not None:
+                    servicemanager.LogInfoMsg("WinHubService - Process Exited, restarting")
+                    time.sleep(3)
+                    self.SvcStop()
+                    time.sleep(1)
+                    self.SvcDoRun()
+    
+    def restart_service(self):
+        try:
+            subprocess.run(['sc', 'start', self._svc_name_], check=True, capture_output=True, text=True)
+            servicemanager.LogInfoMsg(f"{self._svc_name_} service started.")
+        except subprocess.CalledProcessError as e:
+            servicemanager.LogErrorMsg(f"Error during restarting service: {str(e)}")
+        except Exception as e:
+            servicemanager.LogErrorMsg(f"Unexpected error: {str(e)}")
 
 
 if __name__ == '__main__':

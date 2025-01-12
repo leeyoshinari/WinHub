@@ -134,6 +134,58 @@
     display: block;
 }
 
+#win-setting>.page>.cnt.update>.lo>img{
+    width: 80px;
+    transition: transform 0.1s;
+    margin: 15px 20px 30px 20px;
+}
+
+#win-setting>.page>.cnt.update>.lo{
+    display: flex;
+    align-items: center;
+}
+
+#win-setting>.page>.cnt.update>.lo div{
+    flex-grow: 1;
+    font-size: 20px;
+    padding: 20px 5px;
+}
+#win-setting>.page>.cnt.update>.lo div>.detail{
+    flex-grow: 1;
+    font-size: 14px;
+    color: #7f7f7f;
+}
+
+#win-setting>.page>.cnt.update>.lo>.update-main {
+    display: flex;
+    justify-content: center;
+}
+
+#win-setting>.page>.cnt.update>.lo>.update-main>div {
+    display: flex;
+    align-items: center;
+}
+
+#win-setting>.page>.cnt.update>.lo>.update-main>div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#win-setting>.page>.cnt.update>.lo>.update-main>div:last-child {
+    justify-content: flex-end;
+}
+
+#win-setting>.page>.cnt.update .disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.rotating { animation: rotate 3s linear infinite;}
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .setting-list {
     display: flex;
     flex-direction: column;

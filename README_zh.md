@@ -22,8 +22,6 @@
 - 支持 PWA，可以“安装”到手机上
 - 可任意挂载多个磁盘
 
-查看详细页面样式，[请点我](https://github.com/leeyoshinari/WinHub/blob/main/web/detail_zh.md)
-
 
 ## 技术选型
 - 后端框架：FastApi<br>
@@ -39,6 +37,7 @@
 ```shell script
 pip3 install -r requirements.txt
 ```
+特别注意：如果你使用的是 Windows 系统，那么还要安装 pywin32 包，执行 `pip install pywin32`。
 
 4、初始化数据库，依次执行下面命令；
 ```shell script
@@ -103,24 +102,17 @@ location /api/openapi {
 
 10、如果想把当前服务器上已有的文件导入系统中，可访问后台 api 接口页面，找到 `file/import` 接口，请求参数分别是需要导入的文件夹的绝对路径和目标的目录Id。
 
-11、如需配置多语言，[请点我](https://github.com/leeyoshinari/WinHub/blob/main/web/detail_zh.md) 。
-
-12、如需了解更多，[请点我](https://github.com/leeyoshinari/WinHub/blob/main/web/detail_zh.md) 。
 
 ## 其他
 1、支持 `Linux`、`Windows`、`MacOS` 等多个平台，建议在 `Linux` 系统部署； 
 
 2、因为是在操作本地文件，所以不支持集群部署和分布式存储；
 
-3、登录页面的背景图片的路径是`web/img/pictures/undefined/background.jpg`，如需修改登录背景图片，可直接替换掉这个图片即可，注意：图片名必须是`background.jpg`；
+3、在线播放视频，基本上都是用的是流式播放（边缓存边播放），这就要求视频的元数据必须在视频文件的最前面，而有些视频的元数据在视频文件的末尾，这就需要浏览器把整个视频加载完成后才能播放，体验极差。因此需要手动将视频的元数据移动到视频文件的最前面，然后再上传至云盘，这里使用 [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) 工具移动视频的元数据，命令：`ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`。
 
-4、目前多语言已支持中文简体和英文，如有翻译不正确，或者漏翻译的，烦请告知。多语言已完全放开，可自行配置；
+4、所有页面和操作已尽可能的适配手机端了，使用手机浏览器打开页面，手机横屏展示，使用体验还是不错的；
 
-5、在线播放视频，基本上都是用的是流式播放（边缓存边播放），这就要求视频的元数据必须在视频文件的最前面，而有些视频的元数据在视频文件的末尾，这就需要浏览器把整个视频加载完成后才能播放，体验极差。因此需要手动将视频的元数据移动到视频文件的最前面，然后再上传至云盘，这里使用 [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) 工具移动视频的元数据，命令：`ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`。
-
-7、所有页面和操作已尽可能的适配手机端了，使用手机浏览器打开页面，手机横屏展示，使用体验还是不错的；
-
-8、更好的使用体验建议：不管你用的是PC端浏览器还是手机端浏览器，设置浏览器全屏展示，使用体验更好；
+5、更好的使用体验建议：不管你用的是PC端浏览器还是手机端浏览器，设置浏览器全屏展示，使用体验更好；
 
 ## 开源协议
 此项目使用 GPL-2.0 许可证。当您使用此项目时，请遵守 GPL-2.0 许可证的条款。请自觉尊重我们的工作成果。

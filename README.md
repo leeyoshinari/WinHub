@@ -1,5 +1,5 @@
 # WinHub
-Windows-style personal cloud-drive with supporting online editing.
+A multi-functional platform integrating file storage, editing, communication, entertainment and system management.
 
 [中文文档](https://github.com/leeyoshinari/WinHub/blob/main/README_zh.md)
 
@@ -40,6 +40,7 @@ View detailed page style, [Please click me.](https://github.com/leeyoshinari/Win
 ```shell script
 pip3 install -r requirements.txt
 ```
+Note: If you use Windows system, you need to install pywin32 package, run command: `pip install pywin32`。
 
 4.Initialize the database and execute the following commands in sequence
 ```shell script
@@ -113,11 +114,9 @@ If you don’t know nginx, please go to [nginx official website](http://nginx.or
 
 2.Cluster deployment and distributed storage are not supported.
 
-3.The path of the background image of the login page is `web/img/pictures/undefined/background.jpg`. If you need to modify the login background image, you can directly replace this image. Note: the image name must be `background.jpg`.
+3.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
 
-4.Playing videos online uses streaming playback, which requires that the metadata of the video must be at the front of the video file. So, you need to manually move the metadata of the video to the front of the video file. Using the [ffmpeg](https://github.com/BtbN/FFmpeg-Builds/releases) to move the metadata of the video. The command: `ffmpeg -i input_video.mp4 -map_metadata 0 -c:v copy -c:a copy -movflags +faststart output_video.mp4`.
-
-5.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
+4.Whether you are using a PC browser or a mobile browser, setting the browser to display in full screen will provide a better user experience.
 
 ## License
 This repository uses the GPL-2.0 License. When you use this repository, please comply with the terms of the GPL-2.0 License. Please respect our work results consciously.
