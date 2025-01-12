@@ -115,7 +115,7 @@ If you don’t know nginx, please go to [nginx official website](http://nginx.or
 ## Configuration
 If the following configuration needs to be modified, it must be configured in the system environment variables. If the environment variables are not set, the configuration in `config.conf` will be used by default. After setting the environment variables, if it does not take effect, please reopen the command line or re-ssh the server.
 
-### winHubHost and winHubPort
+### winHubHost & winHubPort
 The IP and port that the service listens on.
 
 ### winHubFrontEndPrefix
@@ -137,7 +137,7 @@ The startup URL of PWA. If the prefix of the front-end is empty, then it can als
 ### winHubEnableOnlyoffice
 Whether to enable OnlyOffice, 0: not enabled, 1: enabled
 
-### winHubOnlyOfficeServer and winHubOnlyOfficeSecret
+### winHubOnlyOfficeServer & winHubOnlyOfficeSecret
 They are the URL of OnlyOffice and the jwt secret of OnlyOffice respectively.
 
 ### winHubHistoryVersionPath
@@ -161,7 +161,7 @@ STUN server address, mainly used for audio and video calls.
 ### winHubTURN
 TURN server address, mainly used for audio and video calls.
 
-### winHubTURNUserName and winHubCredential
+### winHubTURNUserName & winHubCredential
 Username and password for the TURN service
 
 ### winHubLevel
