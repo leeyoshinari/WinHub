@@ -3496,7 +3496,7 @@ function get_update_status() {
         url: server + '/system/update/status',
         success: function (data) {
             if (data['code'] === 0) {
-                switch(data['data']) {
+                switch(data['data']['status']) {
                     case 1:
                         $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.version");
                         $('.update>.setting-list>.update-now>.alr>.a')[0].classList.add("disabled");
@@ -3518,6 +3518,7 @@ function get_update_status() {
                         $('.update>.setting-list>.dp')[0].classList.add("disabled");
                         break;
                 }
+                $('.update>.lo>.update-main>.part>.detail')[0].innerText = i18next.t("setting.window.update.date") + data['data']['date'];
             } else {
                 $.Toast(data['msg'], 'error');
             }

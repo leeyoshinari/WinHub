@@ -15,8 +15,9 @@ import platform
 import psutil
 import requests
 from mycloud import models
-from settings import TMP_PATH, SYSTEM_VERSION, BASE_PATH, TIME_ZONE
+from settings import TMP_PATH, SYSTEM_VERSION, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
+from common.scheduler import scheduler, get_schedule_time
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
@@ -210,6 +211,9 @@ async def get_new_version(hh: models.SessionBase) -> Result:
                            'is_new': current_version < latest_version, 'body': body, 'check_time': time.strftime("%Y-%m-%d %H:%M:%S")}
             UPDATE_STATUE = 2 if current_version < latest_version else 1
             NEWEST_VERSION = res_json[0]['name']
+            update_date_path = os.path.join(BASE_PATH, '__update_date__')
+            with open(update_date_path, 'w') as f:
+                f.write(time.strftime("%Y-%m-%d %H:%M:%S"))
         result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
@@ -288,8 +292,26 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
     return result
 
 
+async def auto_update():
+    try:
+        hh = models.SessionBase(username='system', lang='en', ip='127.0.0.1')
+        version = await get_new_version(hh)
+        if version['code'] == 0 and version['data']['is_new']:
+            result = await update_system(hh)
+            if result['code'] == 0:
+                result = await restart_system(1, hh)
+                logger.info(f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}, username: {hh.username}")
+    except:
+        logger.error(traceback.format_exc())
+
+
 def get_update_status():
-    return UPDATE_STATUE
+    update_date_path = os.path.join(BASE_PATH, '__update_date__')
+    update_date = ''
+    if os.path.exists(update_date_path):
+        with open(update_date_path, 'r') as f:
+            update_date = f.read()
+    return {'status': UPDATE_STATUE, 'date': update_date}
 
 
 def get_windows_cpu_model() -> str:
@@ -341,3 +363,7 @@ def exec_cmd(cmd):
     with os.popen(cmd) as p:
         res = p.readlines()
     return res
+
+
+if ENABLED_AUTO_UPDATE == 1:
+    scheduler.add_job(auto_update, 'interval', days=1, start_date=get_schedule_time())

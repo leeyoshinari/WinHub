@@ -70,13 +70,16 @@ PWA 的启动 url，如果前端的 prefix 配置为空，那么这里也可以�
 OnlyOffice 文件编辑过程中的历史版本存放目录
 
 ### winHubEnableBackup
-是否启用备份功能，0 不启用，1 启用
+是否启用自动备份功能，0 不启用，1 启用
 
 ### winHubBackupPath
 备份目录，必须存在
 
 ### winHubBackupInterval
 备份周期，单位：天，即每隔x天备份一次
+
+### winHubEnabledAutoUpdate
+是否启动自动更新，0 不启用，1 启用
 
 ### winHubTrackerUrls
 可用 tracker 获取连接，aria2c 下载 BT 种子需要 tracker

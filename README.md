@@ -147,6 +147,9 @@ Backup directory, must exist.
 ### winHubBackupInterval
 Backup cycle, unit: day, that is, backup once every x days.
 
+### winHubEnabledAutoUpdate
+Whether to enable the auto-update system function, 0 is not enabled, 1 is enabled
+
 ### winHubTrackerUrls
 URL of available tracker, aria2c needs tracker to download BT seeds.
 
