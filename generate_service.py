@@ -45,7 +45,7 @@ class MyService(ServiceFramework):
                 try:
                     if not self.process or self.process.poll() is not None:
                         project_path = os.path.dirname(os.path.abspath(__file__))
-                        command = ["uvicorn", "main:app", "--host", f"{get_variable('host')}", "--port", f"{get_variable('port')}"]
+                        command = ["uvicorn", "main:app", "--host", f"{get_variable('winHubHost')}", "--port", f"{get_variable('winHubPort')}"]
                         self.process = subprocess.Popen(command, cwd=project_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         servicemanager.LogInfoMsg("WinHubService - Started!")
                 except Exception as e:
