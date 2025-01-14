@@ -305,12 +305,13 @@ async def auto_update():
         logger.error(traceback.format_exc())
 
 
-def get_update_status():
+def get_update_status(hh: models.SessionBase):
     update_date_path = os.path.join(BASE_PATH, '__update_date__')
     update_date = ''
     if os.path.exists(update_date_path):
         with open(update_date_path, 'r') as f:
             update_date = f.read()
+    logger.info(f"Get system status, username: {hh.username}, ip: {hh.ip}")
     return {'status': UPDATE_STATUE, 'date': update_date}
 
 
