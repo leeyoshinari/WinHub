@@ -71,12 +71,12 @@ def beauty_time_pretty(time_list: list, format_str: str) -> str:
     if length == 4:
         res = format_str.format(time_list[0], time_list[1], time_list[2], time_list[3])
     if length == 3:
-        res = format_str.format("-_-", time_list[0], time_list[1], time_list[2])
+        res = format_str.format("", "_" + time_list[0], time_list[1], time_list[2])
     if length == 2:
-        res = format_str.format("", "-_-", time_list[0], time_list[1])
+        res = format_str.format("", "", "_" + time_list[0], time_list[1])
     if length == 1:
-        res = format_str.format("", "", "-_-", time_list[0])
-    res = res.split('-_-')[-1]
+        res = format_str.format("", "", "", "_" + time_list[0])
+    res = res.split('_')[-1]
     return res
 
 

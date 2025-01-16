@@ -50,7 +50,7 @@ async def clean_temporary_file(hh: models.SessionBase = Depends(auth)):
 
 @router.get("/update/status", summary="Get update status (获取更新状态)")
 async def get_update_status(hh: models.SessionBase = Depends(auth)):
-    return Result(code=0, data=views.get_update_status())
+    return Result(code=0, data=views.get_update_status(hh))
 
 
 @router.get("/version", summary="Get newest version (获取最新版本)")

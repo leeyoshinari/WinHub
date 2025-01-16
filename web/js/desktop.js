@@ -2227,8 +2227,10 @@ function toggletheme() {
     $('.dock.theme').toggleClass('dk');
     $(':root').toggleClass('dark');
     if ($(':root').hasClass('dark')) {
+        localStorage.setItem("winTheme", 1);
         $('.window.whiteboard>.titbar>span>.title').text('Blackboard');
     } else {
+        localStorage.setItem("winTheme", 0);
         $('.window.whiteboard>.titbar>span>.title').text('Whiteboard');
     }
 }
@@ -2253,7 +2255,8 @@ function toggle_transparent() {
 }
 
 const isDarkTheme = window.matchMedia("(prefers-color-scheme: dark)");
-if (isDarkTheme.matches) { //是深色
+const localTheme = localStorage.getItem("winTheme");
+if (isDarkTheme.matches || localTheme === "1") { //是深色
     $('.dock.theme').toggleClass('dk');
     $(':root').toggleClass('dark');
     $('.window.whiteboard>.titbar>span>.title').text('Blackboard');

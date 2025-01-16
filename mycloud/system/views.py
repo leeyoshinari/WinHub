@@ -296,21 +296,22 @@ async def auto_update():
     try:
         hh = models.SessionBase(username='system', lang='en', ip='127.0.0.1')
         version = await get_new_version(hh)
-        if version['code'] == 0 and version['data']['is_new']:
+        if version.code == 0 and version.data['is_new']:
             result = await update_system(hh)
-            if result['code'] == 0:
+            if result.code == 0:
                 result = await restart_system(1, hh)
-                logger.info(f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}, username: {hh.username}")
+                logger.info(f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}, username: {hh.username}, result: {result}")
     except:
         logger.error(traceback.format_exc())
 
 
-def get_update_status():
+def get_update_status(hh: models.SessionBase):
     update_date_path = os.path.join(BASE_PATH, '__update_date__')
     update_date = ''
     if os.path.exists(update_date_path):
         with open(update_date_path, 'r') as f:
             update_date = f.read()
+    logger.info(f"Get system status, username: {hh.username}, ip: {hh.ip}")
     return {'status': UPDATE_STATUE, 'date': update_date}
 
 
@@ -366,4 +367,4 @@ def exec_cmd(cmd):
 
 
 if ENABLED_AUTO_UPDATE == 1:
-    scheduler.add_job(auto_update, 'interval', days=1, start_date=get_schedule_time())
+    scheduler.add_job(auto_update, 'interval', days=1, start_date=get_schedule_time(hour=5, minute=30))     # 自动更新的时间需要和其他任务的时间分开

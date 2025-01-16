@@ -303,10 +303,6 @@ class Msg:
     SystemVersionInfo.zh_CN = "查询系统版本信息"
     SystemVersionInfo.en = "Get System Version"
 
-    SystemUpdateGitNoPush = MsgObj()
-    SystemUpdateGitNoPush.zh_CN = "仓库有未提交的更改，将强制覆盖！"
-    SystemUpdateGitNoPush.en = "The repository has uncommitted changes, which will be forced to be overwritten!"
-
     SystemUpdateInfo = MsgObj()
     SystemUpdateInfo.zh_CN = "系统更新"
     SystemUpdateInfo.en = "System update"
