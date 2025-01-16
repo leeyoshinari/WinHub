@@ -49,10 +49,7 @@ def get_folder_size(folder_path) -> int:
     return total_size
 
 
-def get_schedule_time():
-    hour = 5
-    minute = 20
-    second = 20
+def get_schedule_time(hour: int = 5, minute: int = 20, second: int = 20):
     now = datetime.datetime.now()
     scheduled_time = now.replace(hour=hour, minute=minute, second=second, microsecond=0)
     if now < scheduled_time:
