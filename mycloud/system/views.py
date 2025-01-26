@@ -300,7 +300,7 @@ async def auto_update():
             result = await update_system(hh)
             if result.code == 0:
                 result = await restart_system(1, hh)
-                logger.info(f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}, username: {hh.username}, result: {result}")
+                logger.info(f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}, username: {hh.username}, result: {result.msg}")
     except:
         logger.error(traceback.format_exc())
 

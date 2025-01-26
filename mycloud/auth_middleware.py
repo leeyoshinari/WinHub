@@ -49,5 +49,8 @@ def auth_uc(request: Request) -> SessionBase:
 def no_auth(request: Request) -> SessionBase:
     username = request.query_params.get('u', '')
     lang = request.query_params.get('lang', 'en')
+    if not username or not lang:
+        username = request.cookies.get("u", 's')
+        lang = request.headers.get('lang', 'en')
     ip = request.headers.get('x-real-ip', '')
     return SessionBase(username=username, ip=ip, lang=lang)
