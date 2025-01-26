@@ -15,7 +15,7 @@ import platform
 import psutil
 import requests
 from mycloud import models
-from settings import TMP_PATH, SYSTEM_VERSION, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE
+from settings import TMP_PATH, SYSTEM_VERSION, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE, PIP_CMD, AERICH_CMD
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
 from common.scheduler import scheduler, get_schedule_time
 from common.results import Result
@@ -264,20 +264,24 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
             # 安装第三方包
             time.sleep(1)
             if current_platform == "windows":
-                pip_command = ["pip", "install", "-r", "requirements.txt"]
+                windows_cmd = PIP_CMD
+                if PIP_CMD.startswith("pip"):
+                    if PIP_CMD == 'pip3':
+                        windows_cmd = 'pip'
+                pip_command = [windows_cmd, "install", "-r", "requirements.txt"]
             else:
-                pip_command = ["pip3", "install", "-r", "requirements.txt"]
+                pip_command = [PIP_CMD, "install", "-r", "requirements.txt"]
             if TIME_ZONE == 'Asia/Shanghai':
-                pip_command += ["-i", "https://pypi.tuna.tsinghua.edu.cn/simple", "--trusted-host", "pypi.tuna.tsinghua.edu.cn"]
+                pip_command += ["-i", "https://mirrors.ustc.edu.cn/pypi/simple/", "--trusted-host", "mirrors.ustc.edu.cn"]
             logger.info(f"Run pip command: {pip_command}, user: {hh.username}, IP: {hh.ip}")
-            subprocess.run(pip_command, check=True, capture_output=True, text=True)
+            subprocess.run(pip_command, check=True, capture_output=True, text=True, timeout=60)
 
             # 更新数据库
-            aerich_command = ["aerich", "migrate"]
-            subprocess.run(aerich_command, check=True, capture_output=True, text=True)
+            aerich_command = [AERICH_CMD, "migrate"]
+            subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
             time.sleep(1)
-            aerich_command = ["aerich", "upgrade"]
-            subprocess.run(aerich_command, check=True, capture_output=True, text=True)
+            aerich_command = [AERICH_CMD, "upgrade"]
+            subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
             logger.info(f"DataBase update, user: {hh.username}, IP: {hh.ip}")
         result.msg = f"{Msg.SystemRestartInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
