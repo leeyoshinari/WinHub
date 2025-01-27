@@ -165,6 +165,12 @@ Username and password for the TURN service
 ### winHubLevel
 Log Level
 
+### winHubPipCmd
+The pip command, the default for Windows is pip, and the default for Linux and MacOS is pip3. If you are using a virtual environment, you need to configure the absolute path of the pip command here.
+
+### winHubAerichCmd
+The aerich command, by default, is aerich. If you are using a virtual environment, you need to configure the absolute path of the aerich command here.
+
 
 ## Others
 1.Supports multiple platforms such as `Linux`, `Windows`, `MacOS`, etc. It is recommended to deploy on `Linux`.

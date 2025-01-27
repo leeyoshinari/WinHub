@@ -159,7 +159,7 @@ function upload_file(path) {
 
             let xhr = new XMLHttpRequest();
             xhr.open("POST", server + "/server/file/upload", true);
-
+            xhr.setRequestHeader("lang", localStorage.getItem('lang'));
             xhr.upload.onprogress = function(event) {
                 if (event.lengthComputable) {
                     // progressBar.max = event.total;

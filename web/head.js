@@ -3,6 +3,9 @@ localStorage.setItem('server', server);
 if (!localStorage.getItem('username')) {
     localStorage.setItem('username', 'undefined');
 }
+if (!localStorage.getItem('lang')) {
+    localStorage.setItem('lang', 'en');
+}
 let nickName = '';
 function change_language(flag) {
     if (flag === 0){

@@ -136,7 +136,7 @@ async def get_events(request: Request):
 
 
 @router.get("/send/event", summary="发送数据")
-async def send_event(code: int, data, hh: models.SessionBase = Depends(no_auth)):
+async def send_event(code: int, data):
     data = json.dumps({'code': code, 'data': data})
     for client in views.clients:
         await client.put(data)
