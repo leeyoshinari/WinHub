@@ -187,6 +187,8 @@
   "explore.window.file.tool.downloader.window.placeholder1": "请输入文件下载链接",
   "explore.window.file.tool.downloader.window.title2": "如果下载文件需要cookie验证",
   "explore.window.file.tool.downloader.window.placeholder2": "请输入cookie，仅下载文件需要cookie验证时输入",
+  "explore.window.file.tool.downloader.window.title3": "文件名",
+  "explore.window.file.tool.downloader.window.placeholder3": "如果不输入文件名，则会自动获取文件名",
   "explore.window.file.tool.downloader.window.selected": "请选择要下载的文件",
   "explore.window.file.list.folder.type.name": "文件夹",
   "explore.window.file.list.header.name": "名称",

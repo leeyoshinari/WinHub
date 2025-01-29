@@ -38,7 +38,7 @@ class Aria2Downloader:
     def delete_gid_dict(self, gid: str):
         self.gid_dict.pop(gid)
 
-    def add_http_task(self, url: str, file_path: str, cookie: str = ""):
+    def add_http_task(self, url: str, file_path: str, file_name: str = "", cookie: str = ""):
         if not self.process:
             self.start_rpc_server()
             time.sleep(1)
@@ -51,13 +51,15 @@ class Aria2Downloader:
         }
         if cookie:
             options["header"] = "Cookie:" + cookie
+        if file_name:
+            options["out"] = file_name
         payload = {
             "jsonrpc": "2.0",
             "method": "aria2.addUri",
             "id": "1",
             "params": [[url], options]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         logger.info(response.json())
         return response.json().get('result')
 
@@ -82,7 +84,7 @@ class Aria2Downloader:
             "id": "1",
             "params": [[url], options]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         logger.info(response.json())
         return response.json().get('result')
 
@@ -107,7 +109,7 @@ class Aria2Downloader:
             "id": "1",
             "params": [url, [], options]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         return response.json().get('result')
 
     def list_download_tasks(self, is_stop=True):
@@ -116,7 +118,7 @@ class Aria2Downloader:
             "method": "aria2.tellActive",
             "id": "2"
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         res = response.json().get('result', [])
         payload = {
             "jsonrpc": "2.0",
@@ -124,7 +126,7 @@ class Aria2Downloader:
             "id": "3",
             "params": [0, 100]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         res += response.json().get('result', [])
         if is_stop:
             payload = {
@@ -133,7 +135,7 @@ class Aria2Downloader:
                 "id": "30",
                 "params": [0, 100]
             }
-            response = requests.post(self.rpc_url, json=payload)
+            response = requests.post(self.rpc_url, json=payload, timeout=15)
             res += response.json().get('result', [])
         return res
 
@@ -150,7 +152,7 @@ class Aria2Downloader:
             "id": "5",
             "params": [gid]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         return response.json().get('result', {})
 
     def get_file_list(self, gid):
@@ -160,7 +162,7 @@ class Aria2Downloader:
             "id": "8",
             "params": [gid]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         return response.json().get('result', {})
 
     def select_files_to_download(self, gid, file_index):
@@ -180,7 +182,7 @@ class Aria2Downloader:
             "method": "aria2.changeOption",
             "params": [gid, options]  # {"select-file": f"{file_index}"}]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         return response.json()
 
     def update_task(self, gid, method):
@@ -191,7 +193,7 @@ class Aria2Downloader:
             "id": "4",
             "params": [gid]
         }
-        response = requests.post(self.rpc_url, json=payload)
+        response = requests.post(self.rpc_url, json=payload, timeout=15)
         return response.json()
 
 
@@ -200,7 +202,7 @@ def get_tracker_list():
     tracker = []
     for url in urls:
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=15)
             if response.status_code == 200:
                 lines = response.text.split('\n')
                 tracker += [line for line in lines if len(line) > 3]

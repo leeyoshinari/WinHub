@@ -355,7 +355,7 @@ let nts = {
             { type: 'detail', text: 'cancel', js: 'closenotice();' }]
     },
     'downloader': {
-        cnt: `<p class="tit"></p><input type="text" id="downloader-url" placeholder="" style="width: 95%;">
+        cnt: `<p class="tit"></p><input type="text" id="downloader-url" placeholder="" style="width: 95%;"><p class="tit"></p><input type="text" id="downloader-filename" placeholder="" style="width: 95%;">
             <p class="tit"></p><input type="text" id="downloader-cookie" placeholder="" style="width: 95%;">`,
         btn: [{ type: 'main', text: 'submit', js: 'apps.explorer.download_online();' },
             { type: 'detail', text: 'cancel', js: 'closenotice();' }]
@@ -389,8 +389,10 @@ function shownotice(name) {
         $('#notice')[0].style.top = '30%';
         $('#notice>.cnt>p')[0].innerText = i18next.t('explore.window.file.tool.downloader.window.title1');
         $('#notice>.cnt>input')[0].placeholder = i18next.t('explore.window.file.tool.downloader.window.placeholder1');
-        $('#notice>.cnt>p')[1].innerText = i18next.t('explore.window.file.tool.downloader.window.title2');
-        $('#notice>.cnt>input')[1].placeholder = i18next.t('explore.window.file.tool.downloader.window.placeholder2');
+        $('#notice>.cnt>p')[1].innerText = i18next.t('explore.window.file.tool.downloader.window.title3');
+        $('#notice>.cnt>input')[1].placeholder = i18next.t('explore.window.file.tool.downloader.window.placeholder3');
+        $('#notice>.cnt>p')[2].innerText = i18next.t('explore.window.file.tool.downloader.window.title2');
+        $('#notice>.cnt>input')[2].placeholder = i18next.t('explore.window.file.tool.downloader.window.placeholder2');
     }
     setTimeout(() => {
         $('#notice-back').addClass('show');
@@ -1195,9 +1197,11 @@ let apps = {
             let folder_id = $('#win-explorer>.path>.tit')[0].id.split('/');
             let downloader_url = document.getElementById("downloader-url").value;
             let downloader_cookie = document.getElementById("downloader-cookie").value;
+            let downloader_filename = document.getElementById("downloader-filename").value;
             let post_data = {
                 parent_id: folder_id[folder_id.length - 1],
                 url: downloader_url,
+                file_name: downloader_filename,
                 cookie: downloader_cookie
             }
             $.ajax({
