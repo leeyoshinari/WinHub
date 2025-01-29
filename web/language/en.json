@@ -187,6 +187,8 @@
   "explore.window.file.tool.downloader.window.placeholder1": "Please input the file download link.",
   "explore.window.file.tool.downloader.window.title2": "If cookie verification is required when downloading",
   "explore.window.file.tool.downloader.window.placeholder2": "Please input cookie, only input it when downloading files requires cookie verification.",
+  "explore.window.file.tool.downloader.window.title3": "File Name",
+  "explore.window.file.tool.downloader.window.placeholder3": "If you do not enter a file name, it will be automatically obtained.",
   "explore.window.file.tool.downloader.window.selected": "Please select the file to download",
   "explore.window.file.list.folder.type.name": "folder",
   "explore.window.file.list.header.name": "Name",

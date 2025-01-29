@@ -386,6 +386,7 @@ class MusicHistory(BaseModel):
 class DownloadFileOnline(BaseModel):
     parent_id: str
     url: str
+    file_name: Optional[str] = None
     cookie: Optional[str] = None
 
 

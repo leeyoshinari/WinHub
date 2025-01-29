@@ -52,7 +52,8 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        gid = aria2c_downloader.add_http_task(query.url, TMP_PATH, query.cookie)
+        file_path = TMP_PATH
+        gid = aria2c_downloader.add_http_task(query.url, TMP_PATH, query.file_name, query.cookie)
         res = aria2c_downloader.get_completed_task_info(gid)
         completed_length = res['completedLength']
         start_time = time.time()
@@ -250,7 +251,10 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
     result = Result()
     try:
         url_parse = urlparse(query.url)
-        file_name = os.path.join(TMP_PATH, f"{url_parse.path[1:].replace('/', '-')}.mp4")
+        if query.file_name:
+            file_name = os.path.join(TMP_PATH, query.file_name)
+        else:
+            file_name = os.path.join(TMP_PATH, f"{url_parse.path[1:].replace('/', '-')}.mp4")
         cmd = ['ffmpeg', '-i', query.url, '-c', 'copy', file_name]
         if query.cookie:
             cmd = ['ffmpeg', '-headers', f'Cookie: {query.cookie}', '-i', query.url, '-c', 'copy', file_name]
