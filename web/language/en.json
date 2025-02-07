@@ -37,7 +37,7 @@
   "setting.window.account.modify.pwd.tips": "Modify system login password",
   "setting.window.account.user.img": "Upload Avatar",
   "setting.window.account.user.img.tips": "Modify your own avatar, it is best to have the same width and height of the image",
-  "setting.window.account.login.img": "Modify Lock-Screen Image",
+  "setting.window.account.login.img": "Set Lock-Screen Image",
   "setting.window.account.login.img.tips": "Set your own lock screen image for display on the login page",
   "setting.window.account.modify.new.pwd": "Input new password: ",
   "setting.window.account.modify.new.pwd.again": "Input new password again: ",

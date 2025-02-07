@@ -59,6 +59,12 @@ async def get_version(hh: models.SessionBase = Depends(auth)):
     return result
 
 
+@router.get("/update/log", summary="Get newest version (获取最新日志)")
+async def get_version_log(hh: models.SessionBase = Depends(auth)):
+    result = await views.get_version_log(hh)
+    return result
+
+
 @router.get("/update", summary="Update System (更新系统)")
 async def update_system(hh: models.SessionBase = Depends(auth)):
     result = await views.update_system(hh)

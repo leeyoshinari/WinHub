@@ -153,6 +153,8 @@ highlight/
 tmp/
 WinHub*
 start
+stop
+delete
 __update_date__
 # Pyre type checker
 .pyre/

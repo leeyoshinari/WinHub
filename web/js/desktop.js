@@ -3542,7 +3542,7 @@ function get_system_version() {
         url: server + '/system/version',
         success: function (data) {
             if (data['code'] === 0) {
-                if (data['data']['is_new']) {
+                if (data['data']['status'] === 2) {
                     $('.update>.lo>.update-main>.part>.notice')[0].innerText = i18next.t("setting.window.update.version.new");
                     $('.update>.setting-list>.update-now>.alr>.a')[0].classList.remove("disabled");
                 } else {
@@ -3603,12 +3603,12 @@ function get_update_log() {
     show_modal_cover();
     $.ajax({
         type: 'GET',
-        url: server + '/system/version',
+        url: server + '/system/update/log',
         success: function (data) {
             if (data['code'] === 0) {
                 openapp('about');
                 let html_str = '';
-                data['data']['body'].forEach(item => {
+                data['data'].forEach(item => {
                     html_str += `<details style="margin-bottom:7px;"><summary><span>${item['version']}</span> - ${item['publish_date']}</summary><p style="padding-left:30px;">${item['body']}</p></details>`;
                 })
                 $('.about>.content>.update>div')[0].innerHTML = html_str;
