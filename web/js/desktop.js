@@ -3603,7 +3603,7 @@ function get_update_log() {
     show_modal_cover();
     $.ajax({
         type: 'GET',
-        url: server + '/system//update/log',
+        url: server + '/system/update/log',
         success: function (data) {
             if (data['code'] === 0) {
                 openapp('about');
