@@ -15,7 +15,7 @@ import platform
 import psutil
 import requests
 from mycloud import models
-from settings import TMP_PATH, SYSTEM_VERSION, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE, PIP_CMD, AERICH_CMD
+from settings import TMP_PATH, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE, PIP_CMD, AERICH_CMD
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
 from common.scheduler import scheduler, get_schedule_time
 from common.results import Result
@@ -24,7 +24,7 @@ from common.logging import logger
 
 
 UPDATE_STATUE = 0   # 0-默认状态, 1-最新版本, 2-有新版本, 3-已更新,需要重启
-NEWEST_VERSION = ''
+UPDATE_DATE_PATH = os.path.join(BASE_PATH, '__update_date__')
 
 
 async def get_system_info(hh: models.SessionBase) -> Result:
@@ -197,23 +197,39 @@ async def remove_tmp_folder(hh: models.SessionBase) -> Result:
 async def get_new_version(hh: models.SessionBase) -> Result:
     result = Result()
     global UPDATE_STATUE
-    global NEWEST_VERSION
+    try:
+        res = requests.get("https://api.github.com/repos/leeyoshinari/WinHub/releases/latest", timeout=30)
+        if res.status_code == 200:
+            res_json = json.loads(res.text)
+            latest_version = res_json['name']
+            current_version = ""
+            if os.path.exists(UPDATE_DATE_PATH):
+                with open(UPDATE_DATE_PATH, 'r') as f:
+                    update_info = f.read()
+                current_version = update_info.split('_')[0]
+            UPDATE_STATUE = 1 if current_version == latest_version else 2
+            with open(UPDATE_DATE_PATH, 'w') as f:
+                f.write(f'{current_version}_{time.strftime("%Y-%m-%d %H:%M:%S")}')
+            result.data = {'zip_url': res_json['zipball_url'], 'status': UPDATE_STATUE, 'check_time': time.strftime("%Y-%m-%d %H:%M:%S"), 'name': latest_version}
+        result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
+    except:
+        logger.error(traceback.format_exc())
+        result.code = 1
+        result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
+    return result
+
+
+async def get_version_log(hh: models.SessionBase) -> Result:
+    result = Result()
     try:
         res = requests.get("https://api.github.com/repos/leeyoshinari/WinHub/releases", timeout=30)
         if res.status_code == 200:
             res_json = json.loads(res.text)
-            latest_version = float(res_json[0]['name'].replace('v', ''))
-            current_version = float(SYSTEM_VERSION.replace('v', ''))
             body = []
             for v in res_json:
                 body.append({'version': v['name'], 'publish_date': v['published_at'].split('T')[0], 'body': '<br>· '.join(parse_update_log(v['body']))})
-            result.data = {'latest_version': res_json[0]['name'], 'current_version': SYSTEM_VERSION,
-                           'is_new': current_version < latest_version, 'body': body, 'check_time': time.strftime("%Y-%m-%d %H:%M:%S")}
-            UPDATE_STATUE = 2 if current_version < latest_version else 1
-            NEWEST_VERSION = res_json[0]['name']
-            update_date_path = os.path.join(BASE_PATH, '__update_date__')
-            with open(update_date_path, 'w') as f:
-                f.write(time.strftime("%Y-%m-%d %H:%M:%S"))
+            result.data = body
         result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
@@ -226,11 +242,11 @@ async def get_new_version(hh: models.SessionBase) -> Result:
 async def update_system(hh: models.SessionBase) -> Result:
     result = Result()
     global UPDATE_STATUE
-    global NEWEST_VERSION
     try:
-        version = NEWEST_VERSION.replace('v', '')
+        update_info_res = await get_new_version(hh)
+        zip_url = update_info_res.data['zip_url'] if update_info_res.data else ""
         package_path = os.path.join(BASE_PATH, 'WinHub.zip')
-        res = requests.get(f"https://github.com/leeyoshinari/WinHub/archive/refs/tags/{version}.zip", stream=True, timeout=3600)
+        res = requests.get(zip_url, stream=True, timeout=3600)
         res.raise_for_status()
         with open(package_path, 'wb') as f:
             for chunk in res.iter_content(chunk_size=1024):
@@ -253,7 +269,6 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
         if start_type == 1:
             package_path = os.path.join(BASE_PATH, 'WinHub.zip')
             if os.path.exists(package_path):
-                tmp_name = 'WinHub-' + NEWEST_VERSION
                 with zipfile.ZipFile(package_path, 'r') as f:
                     zip_files = f.namelist()
                     tmp_name = zip_files[0][: zip_files[0].index('/')]
@@ -283,6 +298,11 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
             aerich_command = [AERICH_CMD, "upgrade"]
             subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
             logger.info(f"DataBase update, user: {hh.username}, IP: {hh.ip}")
+
+            update_info_res = await get_new_version(hh)
+            newest_version = update_info_res.data['name'] if update_info_res.data else ""
+            with open(UPDATE_DATE_PATH, 'w') as f:
+                f.write(f'{newest_version}_{time.strftime("%Y-%m-%d %H:%M:%S")}')
         result.msg = f"{Msg.SystemRestartInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
         if current_platform == "windows":
@@ -300,7 +320,7 @@ async def auto_update():
     try:
         hh = models.SessionBase(username='system', lang='en', ip='127.0.0.1')
         version = await get_new_version(hh)
-        if version.code == 0 and version.data['is_new']:
+        if version.code == 0 and version.data['status'] == 2:
             result = await update_system(hh)
             if result.code == 0:
                 result = await restart_system(1, hh)
@@ -310,13 +330,12 @@ async def auto_update():
 
 
 def get_update_status(hh: models.SessionBase):
-    update_date_path = os.path.join(BASE_PATH, '__update_date__')
     update_date = ''
-    if os.path.exists(update_date_path):
-        with open(update_date_path, 'r') as f:
+    if os.path.exists(UPDATE_DATE_PATH):
+        with open(UPDATE_DATE_PATH, 'r') as f:
             update_date = f.read()
     logger.info(f"Get system status, username: {hh.username}, ip: {hh.ip}")
-    return {'status': UPDATE_STATUE, 'date': update_date}
+    return {'status': UPDATE_STATUE, 'date': update_date.split('_')[-1]}
 
 
 def get_windows_cpu_model() -> str:
