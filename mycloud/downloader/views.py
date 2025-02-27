@@ -250,6 +250,13 @@ async def download_selected_file(query: models.BtSelectedFiles, hh: models.Sessi
 async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.SessionBase) -> Result:
     result = Result()
     try:
+        parent_id = query.parent_id
+        if len(parent_id) == 1:
+            parent_id = parent_id + hh.username
+        if len(parent_id) <= 3:
+            result.code = 1
+            result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
+            return result
         url_parse = urlparse(query.url)
         if query.file_name:
             file_name = os.path.join(TMP_PATH, query.file_name)
@@ -258,9 +265,9 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
         cmd = ['ffmpeg', '-i', query.url, '-c', 'copy', file_name]
         if query.cookie:
             cmd = ['ffmpeg', '-headers', f'Cookie: {query.cookie}', '-i', query.url, '-c', 'copy', file_name]
-        threading.Thread(target=run_async_write_m3u8_to_db, args=(cmd, query.parent_id, file_name,)).start()
+        threading.Thread(target=run_async_write_m3u8_to_db, args=(cmd, parent_id, file_name,)).start()
         result.msg = Msg.Download.get_text(hh.lang).format(file_name.replace(TMP_PATH, ''))
-        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, query.parent_id, hh.username, hh.ip))
+        logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, parent_id, hh.username, hh.ip))
     except:
         logger.error(traceback.format_exc())
         result.code = 1

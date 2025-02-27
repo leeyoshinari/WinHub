@@ -2942,7 +2942,7 @@ function upload_file() {
     fileUpload_input.click();
     fileUpload_input.onchange = function (event) {
         let progressBar = document.getElementById("progressBar");
-        show_modal_cover(false, true);
+        show_modal_cover(true, true);
         let files = event.target.files;
         let total_files = files.length;
         if (total_files < 1) {

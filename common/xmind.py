@@ -213,7 +213,11 @@ def format_x_children(data: list, style_path: str):
             with open(style_path, 'a', encoding='utf-8') as f:
                 f.write(ss)
             style_property = f' style-id="{style_id}"'
-        res += f'<topic id="{item["data"]["id"]}" timestamp="{int(time.time() * 1000)}"{style_property}><title>{deal_xmind_title(item["data"]["text"])}</title>{format_x_marker(item["data"])}{format_x_note(item["data"])}<children><topics type="attached">{format_x_children(item.get("children", []), style_path)}</topics></children></topic>'
+        if 'text' in item["data"]:
+            x_text = item["data"]["text"]
+        else:
+            x_text = ' '
+        res += f'<topic id="{item["data"]["id"]}" timestamp="{int(time.time() * 1000)}"{style_property}><title>{deal_xmind_title(x_text)}</title>{format_x_marker(item["data"])}{format_x_note(item["data"])}<children><topics type="attached">{format_x_children(item.get("children", []), style_path)}</topics></children></topic>'
     return res
 
 
