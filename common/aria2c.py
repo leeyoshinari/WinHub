@@ -43,9 +43,8 @@ class Aria2Downloader:
             self.start_rpc_server()
             time.sleep(1)
         options = {
-            # "max-download-limit": "30K",
-            "max-connection-per-server": "5",
-            "split": "5",
+            "max-connection-per-server": "8",
+            "split": "16",
             "continue": "true",
             "dir": file_path
         }
@@ -69,9 +68,8 @@ class Aria2Downloader:
             time.sleep(1)
         trackers = get_tracker_list()
         options = {
-            "max-download-limit": "30K",
-            "max-connection-per-server": "5",
-            "split": "5",
+            "max-connection-per-server": "8",
+            "split": "8",
             "continue": "true",
             "bt.metadataOnly": "true",
             "dir": file_path
@@ -94,9 +92,8 @@ class Aria2Downloader:
             time.sleep(1)
         trackers = get_tracker_list()
         options = {
-            "max-download-limit": "30K",
-            "max-connection-per-server": "5",
-            "split": "5",
+            "max-connection-per-server": "8",
+            "split": "8",
             "continue": "true",
             "bt.metadataOnly": "true",
             "dir": file_path
@@ -168,9 +165,8 @@ class Aria2Downloader:
     def select_files_to_download(self, gid, file_index):
         trackers = get_tracker_list()
         options = {
-            "max-download-limit": "30K",
-            "max-connection-per-server": "5",
-            "split": "5",
+            "max-connection-per-server": "8",
+            "split": "8",
             "continue": "true",
             "select-file": f"{file_index}"
         }
