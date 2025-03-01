@@ -36,21 +36,24 @@ class Aria2Downloader:
             logger.info('aria2c RPC server has stopped.')
 
     def kill_aria2c(self):
-        current_platform = platform.system().lower()
-        if current_platform == "windows":
-            stop_cmd = "tasklist | findstr aria2c.exe"
-            result = subprocess.run(stop_cmd, capture_output=True, text=True, shell=True, timeout=15)
-            if result.stdout:
-                stop_cmd = ["taskkill", "/F", "/IM", "aria2c.exe"]
-                subprocess.run(stop_cmd, check=True, capture_output=True, text=True, timeout=15)
-        else:
-            stop_cmd = "ps -ef|grep aria2c|grep -v grep"
-            with os.popen(stop_cmd) as p:
-                result = p.read()
-            if result:
-                stop_cmd = "ps -ef|grep aria2c|grep -v grep |awk '{print $2}' |xargs kill -9"
+        try:
+            current_platform = platform.system().lower()
+            if current_platform == "windows":
+                stop_cmd = "tasklist | findstr aria2c.exe"
+                result = subprocess.run(stop_cmd, capture_output=True, text=True, shell=True, timeout=15)
+                if result.stdout:
+                    stop_cmd = ["taskkill", "/F", "/IM", "aria2c.exe"]
+                    subprocess.run(stop_cmd, check=True, capture_output=True, text=True, timeout=15)
+            else:
+                stop_cmd = "ps -ef|grep aria2c|grep -v grep"
                 with os.popen(stop_cmd) as p:
-                    _ = p.read()
+                    result = p.read()
+                if result:
+                    stop_cmd = "ps -ef|grep aria2c|grep -v grep |awk '{print $2}' |xargs kill -9"
+                    with os.popen(stop_cmd) as p:
+                        _ = p.read()
+        except:
+            logger.error(traceback.format_exc())
 
     def add_gid_dict(self, gid: str, username: str):
         self.gid_dict.update({gid: username})
