@@ -8,8 +8,8 @@ import time
 import base64
 import asyncio
 import subprocess
-import threading
 import traceback
+from threading import Thread
 from urllib.parse import urlparse
 from settings import TMP_PATH
 from mycloud import models
@@ -90,7 +90,7 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
                     return result
                 time.sleep(1)
                 res = aria2c_downloader.get_completed_task_info(gid)
-        threading.Thread(target=run_async_write_aria2c_to_db, args=(gid, folder_id, )).start()
+        Thread(target=run_async_write_aria2c_to_db, args=(gid, folder_id, )).start()
         aria2c_downloader.add_gid_dict(gid, hh.username)
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(query.url, gid, hh.username, hh.ip))
@@ -237,7 +237,7 @@ async def download_selected_file(query: models.BtSelectedFiles, hh: models.Sessi
             result.msg = res['error']["message"]
             logger.error(f"{Msg.DownloadError.get_text(hh.lang)}, gid: {query.gid}, username: {hh.username}, ip: {hh.ip}")
             return result
-        threading.Thread(target=run_async_write_aria2c_to_db, args=(query.gid, query.folder,)).start()
+        Thread(target=run_async_write_aria2c_to_db, args=(query.gid, query.folder,)).start()
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(query.gid, query.index, hh.username, hh.ip))
     except:
@@ -265,7 +265,7 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
         cmd = ['ffmpeg', '-i', query.url, '-c', 'copy', file_name]
         if query.cookie:
             cmd = ['ffmpeg', '-headers', f'Cookie: {query.cookie}', '-i', query.url, '-c', 'copy', file_name]
-        threading.Thread(target=run_async_write_m3u8_to_db, args=(cmd, parent_id, file_name,)).start()
+        Thread(target=run_async_write_m3u8_to_db, args=(cmd, parent_id, file_name,)).start()
         result.msg = Msg.Download.get_text(hh.lang).format(file_name.replace(TMP_PATH, ''))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, parent_id, hh.username, hh.ip))
     except:
