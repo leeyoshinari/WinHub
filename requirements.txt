@@ -1,5 +1,6 @@
 aerich>=0.7.2
 aiomysql>=0.2.0
+aiosqlite>=0.20.0
 fastapi>=0.103.1
 tortoise-orm>=0.19.3
 uvicorn>=0.23.2

@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 
+import os
 import time
 import subprocess
 import traceback
 import requests
+import platform
 from settings import TRACKER_URL
 from common.logging import logger
 
@@ -17,6 +19,7 @@ class Aria2Downloader:
         self.rpc_url = f'http://localhost:{rpc_port}/jsonrpc'
         self.process = None
         self.gid_dict = {}
+        self.kill_aria2c()
 
     def start_rpc_server(self):
         self.process = subprocess.Popen([self.aria2c_path, '--enable-rpc=true', '--allow-overwrite=true', '--enable-dht=true', f'--dht-listen-port={self.rpc_port+2}', f'--rpc-listen-port={self.rpc_port}'])
@@ -32,6 +35,23 @@ class Aria2Downloader:
         else:
             logger.info('aria2c RPC server has stopped.')
 
+    def kill_aria2c(self):
+        current_platform = platform.system().lower()
+        if current_platform == "windows":
+            stop_cmd = "tasklist | findstr aria2c.exe"
+            result = subprocess.run(stop_cmd, capture_output=True, text=True, shell=True, timeout=15)
+            if result.stdout:
+                stop_cmd = ["taskkill", "/F", "/IM", "aria2c.exe"]
+                subprocess.run(stop_cmd, check=True, capture_output=True, text=True, timeout=15)
+        else:
+            stop_cmd = "ps -ef|grep aria2c|grep -v grep"
+            with os.popen(stop_cmd) as p:
+                result = p.read()
+            if result:
+                stop_cmd = "ps -ef|grep aria2c|grep -v grep |awk '{print $2}' |xargs kill -9"
+                with os.popen(stop_cmd) as p:
+                    _ = p.read()
+
     def add_gid_dict(self, gid: str, username: str):
         self.gid_dict.update({gid: username})
 
@@ -44,7 +64,7 @@ class Aria2Downloader:
             time.sleep(1)
         options = {
             "max-connection-per-server": "8",
-            "split": "16",
+            "split": "8",
             "continue": "true",
             "dir": file_path
         }
