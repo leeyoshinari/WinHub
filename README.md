@@ -36,8 +36,7 @@ View detailed page style, [Please click me.](https://github.com/leeyoshinari/Win
 [See the blog for detailed deployment steps](https://blog.ihuster.top/p/940241891.html#%E9%83%A8%E7%BD%B2) <br>
 1.Clone `git clone https://github.com/leeyoshinari/WinHub.git` ;
 
-2.`cd WinHub`, and check configuration in `config.conf`；<br>
-Note: If you need the restart and automatic update functions, you need to set the configuration that needs to be modified in `config.conf` as system environment variables. See below for configuration details.
+2.`cd WinHub`, and check configuration in `.env.example`; you must copy it and rename it to `.env`.<br>
 
 3.Install third-party packages
 ```shell script
@@ -108,7 +107,7 @@ If you don’t know nginx, please go to [nginx official website](http://nginx.or
 
 
 ## Configuration
-If the following configuration needs to be modified, it must be configured in the system environment variables. If the environment variables are not set, the configuration in `config.conf` will be used by default. After setting the environment variables, if it does not take effect, please reopen the command line or re-ssh the server.
+The configuration file is `.env.example`. Please copy it and rename it to `.env`, then modify the variable value in `.env`.
 
 ### winHubHost & winHubPort
 The IP and port that the service listens on.

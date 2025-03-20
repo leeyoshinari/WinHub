@@ -32,14 +32,14 @@
 ## 部署
 1、[详细的部署步骤见博客](https://blog.ihuster.top/p/940241891.html#%E9%83%A8%E7%BD%B2)
 
-2、所有配置在 `config.conf` 中，详细的配置请往下看；
+2、所有配置在 `.env.example` 中，请务必复制一份并重命名为 `.env`，详细的配置请往下看；
 
 3、访问页面，url是 `http://IP:Port/Windows`（这里的 IP 和 端口是 Nginx 中设置的 IP 和 端口。`Windows`就是第8步中的前端配置的名字）
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/home.jpg)
 
 ## 配置解释
-以下配置，如果需要修改的话，一定要配置到系统环境变量中，如果没有设置环境变量，则默认会使用 `config.conf` 中的配置。设置环境变量后，如果没有生效，请重新打开命令行窗口或重新 ssh 服务器。
+配置文件是 `.env.example`，请务必复制一份并重命名为 `.env`，然后在 `.env` 中修改变量值。
 
 ### winHubHost 和 winHubPort
 后端服务监听的 ip 和 端口

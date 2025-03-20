@@ -1,6 +1,5 @@
 #!/bin/sh
-#port=$(cat config.conf | grep -E "^port" | awk -F '=' '{print $2}' | awk -F '\r' '{print $1}' | tr -d '\n' | xargs)
-port=$winHubPort
+port=$(cat .env | grep -E "^winHubPort" | awk -F '=' '{print $2}' | awk -F '\r' '{print $1}' | tr -d '[:space:]')
 if [ "$(uname)" = "Darwin" ] 
 then
 	lsof -i:${port}| grep "LISTEN"| awk -F ' ' '{print $2}'| xargs kill -9 
