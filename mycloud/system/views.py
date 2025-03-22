@@ -293,11 +293,12 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
 
             # 更新数据库
             aerich_command = [AERICH_CMD, "migrate"]
-            subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
-            time.sleep(1)
-            aerich_command = [AERICH_CMD, "upgrade"]
-            subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
-            logger.info(f"DataBase update, user: {hh.username}, IP: {hh.ip}")
+            cmd_res = subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
+            if 'No changes detected' not in cmd_res.stdout:
+                time.sleep(1)
+                aerich_command = [AERICH_CMD, "upgrade"]
+                subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
+                logger.info(f"DataBase update, user: {hh.username}, IP: {hh.ip}")
 
             update_info_res = await get_new_version(hh)
             newest_version = update_info_res.data['name'] if update_info_res.data else ""
