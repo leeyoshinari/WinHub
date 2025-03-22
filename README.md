@@ -170,6 +170,8 @@ The pip command, the default for Windows is pip, and the default for Linux and M
 ### winHubAerichCmd
 The aerich command, by default, is aerich. If you are using a virtual environment, you need to configure the absolute path of the aerich command here.
 
+### winHubGunicornCmd
+The gunicorn command, by default, is gunicorn. If you are using a virtual environment, you need to configure the absolute path of the gunicorn command here.
 
 ## Others
 1.Supports multiple platforms such as `Linux`, `Windows`, `MacOS`, etc. It is recommended to deploy on `Linux`.

@@ -102,6 +102,8 @@ pip命令，Windows系统默认pip，Linux和MacOS系统默认pip3。如果你�
 ### winHubAerichCmd
 aerich命令，默认是aerich。如果你用的是虚拟环境，那么这里需要配置命令的绝对路径。
 
+### winHubGunicornCmd
+gunicorn命令，默认是gunicorn。如果你用的是虚拟环境，那么这里需要配置命令的绝对路径。
 
 ## 其他
 1、支持 `Linux`、`Windows`、`MacOS` 等多个平台，建议在 `Linux` 系统部署； 
