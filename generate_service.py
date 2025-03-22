@@ -11,8 +11,8 @@ import win32event
 import servicemanager
 
 
-def get_variable(key):
-    return os.environ.get(key, '')
+HOST = '127.0.0.1'
+PORT = '15200'
 
 
 class MyService(ServiceFramework):
@@ -31,7 +31,7 @@ class MyService(ServiceFramework):
         if self.process:
             self.process.terminate()
             self.process.wait()
-        
+
         self.restart_service()
 
     def SvcDoRun(self):
@@ -45,7 +45,7 @@ class MyService(ServiceFramework):
                 try:
                     if not self.process or self.process.poll() is not None:
                         project_path = os.path.dirname(os.path.abspath(__file__))
-                        command = ["uvicorn", "main:app", "--host", f"{get_variable('winHubHost')}", "--port", f"{get_variable('winHubPort')}"]
+                        command = ["uvicorn", "main:app", "--host", f"{HOST}", "--port", f"{PORT}"]
                         self.process = subprocess.Popen(command, cwd=project_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         servicemanager.LogInfoMsg("WinHubService - Started!")
                 except Exception as e:
@@ -57,7 +57,7 @@ class MyService(ServiceFramework):
                     self.SvcStop()
                     time.sleep(1)
                     self.SvcDoRun()
-    
+
     def restart_service(self):
         try:
             subprocess.run(['sc', 'start', self._svc_name_], check=True, capture_output=True, text=True)

@@ -5,25 +5,22 @@
 import os
 import sys
 import json
-import configparser
 import tzlocal
+from dotenv import load_dotenv
 
 
 if hasattr(sys, 'frozen'):
     BASE_PATH = os.path.dirname(sys.executable)
 else:
     BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-cfg = configparser.ConfigParser()
-config_path = os.path.join(BASE_PATH, 'config.conf')
-cfg.read(config_path, encoding='utf-8')
+
 TOKENs = {}
+load_dotenv()
 
 
 def get_config(key):
-    value = os.environ.get(key, None)
-    if value is not None:
-        return value
-    return cfg.get('default', key, fallback="")
+    value = os.getenv(key, None)
+    return value
 
 
 FRONT_END_PREFIX = get_config("winHubFrontEndPrefix")
