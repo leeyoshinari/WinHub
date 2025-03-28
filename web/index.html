@@ -97,6 +97,9 @@
 		<div class="b i18n_w" ondblclick="openapp('setting');" ontouchstart="openapp('setting');" win12_title="" key="setting.title" oncontextmenu="return showcm(event,'desktop.icon',['setting',-1]);" appname="setting">
 			<img src="img/setting.svg" alt="setting.svg" loading="lazy"><p class="i18n" key="setting"></p>
 		</div>
+		<div class="b i18n_w" ondblclick="openapp('tools');" ontouchstart="openapp('tools');" win12_title="" key="tools.title" oncontextmenu="return showcm(event,'desktop.icon',['tools',-1]);" appname="tools">
+			<img src="img/tools.svg" alt="tools.svg" loading="lazy"><p class="i18n" key="tools"></p>
+		</div>
 		<div class="b i18n_w" ondblclick="openapp('edge');" ontouchstart="openapp('edge');" win12_title="" key="edge.title" oncontextmenu="return showcm(event,'desktop.icon',['edge',-1]);" appname="edge">
 			<img src="img/edge.svg" alt="edge.svg" loading="lazy"><p class="i18n" key="edge"></p>
 		</div>
@@ -141,9 +144,6 @@
 					<a class="enable system" onclick="apps.setting.page('system')"><img src="img/system.svg" alt="system.svg" loading="lazy"><span class="i18n" key="setting.window.system"></span></a>
 					<a class="enable user" onclick="apps.setting.page('user')"><img src="img/setting/user.png" alt="user.png" loading="lazy"><span class="i18n" key="setting.window.account">账户</span></a>
 					<a class="enable appearance" onclick="apps.setting.page('appearance')"><img src="img/setting/personal.png" alt="personal.png" loading="lazy"><span class="i18n" key="setting.window.appearance"></span></a>
-					<a class="enable media" onclick="apps.setting.page('media')"><img src="img/files/video.svg" alt="video.svg" loading="lazy"><span class="i18n" key="setting.window.media"></span></a>
-					<a class="enable game" onclick="apps.setting.page('game')"><img src="img/game.png" alt="game.png" loading="lazy"><span class="i18n" key="setting.window.game"></span></a>
-					<a class="enable shell" onclick="apps.setting.page('shell')"><img src="img/terminal.svg" alt="terminal.svg" loading="lazy"><span class="i18n" key="setting.window.shell">Terminal</span></a>
 					<a class="enable update" onclick="apps.setting.page('update');get_update_status();"><img src="img/setting/update.png" alt="update.png" loading="lazy"><span class="i18n" key="setting.window.update"></span></a>
 				</list>
 			</div>
@@ -206,6 +206,111 @@
 						</a>
 					</div>
 				</div>
+				<div class="cnt system">
+					<p class="title i18n" key="setting.window.system"></p>
+					<div class="setting-list" style="margin-top: 10px;">
+						<a class="dp app-color" onclick="openapp('edge');apps.edge.goto('https://blog.ihuster.top/p/940241891.html');">
+							<icon></icon><div><p class="i18n" key="setting.window.system.course"></p><p class="i18n" key="setting.window.system.course.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+						<a class="dp app-color" onclick="restart_system(0);">
+							<icon></icon><div><p class="i18n" key="setting.window.system.restart"></p><p class="i18n" key="setting.window.system.restart.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+						<a class="dp app-color" onclick="open_system_resource('taskmgr');">
+							<icon></icon><div><p class="i18n" key="setting.window.system.resource"></p><p class="i18n" key="setting.window.system.resource.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+						<a class="dp app-color" onclick="get_system_info(this);">
+							<icon></icon><div><p class="i18n" key="setting.window.system.about"></p><p class="i18n" key="setting.window.system.about.tips"></p></div><i class="bi bi-chevron-down"></i>
+						</a>
+						<div class="dp app-color about">
+							<div><span class="about-label i18n" key="setting.window.system.about.system"></span><span></span></div>
+							<div><span class="about-label i18n" key="setting.window.system.about.system.version"></span><span></span></div>
+							<div><span class="about-label i18n" key="setting.window.system.about.system.type"></span><span></span></div>
+							<div><span class="about-label i18n" key="setting.window.system.about.system.cpu.model"></span><span></span></div>
+							<div><span class="about-label i18n" key="setting.window.system.about.system.cpu.core"></span><span></span></div>
+							<div><span class="about-label i18n" key="setting.window.system.resource.memory"></span><span></span></div>
+							<div><span class="about-label i18n" key="setting.window.system.resource.disk"></span><span></span></div>
+							<div><span class="about-label i18n" key="setting.window.system.about.system.runtime"></span><span></span></div>
+						</div>
+						<a class="dp app-color" onclick="apps.explorer.manual_backup();">
+							<icon></icon><div><p class="i18n" key="setting.window.system.backup"></p><p class="i18n" key="setting.window.system.backup.tips"></p></div><i class="bi bi-chevron-down"></i>
+						</a>
+						<div class="dp app-color backup">
+							<div class="server-title">
+								<div class="i18n" style="width: 20%;" key="explore.window.file.list.header.name">名称</div>
+								<div class="i18n" style="width: 20%;" key="explore.window.file.list.header.create.time">创建时间</div>
+								<div class="i18n" style="width: 20%;" key="explore.window.file.list.header.update.time">修改时间</div>
+								<div class="i18n" style="width: 30%;" key="setting.window.shell.server.list.action">操作</div></div><br />
+							<div class="server-item backup"></div>
+						</div>
+						<a class="dp app-color" onclick="clear_tmp_path();">
+							<icon></icon><div><p class="i18n" key="setting.window.system.clean.temporary"></p><p class="i18n" key="setting.window.system.clean.temporary.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+					</div>
+				</div>
+				<div class="cnt update">
+					<p class="title i18n" key="setting.window.update"></p>
+					<div class="lo">
+						<img src="img/setting/update.svg" alt="update.svg" loading="lazy">
+						<div class="update-main">
+							<div class="part"><p class="notice i18n" key="setting.window.update.check"></p><p class="detail"></p></div>
+							<div><a class="a button i18n" style="font-size:16px;margin-right:20px;" onclick="get_system_version();" key="setting.window.update.check.button"></a></div>
+						</div>
+					</div>
+					<div class="setting-list">
+						<div class="update-now"><icon>&#xE896;</icon><div><p class="i18n" key="setting.window.update.download"></p><p></p></div><div class="alr"><a class="a button disabled i18n" style="font-size:16px;margin-top:-7.5px;" onclick="download_latest_version();" key="setting.window.update.download.button"></a></div></div>
+						<a class="dp app-color" onclick="restart_system(1);">
+							<icon></icon><div><p class="i18n" key="setting.window.update.restart"></p><p class="i18n" key="setting.window.update.restart.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+						<a class="dp app-color" onclick="get_update_log();">
+							<icon></icon><div><p class="i18n" key="setting.window.update.log"></p><p class="i18n" key="setting.window.update.log.tips"></p></div><i class="bi bi-chevron-right"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="window tools">
+		<div class="resize-bar"></div>
+		<div class="titbar">
+			<img src="img/tools.svg" class="icon" alt="tools.svg" loading="lazy"><span><span class="title i18n" key="tools.window.title">设置</span><span class="save-status"></span></span>
+			<div>
+				<a class="a wbtg red" onclick="hidewin('tools')"><i class="bi bi-x-lg"></i></a>
+				<a class="a wbtg max" onclick="maxwin('tools')"><i class="bi bi-app"></i></a>
+				<a class="a wbtg" onclick="minwin('tools')"><i class="bi bi-dash-lg"></i></a>
+			</div>
+		</div>
+		<div class="loadback"><img src="img/tools.svg" class="icon" alt="tools.svg" loading="lazy"></div>
+		<div class="content" id="win-tools">
+			<div class="menu">
+				<a class="a user">
+					<img src="" alt="avatar.jpg" loading="lazy">
+					<div><p></p></div>
+				</a>
+				<list class="focs">
+					<!-- <a class="enable common" onclick="apps.tools.page('common')"><img src="img/tools.svg" alt="tools.svg" loading="lazy"><span class="i18n" key="tools.window.common"></span></a> -->
+					<a class="enable health" onclick="apps.tools.page('health')"><img src="img/setting/health.svg" alt="health.svg" loading="lazy"><span class="i18n" key="tools.window.health"></span></a>
+					<a class="enable media" onclick="apps.tools.page('media')"><img src="img/files/video.svg" alt="video.svg" loading="lazy"><span class="i18n" key="setting.window.media"></span></a>
+					<a class="enable game" onclick="apps.tools.page('game')"><img src="img/game.png" alt="game.png" loading="lazy"><span class="i18n" key="setting.window.game"></span></a>
+					<a class="enable shell" onclick="apps.tools.page('shell')"><img src="img/terminal.svg" alt="terminal.svg" loading="lazy"><span class="i18n" key="setting.window.shell"></span></a>
+				</list>
+			</div>
+			<div class="page">
+				<div class="cnt common">
+					<p class="title i18n" key="tools.window.common"></p>
+					<div class="tools-grid" style="margin-top: 10px;">
+					</div>
+				</div>
+				<div class="cnt health">
+					<p class="title i18n" key="tools.window.health"></p>
+					<div class="tools-grid" style="margin-top: 10px;">
+						<div><a onclick="set_health_window(1);"><img src="img/setting/weight.svg" alt="weight.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.weight"></p></a></div>
+						<div><a onclick="set_health_window(2);"><img src="img/setting/heartbeat.svg" alt="heartbeat.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.heartbeat"></p></a></div>
+						<div><a onclick="set_health_window(3);"><img src="img/setting/bloodPressure.svg" alt="bloodPressure.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.bloodPressure"></p></a></div>
+						<div><a onclick="set_health_window(4);"><img src="img/setting/Bloodglucose.svg" alt="Bloodglucose.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.Bloodglucose"></p></a></div>
+						<div><a onclick="set_health_window(5);"><img src="img/setting/spo2.svg" alt="spo2.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.spo2"></p></a></div>
+						<div><a onclick="set_health_window(0);"><img src="img/setting/height.svg" alt="height.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.height"></p></a></div>
+					</div>
+				</div>
 				<div class="cnt media">
 					<p class="title i18n" key="setting.window.media"></p>
 					<div class="setting-list" style="margin-top: 10px;">
@@ -255,47 +360,6 @@
 						</div>
 					</div>
 				</div>
-				<div class="cnt system">
-					<p class="title i18n" key="setting.window.system"></p>
-					<div class="setting-list" style="margin-top: 10px;">
-						<a class="dp app-color" onclick="openapp('edge');apps.edge.goto('https://blog.ihuster.top/p/940241891.html');">
-							<icon></icon><div><p class="i18n" key="setting.window.system.course"></p><p class="i18n" key="setting.window.system.course.tips"></p></div><i class="bi bi-chevron-right"></i>
-						</a>
-						<a class="dp app-color" onclick="restart_system(0);">
-							<icon></icon><div><p class="i18n" key="setting.window.system.restart"></p><p class="i18n" key="setting.window.system.restart.tips"></p></div><i class="bi bi-chevron-right"></i>
-						</a>
-						<a class="dp app-color" onclick="open_system_resource('taskmgr');">
-							<icon></icon><div><p class="i18n" key="setting.window.system.resource"></p><p class="i18n" key="setting.window.system.resource.tips"></p></div><i class="bi bi-chevron-right"></i>
-						</a>
-						<a class="dp app-color" onclick="get_system_info(this);">
-							<icon></icon><div><p class="i18n" key="setting.window.system.about"></p><p class="i18n" key="setting.window.system.about.tips"></p></div><i class="bi bi-chevron-down"></i>
-						</a>
-						<div class="dp app-color about">
-							<div><span class="about-label i18n" key="setting.window.system.about.system"></span><span></span></div>
-							<div><span class="about-label i18n" key="setting.window.system.about.system.version"></span><span></span></div>
-							<div><span class="about-label i18n" key="setting.window.system.about.system.type"></span><span></span></div>
-							<div><span class="about-label i18n" key="setting.window.system.about.system.cpu.model"></span><span></span></div>
-							<div><span class="about-label i18n" key="setting.window.system.about.system.cpu.core"></span><span></span></div>
-							<div><span class="about-label i18n" key="setting.window.system.resource.memory"></span><span></span></div>
-							<div><span class="about-label i18n" key="setting.window.system.resource.disk"></span><span></span></div>
-							<div><span class="about-label i18n" key="setting.window.system.about.system.runtime"></span><span></span></div>
-						</div>
-						<a class="dp app-color" onclick="apps.explorer.manual_backup();">
-							<icon></icon><div><p class="i18n" key="setting.window.system.backup"></p><p class="i18n" key="setting.window.system.backup.tips"></p></div><i class="bi bi-chevron-down"></i>
-						</a>
-						<div class="dp app-color backup">
-							<div class="server-title">
-								<div class="i18n" style="width: 20%;" key="explore.window.file.list.header.name">名称</div>
-								<div class="i18n" style="width: 20%;" key="explore.window.file.list.header.create.time">创建时间</div>
-								<div class="i18n" style="width: 20%;" key="explore.window.file.list.header.update.time">修改时间</div>
-								<div class="i18n" style="width: 30%;" key="setting.window.shell.server.list.action">操作</div></div><br />
-							<div class="server-item backup"></div>
-						</div>
-						<a class="dp app-color" onclick="clear_tmp_path();">
-							<icon></icon><div><p class="i18n" key="setting.window.system.clean.temporary"></p><p class="i18n" key="setting.window.system.clean.temporary.tips"></p></div><i class="bi bi-chevron-right"></i>
-						</a>
-					</div>
-				</div>
 				<div class="cnt game">
 					<p class="title i18n" key="setting.window.game"></p>
 					<div class="setting-list" style="margin-top: 10px;">
@@ -307,25 +371,6 @@
 						</a>
 						<a class="dp app-color" onclick="open_game('rings')">
 							<img src="img/setting/rings.svg" alt="rings.svg" loading="lazy" /><div><p class="i18n" key="game.rings"></p><p class="i18n" key="game.rings.tips"></p></div><i class="bi bi-chevron-right"></i>
-						</a>
-					</div>
-				</div>
-				<div class="cnt update">
-					<p class="title i18n" key="setting.window.update"></p>
-					<div class="lo">
-						<img src="img/setting/update.svg" alt="update.svg" loading="lazy">
-						<div class="update-main">
-							<div class="part"><p class="notice i18n" key="setting.window.update.check"></p><p class="detail"></p></div>
-							<div><a class="a button i18n" style="font-size:16px;margin-right:20px;" onclick="get_system_version();" key="setting.window.update.check.button"></a></div>
-						</div>
-					</div>
-					<div class="setting-list">
-						<div class="update-now"><icon>&#xE896;</icon><div><p class="i18n" key="setting.window.update.download"></p><p></p></div><div class="alr"><a class="a button disabled i18n" style="font-size:16px;margin-top:-7.5px;" onclick="download_latest_version();" key="setting.window.update.download.button"></a></div></div>
-						<a class="dp app-color" onclick="restart_system(1);">
-							<icon></icon><div><p class="i18n" key="setting.window.update.restart"></p><p class="i18n" key="setting.window.update.restart.tips"></p></div><i class="bi bi-chevron-right"></i>
-						</a>
-						<a class="dp app-color" onclick="get_update_log();">
-							<icon></icon><div><p class="i18n" key="setting.window.update.log"></p><p class="i18n" key="setting.window.update.log.tips"></p></div><i class="bi bi-chevron-right"></i>
 						</a>
 					</div>
 				</div>
@@ -616,7 +661,6 @@
 			<div id="save-bar" style="margin:10px;margin-top: 3px;">
 				<a onclick="apps.edge.goto('https://blog.ihuster.top')" win12_title="博客" class="save-item"><i class="bi bi-file-earmark"></i>博客</a>
 				<a onclick="apps.edge.goto('https://music.txqq.pro')" win12_title="全网音乐免费下载" class="save-item"><i class="bi bi-file-earmark"></i>全网音乐免费下载</a>
-				<a onclick="apps.edge.goto('https://tool.liumingye.cn/music')" win12_title="MyFreeMP3" class="save-item"><i class="bi bi-file-earmark"></i>MyFreeMP3</a>
 				<a onclick="apps.edge.goto('https://xbeibeix.com/api/bilibili')" win12_title="bilibili" class="save-item"><i class="bi bi-file-earmark"></i>B站视频下载</a>
 				<a onclick="apps.edge.goto('https://jx.xmflv.cc/?url=')" win12_title="虾米解析-VIP视频免费看" class="save-item"><i class="bi bi-file-earmark"></i>虾米解析</a>
 				<a onclick="apps.edge.goto('https://im1907.top/?jx=')" win12_title="M1079云加速播放器-VIP视频免费看" class="save-item"><i class="bi bi-file-earmark"></i>云加速播放器</a>

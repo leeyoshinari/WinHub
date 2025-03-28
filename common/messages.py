@@ -382,3 +382,15 @@ class Msg:
     ChatMode = MsgObj()
     ChatMode.zh_CN = ["语音聊天", "视频聊天", "文件传输"]
     ChatMode.en = ["VoiceChat", "VideoChat", "FileTransfer"]
+
+    HealthSetData = MsgObj()
+    HealthSetData.zh_CN = "设置"
+    HealthSetData.en = "Set data"
+
+    HealthNoData = MsgObj()
+    HealthNoData.zh_CN = "数据缺失"
+    HealthNoData.en = "No data"
+
+    HealthBloodPressureErr = MsgObj()
+    HealthBloodPressureErr.zh_CN = "收缩压和舒张压填错了~"
+    HealthBloodPressureErr.en = "Systolic blood pressure and diastolic blood pressure are wrong~"

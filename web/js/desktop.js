@@ -432,6 +432,24 @@ let apps = {
             }
         },
     },
+    tools: {
+        init: () => {
+            if ($('.window.tools>link').length < 1) {
+                let css_link = document.createElement('link');
+                css_link.setAttribute('rel', 'stylesheet');
+                css_link.setAttribute('href', 'css/tools.css');
+                $('.window.tools')[0].appendChild(css_link);
+            }
+            $('#win-tools>.menu>list>a.health')[0].click();
+        },
+        page: (name) => {
+            $('#win-tools>.page>.cnt.' + name).scrollTop(0);
+            $('#win-tools>.page>.cnt.show').removeClass('show');
+            $('#win-tools>.page>.cnt.' + name).addClass('show');
+            $('#win-tools>.menu>list>a.check').removeClass('check');
+            $('#win-tools>.menu>list>a.' + name).addClass('check');
+        },
+    },
     whiteboard: {
         canvas: null,
         ctx: null,
@@ -1912,6 +1930,10 @@ function openapp(name) {
         $('#win-setting>.menu>.user>img')[0].src = 'img/pictures/' + document.cookie.split('u=')[1].split(';')[0] +'/avatar.jpg';
         $('#win-setting>.menu>.user>div>p')[0].innerText = nickName;
     }
+    if (name === 'tools') {
+        $('#win-tools>.menu>.user>img')[0].src = 'img/pictures/' + document.cookie.split('u=')[1].split(';')[0] +'/avatar.jpg';
+        $('#win-tools>.menu>.user>div>p')[0].innerText = nickName;
+    }
 }
 // 窗口操作
 function showwin(name) {
@@ -2779,6 +2801,84 @@ function add_server_window() {
     $('#notice>.btns').html(`<a class="a btn main" onclick="add_server();">${i18next.t('submit')}</a><a class="a btn detail" onclick="closenotice();">${i18next.t('cancel')}</a>`);
     $('#notice-back').addClass('show');
     $('#notice')[0].style.width = '50%';
+}
+
+function set_health_window(health_type) {
+    let label1 = "";
+    let label2 = "";
+    let placeholder1 = "";
+    let placeholder2 = "";
+    switch (health_type) {
+        case 0:     // 身高
+            label1 = "tools.windows.health.height";
+            placeholder1 = "tools.windows.health.height.placeholder";
+            break;
+        case 1:     // 体重
+            label1 = "tools.windows.health.weight";
+            placeholder1 = "tools.windows.health.weight.placeholder";
+            break;
+        case 2:     // 心跳
+            label1 = "tools.windows.health.heartbeat";
+            placeholder1 = "tools.windows.health.heartbeat.placeholder";
+            break;
+        case 3:     // 血压
+            label1 = "tools.windows.health.bloodPressure.label1";
+            label2 = "tools.windows.health.bloodPressure.label2";
+            placeholder1 = "tools.windows.health.bloodPressure.placeholder1";
+            placeholder2 = "tools.windows.health.bloodPressure.placeholder2";
+            break;
+        case 4:     // 血糖
+            label1 = "tools.windows.health.Bloodglucose";
+            placeholder1 = "tools.windows.health.Bloodglucose.placeholder";
+            break;
+        case 5:     // 血氧
+            label1 = "tools.windows.health.spo2";
+            placeholder1 = "tools.windows.health.spo2.placeholder";
+            break;
+
+    }
+    if (health_type === 3) {
+        $('#notice>.cnt').html(`
+                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
+                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label2)}</label><input id="health_value2" type="text" placeholder="${i18next.t(placeholder2)}" style="width:80%;height:39px;"></div>
+        `);
+    } else {
+        $('#notice>.cnt').html(`
+                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
+        `);
+    }
+    $('#notice>.btns').html(`<a class="a btn main" onclick="set_health_data(${health_type});">${i18next.t('submit')}</a><a class="a btn detail" onclick="closenotice();">${i18next.t('cancel')}</a>`);
+    $('#notice-back').addClass('show');
+    $('#notice')[0].style.width = '50%';
+}
+
+function set_health_data(health_type) {
+    let value = document.getElementById('health_value1').value;
+    let post_data = {
+        healthType: health_type,
+        value: value
+    }
+    if (health_type === 3) {
+        post_data['value1'] = document.getElementById('health_value2').value;
+    }
+    $.ajax({
+        type: 'POST',
+        url: server + '/health/set',
+        data: JSON.stringify(post_data),
+        contentType: 'application/json',
+        success: function (data) {
+            if (data['code'] === 0) {
+                $.Toast(data['msg'], 'success');
+                closenotice();
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            let res = JSON.parse(XMLHttpRequest.responseText);
+            $.Toast(res['detail'][0]['msg'], 'error');
+        }
+    })
 }
 
 function move_file_folder() {
