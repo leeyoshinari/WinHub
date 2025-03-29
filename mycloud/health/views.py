@@ -9,17 +9,49 @@ from common.messages import Msg
 from common.logging import logger
 
 
-async def get_all_data(start_type: int, hh: models.SessionBase) -> Result:
+async def get_all_data(health_type: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        datas = await models.Health.filter(mode=start_type, username=hh.username).order_by('id')
-        result.data = datas
-        result.msg = f'{Msg.SystemInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}'
+        x = []
+        y1 = []
+        datas = await models.Health.filter(mode=health_type, username=hh.username).order_by('id').values_list('create_time', 'value')
+        if health_type == 1:    # 体重 + BMI
+            height_obj = await models.Health.filter(mode=0, username=hh.username).order_by('-id').first()
+            y2 = []
+            for d in datas:
+                x.append(d[0].strftime("%Y-%m-%d"))
+                y1.append(d[1] / (height_obj.value / 100)**2)
+                y2.append(d[1])
+            result.data = {'x': x, 'y1': y1, 'y2': y2}
+
+        elif health_type == 3:  # 血压和心跳
+            y3_data = await models.Health.filter(mode=2, username=hh.username).order_by('id').values_list('create_time', 'value')
+            y2_data = await models.Health.filter(mode=333, username=hh.username).order_by('id').values_list('create_time', 'value')
+            y2 = []
+            y3 = []
+            for i in range(len(datas)):
+                x.append(datas[i][0].strftime("%Y-%m-%d"))
+                y1.append(datas[i][1])
+                y2.append(y2_data[i][1])
+                y3.append(y3_data[i][1])
+            result.data = {'x': x, 'y1': y1, 'y2': y2, 'y3': y3}
+
+        else:
+            for d in datas:
+                x.append(d[0].strftime("%Y-%m-%d"))
+                y1.append(d[1])
+            result.data = {'x': x, 'y1': y1}
+        if len(result.data['x']) > 1:
+            result.msg = f'{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}'
+        else:
+            result.msg = Msg.HealthBlank.get_text(hh.lang)
+            result.code = 1
+            result.data = None
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
         logger.error(traceback.format_exc())
         result.code = 1
-        result.msg = f'{Msg.SystemInfo.get_text(hh.lang)} {Msg.Failure.get_text(hh.lang)}'
+        result.msg = f'{Msg.Query.get_text(hh.lang)} {Msg.Failure.get_text(hh.lang)}'
     return result
 
 

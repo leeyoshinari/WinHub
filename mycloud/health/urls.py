@@ -11,9 +11,9 @@ from mycloud.auth_middleware import auth
 router = APIRouter(prefix='/health', tags=['health (健康)'], responses={404: {'description': 'Not found'}})
 
 
-@router.get("/getData/{health_type}", summary="Get all datas (获取所有数据，用于可视化)")
-async def get_all_data(start_type: int, hh: models.SessionBase = Depends(auth)):
-    result = await views.get_all_data(start_type, hh)
+@router.get("/get/{health_type}", summary="Get all datas (获取所有数据，用于可视化)")
+async def get_all_data(health_type: int, hh: models.SessionBase = Depends(auth)):
+    result = await views.get_all_data(health_type, hh)
     return result
 
 

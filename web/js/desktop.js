@@ -440,7 +440,7 @@ let apps = {
                 css_link.setAttribute('href', 'css/tools.css');
                 $('.window.tools')[0].appendChild(css_link);
             }
-            $('#win-tools>.menu>list>a.health')[0].click();
+            $('#win-tools>.menu>list>a.common')[0].click();
         },
         page: (name) => {
             $('#win-tools>.page>.cnt.' + name).scrollTop(0);
@@ -1542,6 +1542,7 @@ let apps = {
     docu: {init: () => {return null;}},
     picture: {init: () => {return null;}},
     pythonEditor: {init: () => {return null;}},
+    chart: {init: () => {return null;}},
     python: {
         codeCache: '',
         prompt: '>>> ',
@@ -2835,7 +2836,6 @@ function set_health_window(health_type) {
             label1 = "tools.windows.health.spo2";
             placeholder1 = "tools.windows.health.spo2.placeholder";
             break;
-
     }
     if (health_type === 3) {
         $('#notice>.cnt').html(`
@@ -3716,6 +3716,59 @@ function get_update_log() {
                 $.Toast(data['msg'], 'error');
             }
             close_modal_cover();
+        }
+    })
+}
+
+function health_visualize() {
+    $('.window.chart')[0].style.height = '490px';
+    $('.window.chart>.titbar>span>.title')[0].innerText = i18next.t("tools.windows.health.chart.title");
+    $('#dock-box>.dock>.chart')[0].setAttribute('win12_title', i18next.t("tools.windows.health.chart.title"));
+    let s = `<div style="text-align: center;"><div><select id="health-chart-select" style="height:32px;width:199px;border-radius:10px;opacity:0.5;" onchange="plot_health_chart();">
+            <option value="1">BMI</option><option value="3">${i18next.t("tools.windows.health.bloodPressure")}</option><option value="4">${i18next.t("tools.windows.health.Bloodglucose")}</option><option value="5">${i18next.t("tools.windows.health.spo2.fullname")}</option>
+            </select></div><div id="health-chart" style="width:100%;height:400px;margin:0 auto;"></div></div>`;
+    document.getElementById("win-chart").innerHTML = s;
+    if ($('#win-chart>script').length < 1) {
+        let script_link = document.createElement('script');
+        script_link.setAttribute('type', 'text/javascript');
+        script_link.setAttribute('src', 'js/plot.chart.js');
+        $('#win-chart')[0].appendChild(script_link);
+
+        script_link = document.createElement('script');
+        script_link.setAttribute('type', 'text/javascript');
+        script_link.setAttribute('src', 'js/echarts.common.js');
+        script_link.onload = function() {plot_health_chart();}
+        $('#win-chart')[0].appendChild(script_link);
+    } else {plot_health_chart();}
+}
+
+function plot_health_chart() {
+    let value = document.getElementById('health-chart-select').value;
+    $.ajax({
+        type: 'GET',
+        url: server + '/health/get/' + value,
+        success: function (data) {
+            if (data['code'] === 0) {
+                $('#health-chart').removeAttr("_echarts_instance_").empty();
+                let figure = document.getElementById('health-chart');
+                let myChart = echarts.init(figure);
+                switch (value) {
+                    case "1":     // 体重
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], data['data']['y2'], [], 'BMI', i18next.t("tools.windows.health.weight"), "", "BMI", i18next.t("tools.windows.health.chart.weight"), 1);
+                        break;
+                    case "3":     // 血压
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], data['data']['y2'], data['data']['y3'], i18next.t("tools.windows.health.bloodPressure.label1"), i18next.t("tools.windows.health.bloodPressure.label2"), i18next.t("tools.windows.health.heartbeat"), i18next.t("tools.windows.health.chart.bloodPressure"), i18next.t("tools.windows.health.chart.heartbeat"), 0);
+                        break;
+                    case "4":     // 血糖
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], [], [], i18next.t("tools.windows.health.Bloodglucose"), "", "", i18next.t("tools.windows.health.chart.Bloodglucose"), "", 0);
+                        break;
+                    case "5":     // 血氧
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], [], [], i18next.t("tools.windows.health.spo2.fullname"), "", "", i18next.t("tools.windows.health.chart.spo2"), "", 0);
+                        break;
+                }
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
         }
     })
 }

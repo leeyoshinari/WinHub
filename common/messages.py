@@ -391,6 +391,10 @@ class Msg:
     HealthNoData.zh_CN = "数据缺失"
     HealthNoData.en = "No data"
 
+    HealthBlank = MsgObj()
+    HealthBlank.zh_CN = "请先录入数据~"
+    HealthBlank.en = "Please record data firstly ~"
+
     HealthBloodPressureErr = MsgObj()
     HealthBloodPressureErr.zh_CN = "收缩压和舒张压填错了~"
     HealthBloodPressureErr.en = "Systolic blood pressure and diastolic blood pressure are wrong~"

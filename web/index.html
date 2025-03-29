@@ -287,7 +287,7 @@
 					<div><p></p></div>
 				</a>
 				<list class="focs">
-					<!-- <a class="enable common" onclick="apps.tools.page('common')"><img src="img/tools.svg" alt="tools.svg" loading="lazy"><span class="i18n" key="tools.window.common"></span></a> -->
+					<a class="enable common" onclick="apps.tools.page('common')"><img src="img/tools.svg" alt="tools.svg" loading="lazy"><span class="i18n" key="tools.window.common"></span></a>
 					<a class="enable health" onclick="apps.tools.page('health')"><img src="img/setting/health.svg" alt="health.svg" loading="lazy"><span class="i18n" key="tools.window.health"></span></a>
 					<a class="enable media" onclick="apps.tools.page('media')"><img src="img/files/video.svg" alt="video.svg" loading="lazy"><span class="i18n" key="setting.window.media"></span></a>
 					<a class="enable game" onclick="apps.tools.page('game')"><img src="img/game.png" alt="game.png" loading="lazy"><span class="i18n" key="setting.window.game"></span></a>
@@ -298,11 +298,15 @@
 				<div class="cnt common">
 					<p class="title i18n" key="tools.window.common"></p>
 					<div class="tools-grid" style="margin-top: 10px;">
+						<div><a onclick="openapp('calc');"><img src="img/calc.svg" alt="calc.svg" loading="lazy" /><p class="i18n" key="explore.window.menu.calc.title"></p></a></div>
+						<div><a onclick="openapp('python');"><img src="img/python.svg" alt="python.svg" loading="lazy" /><p>Python</p></a></div>
+						<div><a onclick="openapp('whiteboard');"><img src="img/whiteboard.svg" alt="whiteboard.svg" loading="lazy" /><p>Whiteboard</p></a></div>
 					</div>
 				</div>
 				<div class="cnt health">
 					<p class="title i18n" key="tools.window.health"></p>
 					<div class="tools-grid" style="margin-top: 10px;">
+						<div><a onclick="openapp('chart');health_visualize();"><img src="img/chart.svg" alt="chart.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.chart" style="font-weight:bold;color:red;"></p></a></div>
 						<div><a onclick="set_health_window(1);"><img src="img/setting/weight.svg" alt="weight.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.weight"></p></a></div>
 						<div><a onclick="set_health_window(2);"><img src="img/setting/heartbeat.svg" alt="heartbeat.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.heartbeat"></p></a></div>
 						<div><a onclick="set_health_window(3);"><img src="img/setting/bloodPressure.svg" alt="bloodPressure.svg" loading="lazy" /><p class="i18n" key="tools.windows.health.bloodPressure"></p></a></div>
@@ -410,9 +414,7 @@
 								<img src="img/explorer/download.svg" alt="download.svg" loading="lazy"><span class="i18n" key="explore.window.menu.download.title">下载</span></a>
 							<a onclick="apps.explorer.share_list();"><span style="display: none; background:linear-gradient(180deg, var(--theme-1), var(--theme-2));width:4px;height: 19px;border-radius: 10px;margin-left: -12px;margin-right: 8px;margin-top: 1px;"></span>
 								<img src="img/explorer/share.svg" alt="share.svg" loading="lazy"><span class="i18n" key="explore.window.menu.share.title">我的分享</span></a>
-							<a onclick="openapp('calc');"><img src="img/calc.svg" alt="calc.svg" loading="lazy"><span class="i18n" key="explore.window.menu.calc.title">计算器</span></a>
-							<a onclick="openapp('python');"><img src="img/python.svg" alt="python.svg" loading="lazy"><span>Python</span></a>
-							<a onclick="openapp('whiteboard');"><img src="img/whiteboard.svg" alt="whiteboard.svg" loading="lazy"><span>Whiteboard</span></a>
+							<a onclick="openapp('tools');"><img src="img/tools.svg" alt="tools.svg" loading="lazy"><span class="i18n" key="tools"></span></a>
 							<a onclick="openapp('setting');"><img src="img/setting.svg" alt="etting.svg" loading="lazy"><span class="i18n" key="setting">设置</span></a>
 						</list>
 					</div>
@@ -874,14 +876,25 @@
 	</div>
 	<div class="window chat">
 		<div class="resize-bar"></div>
-		<div class="titbar"><img src="img/chat.svg" alt="chat.png" class="icon" loading="lazy"><span><span class="title i18n" key="chat.title"></span></span><div>
+		<div class="titbar"><img src="img/chat.svg" alt="chat.svg" class="icon" loading="lazy"><span><span class="title i18n" key="chat.title"></span></span><div>
 				<a class="a wbtg red" onclick="hidewin('chat')"><i class="bi bi-x-lg"></i></a>
 				<a class="a wbtg max" onclick="maxwin('chat')"><i class="bi bi-app"></i></a>
 				<a class="a wbtg" onclick="minwin('chat')"><i class="bi bi-dash-lg"></i></a>
 			</div>
 		</div>
-		<div class="loadback"><img src="img/chat.svg" class="icon" alt="chat.png" loading="lazy"></div>
+		<div class="loadback"><img src="img/chat.svg" class="icon" alt="chat.svg" loading="lazy"></div>
 		<div class="content" id="win-chat" style="height:100%"><iframe id="iframe_chat" src=""></iframe></div>
+	</div>
+	<div class="window chart">
+		<div class="resize-bar"></div>
+		<div class="titbar"><img src="img/chart.svg" alt="chart.svg" class="icon" loading="lazy"><span><span class="title"></span></span><div>
+				<a class="a wbtg red" onclick="hidewin('chart')"><i class="bi bi-x-lg"></i></a>
+				<a class="a wbtg max" onclick="maxwin('chart')"><i class="bi bi-app"></i></a>
+				<a class="a wbtg" onclick="minwin('chart')"><i class="bi bi-dash-lg"></i></a>
+			</div>
+		</div>
+		<div class="loadback"><img src="img/chart.svg" class="icon" alt="chart.svg" loading="lazy"></div>
+		<div class="content" id="win-chart"></div>
 	</div>
 	<script type="text/javascript">
 		let optionToSelect = Array.from($('#loginback>div>select')[0].options).find(option => option.value === lang);
