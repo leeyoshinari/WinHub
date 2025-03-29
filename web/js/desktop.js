@@ -432,6 +432,24 @@ let apps = {
             }
         },
     },
+    tools: {
+        init: () => {
+            if ($('.window.tools>link').length < 1) {
+                let css_link = document.createElement('link');
+                css_link.setAttribute('rel', 'stylesheet');
+                css_link.setAttribute('href', 'css/tools.css');
+                $('.window.tools')[0].appendChild(css_link);
+            }
+            $('#win-tools>.menu>list>a.common')[0].click();
+        },
+        page: (name) => {
+            $('#win-tools>.page>.cnt.' + name).scrollTop(0);
+            $('#win-tools>.page>.cnt.show').removeClass('show');
+            $('#win-tools>.page>.cnt.' + name).addClass('show');
+            $('#win-tools>.menu>list>a.check').removeClass('check');
+            $('#win-tools>.menu>list>a.' + name).addClass('check');
+        },
+    },
     whiteboard: {
         canvas: null,
         ctx: null,
@@ -1524,6 +1542,7 @@ let apps = {
     docu: {init: () => {return null;}},
     picture: {init: () => {return null;}},
     pythonEditor: {init: () => {return null;}},
+    chart: {init: () => {return null;}},
     python: {
         codeCache: '',
         prompt: '>>> ',
@@ -1911,6 +1930,10 @@ function openapp(name) {
     if (name === 'setting') {
         $('#win-setting>.menu>.user>img')[0].src = 'img/pictures/' + document.cookie.split('u=')[1].split(';')[0] +'/avatar.jpg';
         $('#win-setting>.menu>.user>div>p')[0].innerText = nickName;
+    }
+    if (name === 'tools') {
+        $('#win-tools>.menu>.user>img')[0].src = 'img/pictures/' + document.cookie.split('u=')[1].split(';')[0] +'/avatar.jpg';
+        $('#win-tools>.menu>.user>div>p')[0].innerText = nickName;
     }
 }
 // 窗口操作
@@ -2781,6 +2804,83 @@ function add_server_window() {
     $('#notice')[0].style.width = '50%';
 }
 
+function set_health_window(health_type) {
+    let label1 = "";
+    let label2 = "";
+    let placeholder1 = "";
+    let placeholder2 = "";
+    switch (health_type) {
+        case 0:     // 身高
+            label1 = "tools.windows.health.height";
+            placeholder1 = "tools.windows.health.height.placeholder";
+            break;
+        case 1:     // 体重
+            label1 = "tools.windows.health.weight";
+            placeholder1 = "tools.windows.health.weight.placeholder";
+            break;
+        case 2:     // 心跳
+            label1 = "tools.windows.health.heartbeat";
+            placeholder1 = "tools.windows.health.heartbeat.placeholder";
+            break;
+        case 3:     // 血压
+            label1 = "tools.windows.health.bloodPressure.label1";
+            label2 = "tools.windows.health.bloodPressure.label2";
+            placeholder1 = "tools.windows.health.bloodPressure.placeholder1";
+            placeholder2 = "tools.windows.health.bloodPressure.placeholder2";
+            break;
+        case 4:     // 血糖
+            label1 = "tools.windows.health.Bloodglucose";
+            placeholder1 = "tools.windows.health.Bloodglucose.placeholder";
+            break;
+        case 5:     // 血氧
+            label1 = "tools.windows.health.spo2";
+            placeholder1 = "tools.windows.health.spo2.placeholder";
+            break;
+    }
+    if (health_type === 3) {
+        $('#notice>.cnt').html(`
+                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
+                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label2)}</label><input id="health_value2" type="text" placeholder="${i18next.t(placeholder2)}" style="width:80%;height:39px;"></div>
+        `);
+    } else {
+        $('#notice>.cnt').html(`
+                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
+        `);
+    }
+    $('#notice>.btns').html(`<a class="a btn main" onclick="set_health_data(${health_type});">${i18next.t('submit')}</a><a class="a btn detail" onclick="closenotice();">${i18next.t('cancel')}</a>`);
+    $('#notice-back').addClass('show');
+    $('#notice')[0].style.width = '50%';
+}
+
+function set_health_data(health_type) {
+    let value = document.getElementById('health_value1').value;
+    let post_data = {
+        healthType: health_type,
+        value: value
+    }
+    if (health_type === 3) {
+        post_data['value1'] = document.getElementById('health_value2').value;
+    }
+    $.ajax({
+        type: 'POST',
+        url: server + '/health/set',
+        data: JSON.stringify(post_data),
+        contentType: 'application/json',
+        success: function (data) {
+            if (data['code'] === 0) {
+                $.Toast(data['msg'], 'success');
+                closenotice();
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            let res = JSON.parse(XMLHttpRequest.responseText);
+            $.Toast(res['detail'][0]['msg'], 'error');
+        }
+    })
+}
+
 function move_file_folder() {
     show_modal_cover();
     let ids = getSelectedIds();
@@ -3616,6 +3716,59 @@ function get_update_log() {
                 $.Toast(data['msg'], 'error');
             }
             close_modal_cover();
+        }
+    })
+}
+
+function health_visualize() {
+    $('.window.chart')[0].style.height = '490px';
+    $('.window.chart>.titbar>span>.title')[0].innerText = i18next.t("tools.windows.health.chart.title");
+    $('#dock-box>.dock>.chart')[0].setAttribute('win12_title', i18next.t("tools.windows.health.chart.title"));
+    let s = `<div style="text-align: center;"><div><select id="health-chart-select" style="height:32px;width:199px;border-radius:10px;opacity:0.5;" onchange="plot_health_chart();">
+            <option value="1">BMI</option><option value="3">${i18next.t("tools.windows.health.bloodPressure")}</option><option value="4">${i18next.t("tools.windows.health.Bloodglucose")}</option><option value="5">${i18next.t("tools.windows.health.spo2.fullname")}</option>
+            </select></div><div id="health-chart" style="width:100%;height:400px;margin:0 auto;"></div></div>`;
+    document.getElementById("win-chart").innerHTML = s;
+    if ($('#win-chart>script').length < 1) {
+        let script_link = document.createElement('script');
+        script_link.setAttribute('type', 'text/javascript');
+        script_link.setAttribute('src', 'js/plot.chart.js');
+        $('#win-chart')[0].appendChild(script_link);
+
+        script_link = document.createElement('script');
+        script_link.setAttribute('type', 'text/javascript');
+        script_link.setAttribute('src', 'js/echarts.common.js');
+        script_link.onload = function() {plot_health_chart();}
+        $('#win-chart')[0].appendChild(script_link);
+    } else {plot_health_chart();}
+}
+
+function plot_health_chart() {
+    let value = document.getElementById('health-chart-select').value;
+    $.ajax({
+        type: 'GET',
+        url: server + '/health/get/' + value,
+        success: function (data) {
+            if (data['code'] === 0) {
+                $('#health-chart').removeAttr("_echarts_instance_").empty();
+                let figure = document.getElementById('health-chart');
+                let myChart = echarts.init(figure);
+                switch (value) {
+                    case "1":     // 体重
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], data['data']['y2'], [], 'BMI', i18next.t("tools.windows.health.weight"), "", "BMI", i18next.t("tools.windows.health.chart.weight"), 1);
+                        break;
+                    case "3":     // 血压
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], data['data']['y2'], data['data']['y3'], i18next.t("tools.windows.health.bloodPressure.label1"), i18next.t("tools.windows.health.bloodPressure.label2"), i18next.t("tools.windows.health.heartbeat"), i18next.t("tools.windows.health.chart.bloodPressure"), i18next.t("tools.windows.health.chart.heartbeat"), 0);
+                        break;
+                    case "4":     // 血糖
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], [], [], i18next.t("tools.windows.health.Bloodglucose"), "", "", i18next.t("tools.windows.health.chart.Bloodglucose"), "", 0);
+                        break;
+                    case "5":     // 血氧
+                        plot_chart(myChart, data['data']['x'], data['data']['y1'], [], [], i18next.t("tools.windows.health.spo2.fullname"), "", "", i18next.t("tools.windows.health.chart.spo2"), "", 0);
+                        break;
+                }
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
         }
     })
 }

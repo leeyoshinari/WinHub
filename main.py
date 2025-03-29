@@ -21,6 +21,7 @@ import mycloud.downloader.urls as downloader_urls
 import mycloud.onlyoffice.urls as onlyoffice_urls
 import mycloud.backup.urls as backup_urls
 import mycloud.chat.urls as chat_urls
+import mycloud.health.urls as health_urls
 
 
 app = FastAPI(docs_url=None, redoc_url=None, root_path='/api/openapi')
@@ -53,6 +54,7 @@ app.include_router(system_urls.router, prefix=PREFIX)
 app.include_router(karaoke_urls.router, prefix=PREFIX)
 app.include_router(backup_urls.router, prefix=PREFIX)
 app.include_router(chat_urls.router, prefix=PREFIX)
+app.include_router(health_urls.router, prefix=PREFIX)
 app.add_event_handler("startup", startup_event)
 
 

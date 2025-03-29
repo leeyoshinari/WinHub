@@ -169,6 +169,18 @@ class ChatRoom(Model):
         db_table = 'chat_room'
 
 
+# 健康相关的数据
+class Health(Model):
+    id = fields.IntField(pk=True, generated=True, description='主键')
+    mode = fields.IntField(default=1, description='类型, 0-身高, 1-体重, 2-心跳, 3-血压（收缩压）, 4-血糖, 5-血氧, 333-舒张压')
+    value = fields.FloatField(description='数值')
+    username = fields.CharField(max_length=16, description='用户名')
+    create_time = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'health_data'
+
+
 # 登陆会话验证模型
 class SessionBase(BaseModel):
     username: str
@@ -538,3 +550,10 @@ class ChatList(BaseModel):
             duration = obj.end_time - obj.start_time
         return cls(id=obj.id, code=obj.code, duration=beauty_time(duration), start_time=start_time, status=beauty_chat_status(status, lang), mode=beauty_chat_mode(obj.mode, lang),
                    create_time=obj.create_time.strftime("%Y-%m-%d %H:%M:%S"), update_time=obj.update_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+
+# 设置健康数据
+class HealthData(BaseModel):
+    healthType: int
+    value: float
+    value1: Optional[float] = None
