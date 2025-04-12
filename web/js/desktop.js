@@ -1891,7 +1891,7 @@ for (let i = 1; i <= daysum; i++) {
 apps.explorer.get_shortcuts();
 // 应用与窗口
 let other_img = ['taskmgr', 'video', 'picture', 'markdown', 'xmind', 'game', 'sheet', 'docu', 'word', 'excel', 'powerpoint', 'pythonEditor']
-let onlyoffice_width = {word: 600, excel: 736, powerpoint: 600};
+let onlyoffice_width = 400;
 function openapp(name) {
     if ($('#taskbar>.' + name).length !== 0) {
         if ($('.window.' + name).hasClass('min')) {
@@ -2021,7 +2021,7 @@ function maxwin(name, trigger = true) {
         $('#dock-box').removeClass('hide')
     }
     setTimeout(() => {if (name === 'word' || name === 'excel' || name === 'powerpoint') {
-        $('.window.' + name + '>.titbar')[0].style.width = Number($('.window.' + name).css('width').split('px')[0]) - onlyoffice_width[name] + 'px';
+        $('.window.' + name + '>.titbar')[0].style.width = Number($('.window.' + name).css('width').split('px')[0]) - onlyoffice_width + 'px';
     }},500);
 }
 function minwin(name) {
@@ -2189,7 +2189,7 @@ function resizing(win, e, arg) {
         }
     }
     if (win.classList.value.indexOf('word') > 0 || win.classList.value.indexOf('excel') > 0 || win.classList.value.indexOf('powerpoint') > 0) {
-        win.getElementsByClassName('titbar')[0].style.width = Number(win.style.width.split('px')[0]) - 736 + 'px';
+        win.getElementsByClassName('titbar')[0].style.width = Number(win.style.width.split('px')[0]) - onlyoffice_width + 'px';
     }
 }
 let wo = [];
@@ -3424,7 +3424,7 @@ function open_office(file_id, name) {
     document.getElementsByClassName(name)[0].style.display = 'block';
     document.getElementById("iframe_" + name).src = 'module/onlyoffice.html?server=' + server + '&id=' + file_id + '&lang=' + lang;
     $('.window.'+name+'>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_${name}").src = 'about:blank';hidewin('${name}');`);
-    $('.window.' + name + '>.titbar')[0].style.width = Number($('.window.' + name).css('width').split('px')[0]) - onlyoffice_width[name] + 'px';
+    $('.window.' + name + '>.titbar')[0].style.width = Number($('.window.' + name).css('width').split('px')[0]) - onlyoffice_width + 'px';
 }
 
 function open_system_resource(name) {
