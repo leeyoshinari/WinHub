@@ -5,180 +5,8 @@
 import time
 import os.path
 from typing import Optional, List, Any
-from tortoise import fields
-from tortoise.models import Model
 from pydantic import BaseModel
 from common.calc import beauty_size, beauty_time, time2date, beauty_chat_status, beauty_chat_mode
-
-
-# 用户数据库模型
-class User(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    nickname = fields.CharField(max_length=16, description='昵称')
-    username = fields.CharField(max_length=16, description='用户名')
-    password = fields.CharField(max_length=32, description='密码')
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'user'
-
-
-# 文件夹数据库模型
-class Catalog(Model):
-    id = fields.CharField(max_length=16, pk=True, description='目录ID')
-    parent = fields.ForeignKeyField('models.Catalog', on_delete=fields.CASCADE, null=True, related_name='catalog', description='目录父ID')
-    name = fields.CharField(max_length=50, description='目录名')
-    is_delete = fields.IntField(default=0, description='是否删除, 0-不删除, 1-删除')
-    is_backup = fields.IntField(default=0, description='是否备份, 0-不备份, 1-备份')
-    create_time = fields.DatetimeField(auto_now_add=True, description='Create time')
-    update_time = fields.DatetimeField(auto_now=True, description='Update time')
-
-    class Meta:
-        table = 'catalog'
-
-    async def get_all_path(self):
-        paths = []
-        curr_node = self
-        while curr_node:
-            paths.append(curr_node.name)
-            curr_node = await curr_node.parent
-        return '/'.join(paths[::-1])
-
-
-# 文件数据库模型
-class Files(Model):
-    id = fields.CharField(max_length=16, pk=True, description='文件ID')
-    name = fields.CharField(max_length=64, description='文件名')
-    format = fields.CharField(max_length=16, null=True, description='文件格式')
-    parent = fields.ForeignKeyField('models.Catalog', on_delete=fields.CASCADE, related_name='files', description='目录ID')
-    size = fields.BigIntField(default=None, null=True, description='文件大小')
-    md5 = fields.CharField(max_length=50, index=True, description='文件的MD5值')
-    is_delete = fields.IntField(default=0, description='是否删除, 0-不删除, 1-删除')
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True, index=True)
-
-    class Meta:
-        db_table = 'files'
-
-
-# 文件分享数据库模型
-class Shares(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    file_id = fields.CharField(max_length=16, description='文件ID')
-    name = fields.CharField(max_length=50, description='文件名')
-    path = fields.CharField(max_length=256, description='文件路径')
-    format = fields.CharField(max_length=16, default=None, description='文件格式')
-    times = fields.IntField(default=0, description='链接已打开次数')
-    username = fields.CharField(max_length=16, description='用户名')
-    total_times = fields.IntField(default=1, description='分享链接打开最大次数')
-    create_time = fields.DatetimeField(auto_now_add=True, description='创建时间')
-
-    class Meta:
-        db_table = 'shares'
-
-
-# 服务器文件
-class Servers(Model):
-    id = fields.CharField(max_length=16, pk=True, description='ID')
-    host = fields.CharField(max_length=16, description='服务器ID')
-    port = fields.IntField(default=22, description='端口')
-    user = fields.CharField(max_length=16, description='用户名')
-    pwd = fields.CharField(max_length=36, description='密码')
-    system = fields.CharField(max_length=64, description='系统')
-    cpu = fields.IntField(default=1, description='cpu逻辑核数')
-    mem = fields.FloatField(default=0.1, description='内存G')
-    disk = fields.CharField(max_length=8, description='磁盘大小')
-    creator = fields.CharField(max_length=16, description='用户名')
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'servers'
-
-
-# 音乐播放记录
-class Musics(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    file_id = fields.CharField(max_length=16, description='文件ID')
-    name = fields.CharField(max_length=64, description='文件名')
-    singer = fields.CharField(max_length=16, description='歌手')
-    duration = fields.CharField(max_length=16, description='歌曲时长')
-    username = fields.CharField(max_length=16, description='用户名')
-    times = fields.IntField(default=1, description="播放次数")
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'music'
-
-
-# 游戏得分记录
-class Games(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    type = fields.CharField(max_length=8, description='游戏类型')
-    name = fields.CharField(max_length=16, description='用户名')
-    score = fields.IntField(default=0, description="得分")
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'games'
-
-
-# 桌面快捷方式记录
-class Shortcuts(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    file_id = fields.CharField(max_length=16, description='文件ID')
-    name = fields.CharField(max_length=64, description='文件名')
-    format = fields.CharField(max_length=16, description='文件格式')
-    username = fields.CharField(max_length=16, description='用户名')
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'shortcuts'
-
-
-# 卡拉OK记录
-class Karaoke(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    name = fields.CharField(max_length=64, description='文件名')
-    status = fields.IntField(default=0, description='歌是否开始唱, 0-不可以, 1-可以')
-    times = fields.IntField(default=0, description='K歌次数')
-    is_sing = fields.IntField(default=0, description='歌是否唱过, 0-从没唱过, 1-点了没唱, 2-唱了, -1-正在唱')
-    is_top = fields.IntField(default=0, description='是否置顶, 0-不置顶, 1-置顶')
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'karaoke'
-
-
-# 视频聊天记录
-class ChatRoom(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    code = fields.CharField(max_length=8, description='房间码')
-    mode = fields.IntField(default=0, description='聊天模式, 0-语音聊天, 1-视频聊天, 2-文件传输')
-    start_time = fields.IntField(default=0, description='聊天开始时间')
-    end_time = fields.IntField(default=0, description='聊天结束时间')
-    create_time = fields.DatetimeField(auto_now_add=True)
-    update_time = fields.DatetimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'chat_room'
-
-
-# 健康相关的数据
-class Health(Model):
-    id = fields.IntField(pk=True, generated=True, description='主键')
-    mode = fields.IntField(default=1, description='类型, 0-身高, 1-体重, 2-心跳, 3-血压（收缩压）, 4-血糖, 5-血氧, 333-舒张压')
-    value = fields.FloatField(description='数值')
-    username = fields.CharField(max_length=16, description='用户名')
-    create_time = fields.DatetimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'health_data'
 
 
 # 登陆会话验证模型
@@ -235,33 +63,6 @@ class CatalogGetInfo(BaseModel):
 class FolderList(BaseModel):
     id: str
     name: str
-    folder_type: str = 'folder'
-    format: str = ""
-    size: int = 0
-    create_time: str
-    update_time: str
-
-    class Config:
-        from_attributes = True
-
-    @classmethod
-    def from_orm_format(cls, obj: Catalog):
-        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-        m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-        return cls(id=obj.id, name=obj.name, create_time=c, update_time=m)
-
-
-# 重命名文件、文件夹
-class FilesBase(BaseModel):
-    id: str
-    name: str
-
-
-# 文件列表
-class FileList(BaseModel):
-    id: str
-    name: str
-    folder_type: str = 'file'
     format: str
     size: str
     create_time: str
@@ -271,10 +72,37 @@ class FileList(BaseModel):
         from_attributes = True
 
     @classmethod
-    def from_orm_format(cls, obj: Files):
+    def from_orm_format(cls, obj):
         c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
         m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-        return cls(id=obj.id, name=obj.name, format=obj.format, size=beauty_size(obj.size), create_time=c, update_time=m)
+        file_size = "0" if obj.format == 'folder' else beauty_size(obj.size)
+        return cls(id=obj.id, name=obj.name, format=obj.format, size=file_size, create_time=c, update_time=m)
+
+
+# 重命名文件、文件夹
+class FilesBase(BaseModel):
+    id: str
+    name: str
+
+
+# 文件列表
+# class FileList(BaseModel):
+#     id: str
+#     name: str
+#     folder_type: str = 'file'
+#     format: str
+#     size: str
+#     create_time: str
+#     update_time: str
+
+#     class Config:
+#         from_attributes = True
+
+#     @classmethod
+#     def from_orm_format(cls, obj):
+#         c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+#         m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+#         return cls(id=obj.id, name=obj.name, format=obj.format, size=beauty_size(obj.size), create_time=c, update_time=m)
 
 
 # 文件下载模型
@@ -315,10 +143,10 @@ class ShareFileList(BaseModel):
     class Config:
         from_attributes = True
 
-    @classmethod
-    def from_orm_format(cls, obj: Shares):
-        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-        return cls(id=obj.id, name=obj.name, format=obj.format, create_time=c, times=obj.times, total_times=obj.total_times)
+    # @classmethod
+    # def from_orm_format(cls, obj: Shares):
+    #     c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+    #     return cls(id=obj.id, name=obj.name, format=obj.format, create_time=c, times=obj.times, total_times=obj.total_times)
 
 
 # 本地文件导入模型
@@ -362,9 +190,9 @@ class MP3List(BaseModel):
     class Config:
         from_attributes = True
 
-    @classmethod
-    def from_orm_format(cls, obj: Files, duration):
-        return cls(id=obj.id, name=obj.name, format=obj.format, size=beauty_size(obj.size), duration=duration)
+    # @classmethod
+    # def from_orm_format(cls, obj: Files, duration):
+    #     return cls(id=obj.id, name=obj.name, format=obj.format, size=beauty_size(obj.size), duration=duration)
 
 
 # mp3 歌曲列表模型
@@ -379,11 +207,11 @@ class MusicList(BaseModel):
     class Config:
         from_attributes = True
 
-    @classmethod
-    def from_orm_format(cls, obj: Musics):
-        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-        m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-        return cls(file_id=obj.file_id, name=obj.name, singer=obj.singer, duration=obj.duration, create_time=c, update_time=m)
+    # @classmethod
+    # def from_orm_format(cls, obj: Musics):
+    #     c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+    #     m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+    #     return cls(file_id=obj.file_id, name=obj.name, singer=obj.singer, duration=obj.duration, create_time=c, update_time=m)
 
 
 # 听歌历史记录模型
@@ -476,11 +304,11 @@ class KaraokeList(BaseModel):
     class Config:
         from_attributes = True
 
-    @classmethod
-    def from_orm_format(cls, obj: Files):
-        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-        # m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-        return cls(id=obj.id, name=obj.name, create_time=c)
+    # @classmethod
+    # def from_orm_format(cls, obj: Files):
+    #     c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+    #     # m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+    #     return cls(id=obj.id, name=obj.name, create_time=c)
 
 
 # 卡拉OK历史记录
