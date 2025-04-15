@@ -85,26 +85,6 @@ class FilesBase(BaseModel):
     name: str
 
 
-# 文件列表
-# class FileList(BaseModel):
-#     id: str
-#     name: str
-#     folder_type: str = 'file'
-#     format: str
-#     size: str
-#     create_time: str
-#     update_time: str
-
-#     class Config:
-#         from_attributes = True
-
-#     @classmethod
-#     def from_orm_format(cls, obj):
-#         c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-#         m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-#         return cls(id=obj.id, name=obj.name, format=obj.format, size=beauty_size(obj.size), create_time=c, update_time=m)
-
-
 # 文件下载模型
 class DownloadFile(BaseModel):
     ids: List[str]
@@ -143,10 +123,10 @@ class ShareFileList(BaseModel):
     class Config:
         from_attributes = True
 
-    # @classmethod
-    # def from_orm_format(cls, obj: Shares):
-    #     c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-    #     return cls(id=obj.id, name=obj.name, format=obj.format, create_time=c, times=obj.times, total_times=obj.total_times)
+    @classmethod
+    def from_orm_format(cls, obj):
+        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        return cls(id=obj.id, name=obj.name, format=obj.format, create_time=c, times=obj.times, total_times=obj.total_times)
 
 
 # 本地文件导入模型

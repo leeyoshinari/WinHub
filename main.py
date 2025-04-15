@@ -12,12 +12,10 @@ from settings import PREFIX, HOST, PORT, PWA_URL, FRONT_END_PREFIX
 from mycloud.user.urls import UserContoller
 from mycloud.files.urls import FileController
 from mycloud.folders.urls import FolderController
+from mycloud.SSH.urls import ServerController
+from mycloud.share.urls import ShareController
 from mycloud.database import Database
-# import mycloud.folders.urls as folder_urls
-# import mycloud.files.urls as file_urls
 # import mycloud.music.urls as music_urls
-# import mycloud.SSH.urls as ssh_urls
-# import mycloud.share.urls as share_urls
 # import mycloud.games.urls as game_urls
 # import mycloud.system.urls as system_urls
 # import mycloud.karaoke.urls as karaoke_urls
@@ -35,7 +33,9 @@ modify_manifest(PWA_URL)    # 修改 manifest.json 文件中的 url
 route_handlers = [
     Router(path=PREFIX, route_handlers=[UserContoller]),
     Router(path=PREFIX, route_handlers=[FolderController]),
-    Router(path=PREFIX, route_handlers=[FileController])
+    Router(path=PREFIX, route_handlers=[FileController]),
+    Router(path=PREFIX, route_handlers=[ShareController]),
+    Router(path=PREFIX, route_handlers=[ServerController])
 ]
 
 

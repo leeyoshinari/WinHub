@@ -206,14 +206,13 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
             if query.file_type == 'file':
                 files = FileExplorer.filter(FileExplorer.id.in_(query.ids)).all()
                 for file in files:
-                    file_path = file.full_path
                     try:
-                        os.remove(os.path.join(file_path, file.name))
+                        os.remove(file.full_path)
                         if file.format in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
                             remove(file.id, hh)
                     except FileNotFoundError:
                         result.code = 1
-                        result.msg = Msg.FileNotExist.get_text(hh.lang).format(folder.name)
+                        result.msg = Msg.FileNotExist.get_text(hh.lang).format(file.name)
                         logger.error(Msg.CommonLog1.get_text(hh.lang).format(Msg.FileNotExist.get_text(hh.lang).format(file.name), file.id, hh.username, hh.ip))
                         logger.error(traceback.format_exc())
                     FileExplorer.delete(file)

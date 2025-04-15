@@ -115,12 +115,13 @@ async def rename_file(query: models.FilesBase, hh: models.SessionBase) -> Result
     try:
         file_list = query.name.split('.')
         file = FileExplorer.get_one(query.id)
-        folder_path = file.full_path
-        origin_name = file.name
-        if os.path.exists(os.path.join(folder_path, query.name)):
+        file_path = file.full_path
+        folder_path = os.path.dirname(file_path)
+        new_file_path = os.path.join(folder_path, query.name)
+        if os.path.exists(new_file_path):
             raise FileExistsError
         else:
-            os.rename(os.path.join(folder_path, origin_name), os.path.join(folder_path, query.name))
+            os.rename(file_path, new_file_path)
         if len(file_list) > 1:
             new_file_name = query.name
             new_file_format = file_list[-1].lower()
@@ -148,19 +149,19 @@ async def get_file_by_id(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         file = FileExplorer.get_one(file_id)
-        parent_path = file.full_path
+        file_path = file.full_path
         if file.format == 'xmind':
-            xmind = read_xmind(os.path.join(parent_path, file.name))
+            xmind = read_xmind(file_path)
             result.data = xmind
         elif file.format == 'sheet':
-            excel = read_sheet(os.path.join(parent_path, file.name))
+            excel = read_sheet(file_path)
             result.data = excel
         else:
             try:
-                with open(os.path.join(parent_path, file.name), 'r', encoding='utf-8') as f:
+                with open(file_path, 'r', encoding='utf-8') as f:
                     result.data = f.read()
             except UnicodeDecodeError:
-                with open(os.path.join(parent_path, file.name), 'r') as f:
+                with open(file_path, 'r') as f:
                     result.data = f.read()
         result.msg = file.name
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Query.get_text(hh.lang) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip))
@@ -213,10 +214,10 @@ async def save_txt_file(query: models.SaveFile, hh: models.SessionBase) -> Resul
     result = Result()
     try:
         file = FileExplorer.get_one(query.id)
-        folder_path = file.full_path
-        with open(os.path.join(folder_path, file.name), 'w', encoding='utf-8') as f:
+        file_path = file.full_path
+        with open(file_path, 'w', encoding='utf-8') as f:
             f.write(query.data)
-        FileExplorer.update(file, size=os.path.getsize(os.path.join(folder_path, file.name)))
+        FileExplorer.update(file, size=os.path.getsize(file_path))
         result.msg = f"{Msg.Save.get_text(hh.lang).format(file.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file.id, hh.username, hh.ip))
     except FileNotFoundError as msg:
@@ -234,14 +235,15 @@ async def copy_file(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         file = FileExplorer.get_one(file_id)
-        folder_path = file.full_path
+        file_path = file.full_path
+        folder_path = os.path.dirname(file_path)
         if file.format:
             file_name = f"{file.name.replace(f'.{file.format}', '')} - {Msg.CopyName.get_text(hh.lang)}.{file.format}"
         else:
             file_name = f"{file.name.replace(f'.{file.format}', '')} - {Msg.CopyName.get_text(hh.lang)}"
         if os.path.exists(os.path.join(folder_path, file_name)):
             raise FileExistsError
-        shutil.copy2(os.path.join(folder_path, file.name), os.path.join(folder_path, file_name))
+        shutil.copy2(file_path, os.path.join(folder_path, file_name))
         new_file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file.format,
                                        parent_id=file.parent_id, size=file.size, username=hh.username)
         result.data = new_file.id
@@ -259,7 +261,7 @@ async def copy_file(file_id: str, hh: models.SessionBase) -> Result:
 
 async def download_file(file_id: str, hh: models.SessionBase) -> dict:
     file = FileExplorer.get_one(file_id)
-    result = {'path': os.path.join(file.full_path, file.name), 'name': file.name, 'format': file.format}
+    result = {'path': file.full_path, 'name': file.name, 'format': file.format}
     logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Download.get_text(hh.lang).format(file.name), file.id, hh.username, hh.ip))
     return result
 
@@ -305,8 +307,7 @@ async def share_file(query: models.ShareFile, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         file = FileExplorer.get_one(query.id)
-        parent_path = file.full_path
-        share = Shares.create(file_id=file.id, name=file.name, path=os.path.join(parent_path, file.name),
+        share = Shares.create(file_id=file.id, name=file.name, path=file.full_path,
                               format=file.format, times=0, total_times=query.times, username=hh.username)
         result.msg = f"{Msg.Share.get_text(hh.lang).format(share.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, share.id, hh.username, hh.ip))
@@ -410,7 +411,7 @@ async def upload_file(query, hh: models.SessionBase) -> Result:
         with open(file_path, 'wb') as f:
             f.write(data.read())
         file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_type,
-                                   parent_id=parent_id, size=query['file'].size, username=hh.username)
+                                   parent_id=parent_id, size=os.path.getsize(file_path), username=hh.username)
         result.msg = f"{Msg.Upload.get_text(hh.lang).format(file_name)}{Msg.Success.get_text(hh.lang)}"
         result.data = file.name
         logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(result.msg, file.id, hh.username, hh.ip)}, content_type: {query['file'].content_type}")
@@ -452,8 +453,7 @@ async def upload_image(query, hh: models.SessionBase) -> Result:
 
 async def export_xmind_file(file_id, hh: models.SessionBase) -> dict:
     file = FileExplorer.get_one(file_id)
-    parent_path = file.full_path
-    file_path = generate_xmind8(file.id, file.name, os.path.join(parent_path, file.name))
+    file_path = generate_xmind8(file.id, file.name, file.full_path)
     result = {'path': file_path, 'name': file.name, 'format': file.format}
     logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Export.get_text(hh.lang).format(file.name) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip))
     return result
@@ -463,8 +463,7 @@ async def markdown_to_html(file_id: str, hh: models.SessionBase) -> dict:
     result = {'name': '', 'format': '', 'data': ''}
     try:
         file = FileExplorer.get_one(file_id)
-        parent_path = file.full_path
-        file_path = os.path.join(parent_path, file.name)
+        file_path = file.full_path
         with open(file_path, 'r', encoding='utf-8') as f:
             result['data'] = md_to_html(f.read())
         result['name'] = file.name.replace('.md', '.html')
@@ -528,8 +527,7 @@ async def save_shared_to_myself(share_id: int, folder_id: str, hh: models.Sessio
     try:
         share = Shares.get_one(share_id)
         file = FileExplorer.get_one(share.file_id)
-        file_parent_path = file.full_path
-        origin_file_path = os.path.join(file_parent_path, file.name)
+        origin_file_path = file.full_path
         folder = FileExplorer.get_one(folder_id)
         target_folder_path = folder.full_path
         shutil.copy2(origin_file_path, target_folder_path)

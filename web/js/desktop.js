@@ -986,7 +986,7 @@ let apps = {
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
                     $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['folder_type'] === 'folder') {
+                        if (tmp[i]['format'] === 'folder') {
                             ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item touchs files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')" oncontextmenu="showcm(event,'explorer.folder',['${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}']);return stop(event);">
                                 <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                                 <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
@@ -3073,7 +3073,7 @@ function upload_file() {
             xhr.onreadystatechange = function() {
                 progressBar.value = success_num;
                 if (xhr.readyState === 4) {
-                    if(xhr.status === 200) {
+                    if(xhr.status === 200 || xhr.status === 201) {
                         let res = JSON.parse(xhr.responseText);
                         if (res['code'] === 0) {
                             success_num += 1;

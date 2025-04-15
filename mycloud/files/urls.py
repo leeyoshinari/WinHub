@@ -4,12 +4,14 @@
 
 import os
 import traceback
-from litestar import Controller, get, post, Request, Response
+import urllib.parse
+from typing import Union
+from litestar import Controller, get, post, Request
+from litestar.response import Stream, Response
 from litestar.di import Provide
 from mycloud import models
 from mycloud.files import views
 from mycloud.auth_middleware import auth, auth_url
-from mycloud.responses import StreamResponse, MyResponse
 from common.results import Result
 from common.logging import logger
 from common.messages import Msg
@@ -73,23 +75,23 @@ class FileController(Controller):
         return result
 
     @get("/download/{file_id: str}", summary="Download file (下载文件)")
-    async def download_file(self, file_id: str, hh: models.SessionBase) -> Result:
+    async def download_file(self, file_id: str, hh: models.SessionBase) -> Union[Stream, Result]:
         try:
             result = await views.download_file(file_id, hh)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{result["name"]}"'}
-            return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+            return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
             return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
 
     @get("/onlyoffice/{file_id: str}", summary="Download office file (下载 onlyoffice 文件)")
-    async def onlyoffice_file(self, file_id: str, hh_url: models.SessionBase) -> Result:
+    async def onlyoffice_file(self, file_id: str, hh_url: models.SessionBase) -> Union[Stream, Result]:
         try:
             result = await views.download_file(file_id, hh_url)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{result["name"]}"'}
-            return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+            return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
             return Result(code=1, msg=Msg.DownloadError.get_text(hh_url.lang))
@@ -117,13 +119,13 @@ class FileController(Controller):
         return result
 
     @post("/upload", summary="Upload files (上传文件)")
-    async def upload_file(self, data: Request, hh: models.SessionBase) -> Result:
-        result = await views.upload_file(data, hh)
+    async def upload_file(self, request: Request, hh: models.SessionBase) -> Result:
+        result = await views.upload_file(request, hh)
         return result
 
     @post("/uploadImage", summary="Upload background image (上传背景图片)")
-    async def upload_image(self, data: Request, hh: models.SessionBase) -> Result:
-        result = await views.upload_image(data, hh)
+    async def upload_image(self, request: Request, hh: models.SessionBase) -> Result:
+        result = await views.upload_image(request, hh)
         return result
 
     # @get("/background/getImage", summary="get image (获取用户背景图片)")
@@ -153,7 +155,7 @@ class FileController(Controller):
         return result
 
     @get("/playVideo/{file_id: str}", summary="Play video (播放视频)")
-    async def play_video(self, file_id: str, request: Request, hh: models.SessionBase) -> Result:
+    async def play_video(self, file_id: str, request: Request, hh: models.SessionBase) -> Union[Stream, Result]:
         try:
             result = await views.download_file(file_id, hh)
             header_range = request.headers.get('range', '0-')
@@ -161,29 +163,29 @@ class FileController(Controller):
             file_size = os.path.getsize(result['path'])
             content_range = f"bytes {start_index}-{file_size-1}/{file_size}"
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(file_size - start_index),
-                       'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{result["name"]}"'}
-            return StreamResponse(read_file(result['path'], start_index=start_index), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=206)
+                       'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+            return Stream(read_file(result['path'], start_index=start_index), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=206)
         except:
             logger.error(traceback.format_exc())
             return Result(code=1, msg=Msg.VideoError.get_text(hh.lang))
 
     @get("/export/xmind/{file_id: str}", summary="Export xmind file (导出 xmind 文件)")
-    async def export_file(self, file_id: str, hh: models.SessionBase) -> Result:
+    async def export_file(self, file_id: str, hh: models.SessionBase) -> Union[Stream, Result]:
         try:
             result = await views.export_xmind_file(file_id, hh)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{result["name"]}"'}
-            return StreamResponse(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+            return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
             return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
 
     @get("/export/md/{file_id: str}", summary="Export markdown to html (导出 markdown 转 html)")
-    async def md2html(self, file_id: str, hh: models.SessionBase) -> Result:
+    async def md2html(self, file_id: str, hh: models.SessionBase) -> Union[Response, Result]:
         try:
             result = await views.markdown_to_html(file_id, hh)
-            headers = {'Accept-Ranges': 'bytes', 'Content-Disposition': f'inline;filename="{result["name"]}"'}
-            return MyResponse(result['data'].encode('utf-8'), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
+            headers = {'Accept-Ranges': 'bytes', 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+            return Response(result['data'].encode('utf-8'), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
             return Result(code=1, msg=Msg.Failure.get_text(hh.lang))
