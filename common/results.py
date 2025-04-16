@@ -11,8 +11,3 @@ class Result(BaseModel):
     msg: str = 'Success!'
     data: Any = None
     total: int = 0
-    # def __init__(self, code=0, msg='Success!', data=None, total=0):
-    #     self.code = code
-    #     self.msg = msg
-    #     self.data = data
-    #     self.total = total

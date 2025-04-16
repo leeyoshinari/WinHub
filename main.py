@@ -14,6 +14,8 @@ from mycloud.files.urls import FileController
 from mycloud.folders.urls import FolderController
 from mycloud.SSH.urls import ServerController
 from mycloud.share.urls import ShareController
+from mycloud.music.urls import MusicController
+from mycloud.health.urls import HealthController
 from mycloud.database import Database
 # import mycloud.music.urls as music_urls
 # import mycloud.games.urls as game_urls
@@ -35,7 +37,9 @@ route_handlers = [
     Router(path=PREFIX, route_handlers=[FolderController]),
     Router(path=PREFIX, route_handlers=[FileController]),
     Router(path=PREFIX, route_handlers=[ShareController]),
-    Router(path=PREFIX, route_handlers=[ServerController])
+    Router(path=PREFIX, route_handlers=[MusicController]),
+    Router(path=PREFIX, route_handlers=[ServerController]),
+    Router(path=PREFIX, route_handlers=[HealthController]),
 ]
 
 

@@ -170,9 +170,9 @@ class MP3List(BaseModel):
     class Config:
         from_attributes = True
 
-    # @classmethod
-    # def from_orm_format(cls, obj: Files, duration):
-    #     return cls(id=obj.id, name=obj.name, format=obj.format, size=beauty_size(obj.size), duration=duration)
+    @classmethod
+    def from_orm_format(cls, obj, duration):
+        return cls(id=obj.id, name=obj.name, format=obj.format, size=beauty_size(obj.size), duration=duration)
 
 
 # mp3 歌曲列表模型
@@ -187,11 +187,11 @@ class MusicList(BaseModel):
     class Config:
         from_attributes = True
 
-    # @classmethod
-    # def from_orm_format(cls, obj: Musics):
-    #     c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-    #     m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-    #     return cls(file_id=obj.file_id, name=obj.name, singer=obj.singer, duration=obj.duration, create_time=c, update_time=m)
+    @classmethod
+    def from_orm_format(cls, obj):
+        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        return cls(file_id=obj.file_id, name=obj.name, singer=obj.singer, duration=obj.duration, create_time=c, update_time=m)
 
 
 # 听歌历史记录模型
