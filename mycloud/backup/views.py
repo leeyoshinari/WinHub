@@ -7,6 +7,7 @@ import shutil
 import traceback
 from settings import ENABLE_BACKUP, ROOT_PATH, BACKUP_PATH, BACKUP_INTERVAL
 from mycloud import models
+from mycloud.database import FileExplorer
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
@@ -31,11 +32,12 @@ async def start_backup(hh: models.SessionBase) -> Result:
 
 
 async def start_sync(username: str = None):
-    folders = await models.Catalog.filter(is_backup=1)
+    if username:
+        folders = FileExplorer.query(username=username, status=99).all()
+    else:
+        folders = FileExplorer.query(status=99).all()
     for folder in folders:
-        folder_path = await folder.get_all_path()
-        if username and f"/{username}" not in folder_path:
-            continue
+        folder_path = folder.full_path
         for k, v in ROOT_PATH.items():
             if folder_path.startswith(v):
                 relative_path = folder_path[len(v) + 1:]
@@ -53,8 +55,8 @@ async def index_backup(hh: models.SessionBase) -> Result:
         result.msg = Msg.SyncDataNo.get_text(hh.lang)
         return result
     try:
-        folders = await models.Catalog.filter(is_backup=1)
-        folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders if f.id.startswith(tuple('123456789')) and f"/{hh.username}" in await f.get_all_path()]
+        folders = FileExplorer.query(username=hh.username, status=99).all()
+        folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders if f.id.startswith(tuple('123456789'))]
         result.data = folder_list
         result.total = len(result.data)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
@@ -74,9 +76,8 @@ async def add_backup(folder_id: str, is_backup: int, hh: models.SessionBase) -> 
         return result
     try:
         is_backup = 1 if is_backup > 0 else 0
-        folder = await models.Catalog.get(id=folder_id)
-        folder.is_backup = is_backup
-        await folder.save()
+        folder = FileExplorer.get_one(folder_id)
+        FileExplorer.update(folder, status=99)
         result.msg = f"{Msg.Setting.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder_id, hh.username, hh.ip))
     except:

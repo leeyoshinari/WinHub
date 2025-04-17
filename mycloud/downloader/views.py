@@ -13,6 +13,7 @@ from threading import Thread
 from urllib.parse import urlparse
 from settings import TMP_PATH
 from mycloud import models
+from mycloud.database import FileExplorer
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
@@ -138,9 +139,8 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
 async def open_torrent(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        file = await models.Files.get(id=file_id).select_related('parent')
-        folder_path = await file.parent.get_all_path()
-        gid = aria2c_downloader.add_bt_file(base64.b64encode(open(os.path.join(folder_path, file.name), 'rb').read()).decode('ascii'), TMP_PATH)
+        file = FileExplorer.get_one(file_id)
+        gid = aria2c_downloader.add_bt_file(base64.b64encode(open(file.full_path, 'rb').read()).decode('ascii'), TMP_PATH)
         res = aria2c_downloader.get_completed_task_info(gid)
         new_gid = res['gid']
         file_list = aria2c_downloader.get_file_list(new_gid)
@@ -178,12 +178,10 @@ async def write_aria2c_task_to_db(gid, parent_id):
             if files and files[0]['completedLength'] == files[0]['length']:
                 file_path = files[0]['path']
                 file_name = os.path.basename(file_path)
-                folder = await models.Catalog.get(id=parent_id)
-                folder_path = await folder.get_all_path()
-                file = await models.Files.create(id=str(int(time.time() * 10000)), name=file_name,
-                                                 format=file_name.split(".")[-1].lower(), parent_id=parent_id,
-                                                 size=os.path.getsize(file_path), md5=calc_file_md5(file_path))
-                shutil.move(file_path, folder_path)
+                folder = FileExplorer.get_one(parent_id)
+                shutil.move(file_path, folder.full_path)
+                file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
+                                           parent_id=parent_id, size=os.path.getsize(file_path), username=folder.username)
                 logger.info(f"{file.id} - {file.name}")
                 aria2c_downloader.update_task(gid, "cancel")
                 aria2c_downloader.delete_gid_dict(gid)
@@ -301,12 +299,10 @@ async def write_m3u8_task_to_db(cmd, parent_id, file_path):
     process.wait()
     if process.returncode == 0:
         file_name = os.path.basename(file_path)
-        folder = await models.Catalog.get(id=parent_id)
-        folder_path = await folder.get_all_path()
-        file = await models.Files.create(id=str(int(time.time() * 10000)), name=file_name,
-                                         format=file_name.split(".")[-1].lower(), parent_id=parent_id,
-                                         size=os.path.getsize(file_path), md5=calc_file_md5(file_path))
-        shutil.move(file_path, folder_path)
+        folder = FileExplorer.get_one(parent_id)
+        shutil.move(file_path, folder.full_path)
+        file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
+                                   parent_id=parent_id, size=os.path.getsize(file_path), username=folder.username)
         logger.info(f"Download m3u8 completed successfully! fileId: {file.id}, fileName: {file.name}")
     else:
         logger.info(f"Download m3u8 failed with error code: {process.returncode}, fileName: {file_path}")

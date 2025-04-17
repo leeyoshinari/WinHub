@@ -12,20 +12,18 @@ from settings import PREFIX, HOST, PORT, PWA_URL, FRONT_END_PREFIX
 from mycloud.user.urls import UserContoller
 from mycloud.files.urls import FileController
 from mycloud.folders.urls import FolderController
+from mycloud.system.urls import SystemController
 from mycloud.SSH.urls import ServerController
 from mycloud.share.urls import ShareController
 from mycloud.music.urls import MusicController
+from mycloud.downloader.urls import DownloaderController
+from mycloud.backup.urls import SyncController
+from mycloud.chat.urls import ChatController
 from mycloud.health.urls import HealthController
 from mycloud.database import Database
-# import mycloud.music.urls as music_urls
 # import mycloud.games.urls as game_urls
-# import mycloud.system.urls as system_urls
 # import mycloud.karaoke.urls as karaoke_urls
-# import mycloud.downloader.urls as downloader_urls
 # import mycloud.onlyoffice.urls as onlyoffice_urls
-# import mycloud.backup.urls as backup_urls
-# import mycloud.chat.urls as chat_urls
-# import mycloud.health.urls as health_urls
 
 
 Database.init_db()
@@ -36,9 +34,13 @@ route_handlers = [
     Router(path=PREFIX, route_handlers=[UserContoller]),
     Router(path=PREFIX, route_handlers=[FolderController]),
     Router(path=PREFIX, route_handlers=[FileController]),
+    Router(path=PREFIX, route_handlers=[SystemController]),
     Router(path=PREFIX, route_handlers=[ShareController]),
     Router(path=PREFIX, route_handlers=[MusicController]),
+    Router(path=PREFIX, route_handlers=[DownloaderController]),
     Router(path=PREFIX, route_handlers=[ServerController]),
+    Router(path=PREFIX, route_handlers=[SyncController]),
+    Router(path=PREFIX, route_handlers=[ChatController]),
     Router(path=PREFIX, route_handlers=[HealthController]),
 ]
 

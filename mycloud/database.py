@@ -48,7 +48,7 @@ class CRUDBase:
     @classmethod
     def get(cls, value):
         """
-        catalog = Catalog.get("cat001")
+        user = User.get("cat001")
         """
         session = Database.get_session()
         try:
@@ -62,7 +62,7 @@ class CRUDBase:
     def get_one(cls, value):
         """
         If not existed, raise NoResultFound
-        catalog = Catalog.get_one("cat001")
+        user = User.get_one("cat001")
         """
         session = Database.get_session()
         try:
@@ -73,9 +73,23 @@ class CRUDBase:
             Database.close_session()
 
     @classmethod
+    def all(cls):
+        """
+        Query all datas.
+        users = User.all()
+        """
+        session = Database.get_session()
+        try:
+            return session.query(cls).all()
+        except:
+            raise
+        finally:
+            Database.close_session()
+
+    @classmethod
     def query(cls, **kwargs):
         """
-        catalogs = Catalog.query(name="Documents", is_delete=0).all()
+        users = User.query(name="Documents", is_delete=0).all()
         """
         session = Database.get_session()
         try:
@@ -88,7 +102,7 @@ class CRUDBase:
     @classmethod
     def filter(cls, *filters, **kwargs):
         """
-        catalogs = Catalog.filter(like(Catalog.name, "%Doc%"), is_delete=0).all()
+        users = User.filter(like(Catalog.name, "%Doc%"), is_delete=0).all()
         users = User.filter(or_(User.nickname == "John", User.nickname == "Jane")).all()
         """
         session = Database.get_session()
@@ -107,8 +121,8 @@ class CRUDBase:
     @classmethod
     def filter_condition(cls, equal_condition: dict = None, not_equal_condition: dict = None, like_condition: dict = None):
         """
-        Catalog = Catalog.filter_condition(equal_condition={'status': 1, 'name': '222'}, not_equal_condition={'description': 'temp'})
-        SELECT * FROM catalog WHERE status = 1 AND name = '222' AND description != 'temp';
+        users = User.filter_condition(equal_condition={'status': 1, 'name': '222'}, not_equal_condition={'description': 'temp'})
+        SELECT * FROM catuseralog WHERE status = 1 AND name = '222' AND description != 'temp';
         """
         session = Database.get_session()
         try:
@@ -131,7 +145,7 @@ class CRUDBase:
     @classmethod
     def update(cls, instance, **kwargs):
         """
-        updated_catalog = Catalog.update(catalog, name="New Name", is_backup=1)
+        updated_user = User.update(user, name="New Name", is_backup=1)
         """
         session = Database.get_session()
         try:
@@ -165,7 +179,7 @@ class CRUDBase:
     @classmethod
     def delete(cls, instance):
         """
-        Catalog.delete(catalog)
+        User.delete(user)
         """
         session = Database.get_session()
         try:
@@ -186,29 +200,6 @@ class User(Base, CRUDBase):
     password = Column(String(32), nullable=False)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-
-
-class Catalog(Base, CRUDBase):
-    __tablename__ = 'catalog'
-
-    id = Column(String(16), primary_key=True)
-    parent_id = Column(String(16), ForeignKey('catalog.id', ondelete='CASCADE'), nullable=True)
-    name = Column(String(64), nullable=False)
-    is_delete = Column(Integer, default=0)  # 0 - Not deleted, 1 - Deleted
-    is_backup = Column(Integer, default=0)  # 0 - Not backed up, 1 - Backed up
-    create_time = Column(DateTime, default=datetime.now)
-    update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-
-    parent = relationship('Catalog', remote_side=[id])
-
-    @property
-    def full_path(self):
-        paths = []
-        current_node = self
-        while current_node:
-            paths.append(current_node.name)
-            current_node = current_node.get(current_node.parent_id)
-        return '/'.join(paths[::-1])
 
 
 class FileExplorer(Base, CRUDBase):
@@ -234,22 +225,6 @@ class FileExplorer(Base, CRUDBase):
             paths.append(current_node.name)
             current_node = current_node.get(current_node.parent_id)
         return '/'.join(paths[::-1])
-
-
-class Files(Base, CRUDBase):
-    __tablename__ = 'files'
-
-    id = Column(String(16), primary_key=True)
-    name = Column(String(64), nullable=False)
-    format = Column(String(16), nullable=True)
-    parent_id = Column(String(16), ForeignKey('catalog.id'), nullable=False)
-    size = Column(BigInteger, nullable=True)
-    md5 = Column(String(50), index=True, nullable=False)
-    is_delete = Column(Integer, default=0)  # 0 - Not deleted, 1 - Deleted
-    create_time = Column(DateTime, default=datetime.now)
-    update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-
-    parent = relationship('Catalog', backref='files')
 
 
 class Shares(Base, CRUDBase):
