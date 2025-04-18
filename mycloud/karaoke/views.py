@@ -9,12 +9,13 @@ import subprocess
 import traceback
 from typing import List
 from urllib.parse import unquote
-from tortoise.exceptions import DoesNotExist
+from sqlalchemy import asc, desc
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
 from mycloud import models
-from mycloud.models import Karaoke, KaraokeList, KaraokeHistoryList
+from mycloud.database import Karaoke
+from mycloud.models import KaraokeList, KaraokeHistoryList
 from settings import KARAOKE_PATH, KTV_TMP_PATH
 
 
@@ -22,7 +23,7 @@ clients: List[asyncio.Queue] = []
 PAGE_SIZE = 10
 
 
-async def broadcast_data(data: dict):
+async def broadcast_data(data: dict) -> None:
     for client in clients[:]:
         try:
             await client.put(json.dumps(data, ensure_ascii=False))
@@ -30,12 +31,11 @@ async def broadcast_data(data: dict):
             logger.error(traceback.format_exc())
 
 
-async def init_history():
+def init_history() -> None:
     try:
-        songs = await Karaoke.filter(is_sing=-1)
+        songs = Karaoke.query(is_sing=-1).all()
         for s in songs:
-            s.is_sing = 1
-            await s.save()
+            Karaoke.update(s, is_sing=1)
     except:
         logger.error(traceback.format_exc())
 
@@ -49,10 +49,13 @@ async def upload_file(query, hh: models.SessionBase) -> Result:
     try:
         file_path = os.path.join(KARAOKE_PATH, file_name)
         song_name = file_name.replace('.mp4', '').replace('_vocals.mp3', '').replace('_accompaniment.mp3', '')
-        try:
-            file = await Karaoke.get(name=song_name)
-        except DoesNotExist:
-            file = await Karaoke.create(name=song_name, is_sing=0)
+        songs = Karaoke.query(name=song_name).all()
+        if len(songs) == 0:
+            file = Karaoke.create(name=song_name, is_sing=0)
+        elif len(songs) > 1:
+            Karaoke.delete(songs[0])
+        else:
+            pass
         with open(file_path, 'wb') as f:
             f.write(data.read())
         result.msg = f"{Msg.Upload.get_text(hh.lang).format(file_name)}{Msg.Success.get_text(hh.lang)}"
@@ -70,14 +73,15 @@ async def get_list(q: str, page: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         if q:
+            like_condition = {"name": q}
             if page == 0:
-                files = await Karaoke.filter(name__contains=q).order_by('-id').offset(0).limit(200)
+                files = Karaoke.filter_condition(like_condition=like_condition).order_by(desc(Karaoke.id)).offset(0).limit(200).all()
                 total_num = 0
             else:
-                files = await Karaoke.filter(name__contains=q).order_by('-id').offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
-                total_num = await Karaoke.filter(name__contains=q).count()
+                files = Karaoke.filter_condition(like_condition=like_condition).order_by(desc(Karaoke.id)).offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all()
+                total_num = Karaoke.filter_condition(like_condition=like_condition).count()
         else:
-            files = await Karaoke.all().order_by('-id').offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE)
+            files = Karaoke.all().order_by(desc(Karaoke.id)).offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all()
             total_num = await Karaoke.all().count()
         file_list = [KaraokeList.from_orm_format(f).model_dump() for f in files]
         result.data = file_list
@@ -94,14 +98,14 @@ async def get_list(q: str, page: int, hh: models.SessionBase) -> Result:
 async def delete_song(file_id: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        file = await Karaoke.get(id=file_id)
+        file = Karaoke.get_one(file_id)
         if os.path.exists(f"{KARAOKE_PATH}/{file.name}.mp4"):
             os.remove(f"{KARAOKE_PATH}/{file.name}.mp4")
         if os.path.exists(f"{KARAOKE_PATH}/{file.name}_vocals.mp3"):
             os.remove(f'{KARAOKE_PATH}/{file.name}_vocals.mp3')
         if os.path.exists(f"{KARAOKE_PATH}/{file.name}_accompaniment.mp3"):
             os.remove(f'{KARAOKE_PATH}/{file.name}_accompaniment.mp3')
-        await file.delete()
+        Karaoke.delete(file)
         result.msg = f"{file.name}{Msg.Delete.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
     except:
@@ -114,11 +118,8 @@ async def delete_song(file_id: int, hh: models.SessionBase) -> Result:
 async def delete_history(file_id: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        history = await Karaoke.get(id=file_id)
-        history.is_sing = 0
-        history.times = 0
-        history.is_top = 0
-        await history.save()
+        history = Karaoke.get_one(file_id)
+        Karaoke.update(history, is_sing=0, times=0, is_top=0)
         result.msg = f"{Msg.Delete.get_text(hh.lang).format(f'{history.name}{Msg.HistoryRecords.get_text(hh.lang)}')}{Msg.Success.get_text(hh.lang)}"
         await broadcast_data({"code": 8})
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
@@ -133,7 +134,8 @@ async def sing_song(file_id: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         msg_list = []
-        file = await Karaoke.get(id=file_id)
+        file = Karaoke.get_one(file_id)
+        file_status = file.status
         if file.status == 0:
             if not os.path.exists(f"{KARAOKE_PATH}/{file.name}.mp4"):
                 msg_list.append(Msg.FileNotExist.get_text(hh.lang).format(Msg.File.get_text(hh.lang).format(Msg.Video.get_text(hh.lang))))
@@ -147,10 +149,8 @@ async def sing_song(file_id: int, hh: models.SessionBase) -> Result:
                 logger.warning(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
                 return result
             else:
-                file.status = 1
-        file.is_sing = 1
-        file.is_top = 0
-        await file.save()
+                file_status = 1
+        Karaoke.update(file, is_sing=1, status=file_status, is_top=0)
         await broadcast_data({"code": 8})
         result.msg = f"{file.name}{Msg.RequestSong.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
@@ -165,20 +165,20 @@ async def history_list(query_type: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         if query_type == "history":
-            songs = await Karaoke.filter(is_sing=2).order_by('-update_time').offset(0).limit(200)
+            songs = Karaoke.query(is_sing=2).order_by(desc(Karaoke.update_time)).offset(0).limit(200).all()
             logger.info(f"{Msg.Query.get_text(hh.lang)}{Msg.HistoryRecords.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}")
         elif query_type == "usually":
-            songs = await Karaoke.filter(is_sing=2).order_by('-times').offset(0).limit(200)
+            songs = Karaoke.query(is_sing=2).order_by('-times').offset(0).limit(200).all()
             logger.info(f"{Msg.Query.get_text(hh.lang)}{Msg.HistoryRecords.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}")
         elif query_type == "pendingAll":
-            songs = await Karaoke.filter(is_sing=-1)
-            songs = songs + await Karaoke.filter(is_sing=1, is_top=1).order_by('-update_time')
-            songs = songs + await Karaoke.filter(is_sing=1, is_top=0).order_by('update_time')
+            songs = Karaoke.query(is_sing=-1).all()
+            songs = songs + Karaoke.query(is_sing=1, is_top=1).order_by(desc(Karaoke.update_time)).all()
+            songs = songs + Karaoke.query(is_sing=1, is_top=0).order_by(asc(Karaoke.update_time)).all()
             logger.info(f"{Msg.Query.get_text(hh.lang)}{Msg.HistoryRecords.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}")
         else:
-            songs = await Karaoke.filter(is_sing=-1)
-            songs = songs + await Karaoke.filter(is_sing=1, is_top=1).order_by('-update_time')
-            songs = songs + await Karaoke.filter(is_sing=1, is_top=0).order_by('update_time').offset(0).limit(4)
+            songs = Karaoke.query(is_sing=-1).all()
+            songs = songs + Karaoke.query(is_sing=1, is_top=1).order_by(desc(Karaoke.update_time)).all()
+            songs = songs + Karaoke.query(is_sing=1, is_top=0).order_by(asc(Karaoke.update_time)).offset(0).limit(4).all()
             logger.info(f"{Msg.Query.get_text(hh.lang)}{Msg.HistoryRecords.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}")
         song_list = [KaraokeHistoryList.model_validate(f).model_dump() for f in songs]
         result.data = song_list
@@ -193,10 +193,9 @@ async def history_list(query_type: str, hh: models.SessionBase) -> Result:
 async def set_top(file_id: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        history = await Karaoke.get(id=file_id)
-        history.is_top = 1
-        await history.save()
-        result.msg = f"{history.name}{Msg.SetTop.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        file = Karaoke.get_one(file_id)
+        Karaoke.update(file, is_top=1)
+        result.msg = f"{file.name}{Msg.SetTop.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         await broadcast_data({"code": 8})
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
     except:
@@ -209,11 +208,9 @@ async def set_top(file_id: int, hh: models.SessionBase) -> Result:
 async def set_singing(file_id: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        history = await Karaoke.get(id=file_id)
-        history.is_sing = -1
-        history.is_top = 0
-        await history.save()
-        result.msg = Msg.MusicRecord.get_text(hh.lang).format(history.name)
+        file = Karaoke.get_one(file_id)
+        Karaoke.update(file, is_sing=-1, is_top=0)
+        result.msg = Msg.MusicRecord.get_text(hh.lang).format(file.name)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
     except:
         logger.error(traceback.format_exc())
@@ -225,12 +222,9 @@ async def set_singing(file_id: int, hh: models.SessionBase) -> Result:
 async def set_singed(file_id: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        history = await Karaoke.get(id=file_id)
-        history.is_sing = 2
-        history.is_top = 0
-        history.times = history.times + 1
-        await history.save()
-        result.msg = f"{history.name}{Msg.Singed.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
+        file = Karaoke.get_one(file_id)
+        Karaoke.update(file, is_sing=2, is_top=0, times=file.times + 1)
+        result.msg = f"{file.name}{Msg.Singed.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         await broadcast_data({"code": 8})
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
     except:

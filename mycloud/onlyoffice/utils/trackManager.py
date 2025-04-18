@@ -152,7 +152,7 @@ def processForceSave(body, filename, file_path, file_id):
 
 # create a command request
 def commandRequest(method, key, meta=None):
-    payload = {'c': method,'key': key}
+    payload = {'c': method, 'key': key}
     if meta:
         payload['meta'] = meta
 

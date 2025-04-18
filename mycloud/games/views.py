@@ -3,7 +3,9 @@
 # Author: leeyoshinari
 
 import traceback
+from sqlalchemy import desc
 from mycloud import models
+from mycloud.database import Games
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
@@ -12,7 +14,7 @@ from common.logging import logger
 async def get_rank(game_type: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        game = await models.Games.filter(type=game_type).order_by('-score').limit(5)
+        game = Games.query(type=game_type).order_by(desc(Games.score)).limit(5).all()
         rank_list = [models.GamesRankInfo.model_validate(f).model_dump() for f in game]
         result.data = rank_list
         log_str = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
@@ -28,7 +30,7 @@ async def get_rank(game_type: str, hh: models.SessionBase) -> Result:
 async def set_score(query: models.GamesScoreInfo, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        game = await models.Games.filter(type=query.type, name=hh.username)
+        game = Games.query(type=query.type, name=hh.username)
         if game:
             if game[0].score < query.score:
                 game[0].score = query.score
@@ -36,7 +38,7 @@ async def set_score(query: models.GamesScoreInfo, hh: models.SessionBase) -> Res
             else:
                 result.msg = Msg.GameScore.get_text(hh.lang).format(Msg.Success.get_text(hh.lang))
         else:
-            _ = await models.Games.create(type=query.type, name=hh.username, score=query.score)
+            _ = Games.create(type=query.type, name=hh.username, score=query.score)
         result.msg = Msg.GameScore.get_text(hh.lang).format(Msg.Success.get_text(hh.lang))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, f'{query.type}-{query.score}', hh.username, hh.ip))
     except:

@@ -115,7 +115,7 @@ async def clear_expire_chat_code():
 async def get_room_list(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        room = ChatRoom.all()
+        room = ChatRoom.all().all()
         room_list = [models.ChatList.from_orm_format(r, hh.lang).model_dump() for r in room]
         result.data = room_list
         result.total = len(room_list)

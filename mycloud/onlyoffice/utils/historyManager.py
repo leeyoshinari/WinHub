@@ -179,9 +179,7 @@ def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, f
                             'name': meta['uname']
                         }
                 # write file url to the data object
-                dataObj['url'] = docUrl if i == version else getPublicHistUri(
-                    request_host, i, "prev" + fileUtils.getFileExt(filename), file_id
-                    )
+                dataObj['url'] = docUrl if i == version else getPublicHistUri(request_host, i, "prev" + fileUtils.getFileExt(filename), file_id)
                 if isEnableDirectUrl:
                     # write file direct url to the data object
                     dataObj['directUrl'] = docManager.getDownloadUrl(filename) if i == version \
@@ -220,7 +218,7 @@ def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, f
 
                 hist.append(obj)  # add object dictionary to the hist list
                 histData[str(i - 1)] = dataObj  # write data object information to the history data
-            except Exception as e:
+            except:
                 continue
 
         histObj = {  # write history information about the current file version to the history object

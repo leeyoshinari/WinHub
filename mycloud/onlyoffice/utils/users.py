@@ -35,5 +35,5 @@ class User:
 
 
 def getUser(user_id, user_name):
-    return User(user_id, user_name, None, 'group1', ['group1'], {'view': ["group1"], 'edit': ["group1"],  'remove': ["group1"]},
+    return User(user_id, user_name, None, 'group1', ['group1'], {'view': ["group1"], 'edit': ["group1"], 'remove': ["group1"]},
                 ['group1'], None, [], "Default", True, True)

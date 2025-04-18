@@ -80,7 +80,7 @@ class CRUDBase:
         """
         session = Database.get_session()
         try:
-            return session.query(cls).all()
+            return session.query(cls)
         except:
             raise
         finally:

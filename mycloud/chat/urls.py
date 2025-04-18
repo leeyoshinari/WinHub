@@ -42,19 +42,19 @@ class ChatController(Controller):
         return result
 
     @websocket('/join/{username: str}/{room_code: str}')
-    async def start_chat(self, websocket: WebSocket, username: str, room_code: str) -> None:
-        await websocket.accept()
+    async def start_chat(self, socket: WebSocket, username: str, room_code: str) -> None:
+        await socket.accept()
         try:
-            if not views.is_auth(room_code, websocket, username):
-                await websocket.close()
+            if not views.is_auth(room_code, socket, username):
+                await socket.close()
                 return
             while True:
-                data = await websocket.receive_text()
-                await views.broadcast(room_code, data, websocket)
+                data = await socket.receive_text()
+                await views.broadcast(room_code, data, socket)
         except WebSocketDisconnect:
             logger.error("websocket disconnected.")
         except:
             logger.error(traceback.format_exc())
-            await websocket.close()
+            await socket.close()
         finally:
-            await views.leave_room(room_code, websocket, username)
+            await views.leave_room(room_code, socket, username)
