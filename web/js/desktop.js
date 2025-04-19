@@ -3496,7 +3496,7 @@ function get_server_list(event) {
                 data['data'].forEach(item => {
                     s += `<div><div style="width: 16%;">${item['host']}</div><div>${item['port']}</div><div>${item['user']}</div><div style="width: 21%;">${item['system']}</div><div>${item['cpu']}${i18next.t('setting.window.shell.server.list.cpu.core')}</div><div>${item['mem']}G</div><div>${item['disk']}</div><div style="width:15%;"><a href="module/terminal.html?id=${item['id']}&host=${item['host']}&lang=${lang}" style="color:blue;">${i18next.t('setting.window.shell.server.list.action.open')}</a><a href="javascript:void(0);" onclick="delete_server(${item['id']});return false;" style="color:blue;margin-left:15px;">${i18next.t('setting.window.shell.server.list.action.delete')}</a></div></div><br />`;
                 })
-                $('.server-item')[0].innerHTML = s;
+                $('.server>.server-item')[0].innerHTML = s;
                 $('.dp.app-color.server').toggleClass('show');
             } else {
                 $.Toast(data['msg'], 'error');

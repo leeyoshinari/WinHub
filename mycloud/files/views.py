@@ -99,7 +99,7 @@ async def get_all_files(parent_id: str, query: models.SearchItems, hh: models.Se
             equal_condition = {'parent_id': parent_id, 'username': hh.username}
             folders = FileExplorer.filter_condition(equal_condition=equal_condition, not_equal_condition=not_equal_condition).order_by(order_type).all()
             folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders]
-        result.data = folder_list
+        result.data = sort_file_list(folder_list)
         result.total = len(result.data)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, parent_id, hh.username, hh.ip))
@@ -403,6 +403,12 @@ async def upload_file(query, hh: models.SessionBase) -> Result:
         folder = FileExplorer.get_one(parent_id)
         parent_path = folder.full_path
         file_path = os.path.join(parent_path, file_name)
+        if os.path.exists(file_path):
+            result.code = 1
+            result.data = file_name
+            result.msg = Msg.FileExist.get_text(hh.lang).format(file_name)
+            logger.error(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
+            return result
         file_name_list = file_name.split(".")
         if len(file_name_list) == 1:
             file_type = ''
@@ -540,3 +546,15 @@ async def save_shared_to_myself(share_id: int, folder_id: str, hh: models.Sessio
         result.msg = f"{Msg.Save.get_text(hh.lang)}{Msg.Failure.get_text(hh.lang)}"
         logger.error(traceback.format_exc())
     return result
+
+
+def sort_file_list(file_list: list) -> list:
+    if len(file_list) == 0:
+        return file_list
+    folder_list = [f for f in file_list if f['format'] == 'folder']
+    f_list = [f for f in file_list if f['format'] != 'folder']
+    file_type = file_list[0]['format']
+    if file_type == 'folder':
+        return folder_list + f_list
+    else:
+        return f_list + folder_list

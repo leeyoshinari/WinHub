@@ -12,7 +12,7 @@ Base = declarative_base()
 
 
 class Database:
-    engine = create_engine(DB_URL, echo=True, pool_size=DB_POOL_SIZE, max_overflow=DB_POOL_SIZE * 2, pool_timeout=30, pool_recycle=3600, pool_pre_ping=True, pool_use_lifo=True)
+    engine = create_engine(DB_URL, echo=False, pool_size=DB_POOL_SIZE, max_overflow=DB_POOL_SIZE * 2, pool_timeout=30, pool_recycle=3600, pool_pre_ping=True, pool_use_lifo=True)
     session_factory = sessionmaker(bind=engine)
     session = scoped_session(session_factory)
 
@@ -149,12 +149,16 @@ class CRUDBase:
         """
         session = Database.get_session()
         try:
+            if instance in session:
+                current_instance = instance
+            else:
+                current_instance = session.merge(instance, load=False)
             for key, value in kwargs.items():
-                setattr(instance, key, value)
-            session.add(instance)
+                setattr(current_instance, key, value)
+            # session.add(instance)
             session.commit()
-            session.refresh(instance)
-            return instance
+            session.refresh(current_instance)
+            return current_instance
         except:
             session.rollback()
             raise
@@ -183,7 +187,8 @@ class CRUDBase:
         """
         session = Database.get_session()
         try:
-            session.delete(instance)
+            current_instance = session.get(cls, instance.id)
+            session.delete(current_instance)
             session.commit()
         except:
             session.rollback()
@@ -195,7 +200,7 @@ class CRUDBase:
 class User(Base, CRUDBase):
     __tablename__ = 'user'
 
-    username = Column(String(16), primary_key=True)
+    id = Column(String(16), primary_key=True)
     nickname = Column(String(16), nullable=False)
     password = Column(String(32), nullable=False)
     create_time = Column(DateTime, default=datetime.now)
@@ -333,6 +338,6 @@ class Health(Base, CRUDBase):
 class MigrateSql(Base, CRUDBase):
     __tablename__ = "migrate_sql"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     sql = Column(String(128), nullable=False)
     is_run = Column(Integer, default=0)

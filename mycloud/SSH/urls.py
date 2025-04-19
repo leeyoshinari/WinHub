@@ -39,8 +39,8 @@ class ServerController(Controller):
         return result
 
     @post("/file/upload", summary="Upload file (上传文件)")
-    async def upload_file_to_ssh(self, query: Request, hh: models.SessionBase) -> Result:
-        result = await views.upload_file_to_linux(query, hh)
+    async def upload_file_to_ssh(self, request: Request, hh: models.SessionBase) -> Result:
+        result = await views.upload_file_to_linux(request, hh)
         return result
 
     @get("/file/download", summary="Download file (下载文件)")

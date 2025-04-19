@@ -16,7 +16,7 @@ async def get_all_data(health_type: int, hh: models.SessionBase) -> Result:
     try:
         x = []
         y1 = []
-        datas = Health.query(mode=health_type, username=hh.username).order_by(asc(Health.id)).all() # values_list('create_time', 'value')
+        datas = Health.query(mode=health_type, username=hh.username).with_entities(Health.create_time, Health.value).order_by(asc(Health.create_time)).all()
         if health_type == 1:    # 体重 + BMI
             height_obj = Health.query(mode=0, username=hh.username).order_by(desc(Health.id)).first()
             y2 = []
@@ -27,8 +27,8 @@ async def get_all_data(health_type: int, hh: models.SessionBase) -> Result:
             result.data = {'x': x, 'y1': y1, 'y2': y2}
 
         elif health_type == 3:  # 血压和心跳
-            y3_data = Health.filter(mode=2, username=hh.username).order_by(asc(Health.id)).all() #values_list('create_time', 'value')
-            y2_data = Health.filter(mode=333, username=hh.username).order_by(asc(Health.id)).all() #values_list('create_time', 'value')
+            y3_data = Health.query(mode=2, username=hh.username).with_entities(Health.create_time, Health.value).order_by(asc(Health.create_time)).all()
+            y2_data = Health.query(mode=333, username=hh.username).with_entities(Health.create_time, Health.value).order_by(asc(Health.create_time)).all()
             y2 = []
             y3 = []
             for i in range(len(datas)):

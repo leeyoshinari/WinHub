@@ -82,7 +82,7 @@ async def get_list(q: str, page: int, hh: models.SessionBase) -> Result:
                 total_num = Karaoke.filter_condition(like_condition=like_condition).count()
         else:
             files = Karaoke.all().order_by(desc(Karaoke.id)).offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all()
-            total_num = await Karaoke.all().count()
+            total_num = Karaoke.all().count()
         file_list = [KaraokeList.from_orm_format(f).model_dump() for f in files]
         result.data = file_list
         result.total = (total_num + PAGE_SIZE - 1) // PAGE_SIZE

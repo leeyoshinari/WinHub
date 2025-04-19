@@ -44,8 +44,7 @@ async def start_chat(room_code: str, chat_mode: int, hh: models.SessionBase) -> 
                 logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
                 return result
             rooms[room_code] = {"users": [], "usernames": {}, "mode": chat_mode}
-            room[0].start_time = int(time.time())
-            await room[0].save()
+            ChatRoom.update(room[0], start_time=int(time.time()))
         if rooms[room_code]['mode'] != chat_mode:
             result.code = 1
             result.msg = Msg.FileNotExist.get_text(hh.lang).format(room_code)
@@ -77,7 +76,7 @@ async def get_stun_server(room_param: str, hh: models.SessionBase) -> Result:
             logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
             return result
         user = User.get_one(hh.username)
-        result.data = {'stun': WEBRTC_STUN, 'turn': WEBRTC_TURN, 'user': WEBRTC_USER, 'cred': WEBRTC_CRED, 'username': user.username, 'nickname': user.nickname}
+        result.data = {'stun': WEBRTC_STUN, 'turn': WEBRTC_TURN, 'user': WEBRTC_USER, 'cred': WEBRTC_CRED, 'username': user.id, 'nickname': user.nickname}
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
     except:

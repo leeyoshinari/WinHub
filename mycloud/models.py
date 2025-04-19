@@ -28,6 +28,22 @@ class CreateUser(UserBase):
     password1: str
 
 
+class UserList(BaseModel):
+    id: str
+    nickname: str
+    create_time: str
+    update_time: str
+
+    class Config:
+        from_attributes = True
+
+    @classmethod
+    def from_orm_format(cls, obj):
+        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        return cls(id=obj.id, nickname=obj.nickname, create_time=c, update_time=m)
+
+
 # 搜索文件
 class SearchItems(BaseModel):
     q: Optional[str] = None

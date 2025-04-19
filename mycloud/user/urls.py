@@ -51,26 +51,30 @@ class UserContoller(Controller):
                 logger.error(f"{result.msg}, IP: {hh_no.ip}")
                 return result
             password = str_md5(password)
-            user = User.create(nickname=nickname, username=username, password=password)
-            for k, v in ROOT_PATH.items():
-                folder = FileExplorer.get(k)
-                if not folder:
-                    FileExplorer.create(id=k, parent=None, name=v, format='folder', username='system')
-                folder = FileExplorer.get(f"{k}{user.username}")
-                if not folder:
-                    FileExplorer.create(id=f"{k}{user.username}", name=user.username, parent_id=k, format='folder', username='system')
-                user_path = os.path.join(v, user.username)
-                if not os.path.exists(user_path):
-                    os.mkdir(user_path)
-            back_path = os.path.join(BASE_PATH, 'web/img/pictures', user.username)
-            if not os.path.exists(back_path):
-                os.mkdir(back_path)
-            source_file = os.path.join(BASE_PATH, 'web/img/pictures/undefined/background.jpg')
-            target_file = os.path.join(back_path, 'background.jpg')
-            login_file = os.path.join(back_path, 'login.jpg')
-            shutil.copy(source_file, target_file)
-            shutil.copy(source_file, login_file)
-            result.msg = f"{Msg.CreateUser.get_text(hh_no.lang).format(user.username)}{Msg.Success.get_text(hh_no.lang)}"
+            user = User.create(nickname=nickname, id=username, password=password)
+            try:
+                for k, v in ROOT_PATH.items():
+                    folder = FileExplorer.get(k)
+                    if not folder:
+                        FileExplorer.create(id=k, parent=None, name=v, format='folder', username='system')
+                    folder = FileExplorer.get(f"{k}{user.id}")
+                    if not folder:
+                        FileExplorer.create(id=f"{k}{user.id}", name=user.id, parent_id=k, format='folder', username='system')
+                    user_path = os.path.join(v, user.id)
+                    if not os.path.exists(user_path):
+                        os.mkdir(user_path)
+                back_path = os.path.join(BASE_PATH, 'web/img/pictures', user.id)
+                if not os.path.exists(back_path):
+                    os.mkdir(back_path)
+                source_file = os.path.join(BASE_PATH, 'web/img/pictures/undefined/background.jpg')
+                target_file = os.path.join(back_path, 'background.jpg')
+                login_file = os.path.join(back_path, 'login.jpg')
+                shutil.copy(source_file, target_file)
+                shutil.copy(source_file, login_file)
+            except:
+                User.delete(user)
+                logger.error(traceback.format_exc())
+            result.msg = f"{Msg.CreateUser.get_text(hh_no.lang).format(user.id)}{Msg.Success.get_text(hh_no.lang)}"
             logger.info(f"{result.msg}, IP: {hh_no.ip}")
         except:
             result.code = 1
@@ -88,7 +92,7 @@ class UserContoller(Controller):
                 return result
             user = User.get(data.username)
             User.update(user, password=str_md5(parse_pwd(data.password, data.t)))
-            result.msg = f"{Msg.ModifyPwd.get_text(hh.lang).format(user.username)}{Msg.Success.get_text(hh.lang)}"
+            result.msg = f"{Msg.ModifyPwd.get_text(hh.lang).format(user.id)}{Msg.Success.get_text(hh.lang)}"
             logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
         except:
             result.code = 1
@@ -121,21 +125,21 @@ class UserContoller(Controller):
                     folder = FileExplorer.get(k)
                     if not folder:
                         FileExplorer.create(id=k, parent=None, name=v, format='folder', username='system')
-                    folder = FileExplorer.get(f"{k}{user.username}")
+                    folder = FileExplorer.get(f"{k}{user.id}")
                     if not folder:
-                        FileExplorer.create(id=f"{k}{user.username}", name=user.username, parent_id=k, format='folder', username='system')
-                    user_path = os.path.join(v, user.username)
+                        FileExplorer.create(id=f"{k}{user.id}", name=user.id, parent_id=k, format='folder', username='system')
+                    user_path = os.path.join(v, user.id)
                     if not os.path.exists(user_path):
                         os.mkdir(user_path)
-                pwd_str = f'{time.time()}_{user.username}_{int(time.time())}_{user.nickname}'
+                pwd_str = f'{time.time()}_{user.id}_{int(time.time())}_{user.nickname}'
                 token = str_md5(pwd_str)
-                TOKENs.update({user.username: token})
+                TOKENs.update({user.id: token})
                 response = Response(Result().__dict__)
-                response.set_cookie('u', user.username)
+                response.set_cookie('u', user.id)
                 response.set_cookie('t', str(int(time.time() / 1000)))
                 response.set_cookie('token', token)
                 result.data = user.nickname
-                result.msg = f"{Msg.Login.get_text(hh_no.lang).format(user.username)}{Msg.Success.get_text(hh_no.lang)}"
+                result.msg = f"{Msg.Login.get_text(hh_no.lang).format(user.id)}{Msg.Success.get_text(hh_no.lang)}"
                 logger.info(f"{result.msg}, IP: {hh_no.ip}")
                 return response
             else:
@@ -153,3 +157,27 @@ class UserContoller(Controller):
         TOKENs.pop(hh.username, 0)
         logger.info(f"{Msg.Logout.get_text(hh.lang).format(hh.username)}{Msg.Success.get_text(hh.lang)}, IP: {hh.ip}")
         return Result()
+
+    @get("/list", summary="Users list（用户列表）")
+    async def user_list(self, hh: models.SessionBase) -> Result:
+        result = Result()
+        try:
+            users = User.all().all()
+            result.data = [models.UserList.from_orm_format(f).model_dump() for f in users]
+            logger.info(Msg.CommonLog.get_text(hh.lang).format("user list", hh.username, hh.ip))
+        except:
+            logger.error(traceback.format_exc())
+            result.code = 0
+        return result
+
+    @get("/delete/{username: str}", summary="Delete user（删除用户）")
+    async def delete_user(self, username: str, hh: models.SessionBase) -> Result:
+        result = Result()
+        try:
+            user = User.get_one(username)
+            User.delete(user)
+            logger.info(Msg.CommonLog1.get_text(hh.lang).format("Delete user", username, hh.username, hh.ip))
+        except:
+            logger.error(traceback.format_exc())
+            result.code = 0
+        return result
