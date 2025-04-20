@@ -30,14 +30,14 @@ async def get_rank(game_type: str, hh: models.SessionBase) -> Result:
 async def set_score(query: models.GamesScoreInfo, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        game = Games.query(type=query.type, name=hh.username).order_by(desc(Games.score)).all()
+        game = Games.query(type=query.type, username=hh.username).order_by(desc(Games.score)).all()
         if game:
             if game[0].score < query.score:
                 Games.update(game[0], score=query.score)
             else:
                 result.msg = Msg.GameScore.get_text(hh.lang).format(Msg.Success.get_text(hh.lang))
         else:
-            _ = Games.create(type=query.type, name=hh.username, score=query.score)
+            _ = Games.create(type=query.type, username=hh.username, score=query.score)
         result.msg = Msg.GameScore.get_text(hh.lang).format(Msg.Success.get_text(hh.lang))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, f'{query.type}-{query.score}', hh.username, hh.ip))
     except:

@@ -21,7 +21,7 @@ async def save_server(query: models.ServerModel, hh: models.SessionBase) -> Resu
     try:
         datas = get_server_info(host=query.host, port=int(query.port), user=query.user, pwd=query.pwd, current_time=query.t)
         if datas['code'] == 0:
-            Servers.create(id=query.t, host=query.host, port=query.port, user=query.user, creator=hh.username, pwd=query.pwd, system=datas['system'], cpu=datas['cpu'], mem=datas['mem'], disk=datas['disk'])
+            Servers.create(id=query.t, host=query.host, port=query.port, user=query.user, username=hh.groupname, pwd=query.pwd, system=datas['system'], cpu=datas['cpu'], mem=datas['mem'], disk=datas['disk'])
         else:
             result.code = 1
             result.msg = datas['msg']
@@ -52,7 +52,7 @@ async def delete_server(server_id: str, hh: models.SessionBase) -> Result:
 async def get_server(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        server = Servers.query(creator=hh.username).order_by(desc(Servers.id)).all()
+        server = Servers.query(username=hh.groupname).order_by(desc(Servers.id)).all()
         server_list = [models.ServerListModel.model_validate(f).model_dump() for f in server]
         result.data = server_list
         result.total = len(server_list)

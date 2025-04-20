@@ -9,7 +9,7 @@ import traceback
 from litestar import Controller, get, post, Request, Response
 from litestar.di import Provide
 from mycloud import models
-from mycloud.database import User, FileExplorer
+from mycloud.database import Group, User, FileExplorer
 from mycloud.auth_middleware import auth, no_auth
 from common.calc import str_md5, parse_pwd
 from common.results import Result
@@ -32,8 +32,41 @@ class UserContoller(Controller):
         user = User.get(username)
         return Result(data=user.nickname)
 
-    @get("/test/createUser", summary="Create user (创建用户)")
-    async def create_user(self, username: str, nickname: str, password: str, password1: str, hh_no: models.SessionBase) -> Result:
+    @post("/create/group", summary="Create group (创建用户组)")
+    async def create_group(self, group_name: str, hh_no: models.SessionBase) -> Result:
+        result = Result()
+        try:
+            group = Group.get(group_name.strip())
+            if group:
+                result.code = 1
+                result.msg = Msg.FileExist.get_text(hh_no.lang).format(group_name)
+                logger.error(f"{result.msg}, IP: {hh_no.ip}")
+                return result
+            group = Group.create(id=group_name)
+            try:
+                for k, v in ROOT_PATH.items():
+                    folder = FileExplorer.get(k)
+                    if not folder:
+                        FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
+                    folder = FileExplorer.get(f"{k}{group.id}")
+                    if not folder:
+                        FileExplorer.create(id=f"{k}{group.id}", name=group.id, parent_id=k, format='ffolder', username='system')
+                    user_path = os.path.join(v, group.id)
+                    if not os.path.exists(user_path):
+                        os.mkdir(user_path)
+            except:
+                Group.delete(group)
+                logger.error(traceback.format_exc())
+            result.msg = f"{Msg.Create.get_text(hh_no.lang).format(group.id)}{Msg.Success.get_text(hh_no.lang)}"
+            logger.info(f"{result.msg}, IP: {hh_no.ip}")
+        except:
+            result.code = 1
+            result.msg = f"{Msg.Create.get_text(hh_no.lang).format(group_name)}{Msg.Failure.get_text(hh_no.lang)}"
+            logger.error(traceback.format_exc())
+        return result
+
+    @post("/create/user", summary="Create user (创建用户)")
+    async def create_user(self, groupname: str, username: str, nickname: str, password: str, password1: str, hh_no: models.SessionBase) -> Result:
         result = Result()
         try:
             if not username.isalnum():
@@ -44,6 +77,13 @@ class UserContoller(Controller):
                 result.code = 1
                 result.msg = Msg.UserCheckPassword.get_text(hh_no.lang)
                 return result
+            try:
+                group = Group.get_one(groupname)
+            except:
+                result.code = 1
+                result.msg = Msg.FileNotExist.get_text(hh_no.lang).format(groupname)
+                logger.error(f"{result.msg}, IP: {hh_no.ip}")
+                return result
             user = User.get(username.strip())
             if user:
                 result.code = 1
@@ -51,16 +91,16 @@ class UserContoller(Controller):
                 logger.error(f"{result.msg}, IP: {hh_no.ip}")
                 return result
             password = str_md5(password)
-            user = User.create(nickname=nickname, id=username, password=password)
+            user = User.create(nickname=nickname, id=username, password=password, group_id=group.id)
             try:
                 for k, v in ROOT_PATH.items():
                     folder = FileExplorer.get(k)
                     if not folder:
-                        FileExplorer.create(id=k, parent=None, name=v, format='folder', username='system')
-                    folder = FileExplorer.get(f"{k}{user.id}")
+                        FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
+                    folder = FileExplorer.get(f"{k}{user.group_id}")
                     if not folder:
-                        FileExplorer.create(id=f"{k}{user.id}", name=user.id, parent_id=k, format='folder', username='system')
-                    user_path = os.path.join(v, user.id)
+                        FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
+                    user_path = os.path.join(v, user.group_id)
                     if not os.path.exists(user_path):
                         os.mkdir(user_path)
                 back_path = os.path.join(BASE_PATH, 'web/img/pictures', user.id)
@@ -124,20 +164,21 @@ class UserContoller(Controller):
                 for k, v in ROOT_PATH.items():
                     folder = FileExplorer.get(k)
                     if not folder:
-                        FileExplorer.create(id=k, parent=None, name=v, format='folder', username='system')
-                    folder = FileExplorer.get(f"{k}{user.id}")
+                        FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
+                    folder = FileExplorer.get(f"{k}{user.group_id}")
                     if not folder:
-                        FileExplorer.create(id=f"{k}{user.id}", name=user.id, parent_id=k, format='folder', username='system')
-                    user_path = os.path.join(v, user.id)
+                        FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
+                    user_path = os.path.join(v, user.group_id)
                     if not os.path.exists(user_path):
                         os.mkdir(user_path)
-                pwd_str = f'{time.time()}_{user.id}_{int(time.time())}_{user.nickname}'
+                pwd_str = f'{time.time()}_{user.id}_{int(time.time())}_{user.group_id}'
                 token = str_md5(pwd_str)
                 TOKENs.update({user.id: token})
                 response = Response(Result().__dict__)
                 response.set_cookie('u', user.id)
                 response.set_cookie('t', str(int(time.time() / 1000)))
                 response.set_cookie('token', token)
+                response.set_cookie('g', user.group_id)
                 result.data = user.nickname
                 result.msg = f"{Msg.Login.get_text(hh_no.lang).format(user.id)}{Msg.Success.get_text(hh_no.lang)}"
                 logger.info(f"{result.msg}, IP: {hh_no.ip}")
@@ -170,13 +211,37 @@ class UserContoller(Controller):
             result.code = 0
         return result
 
-    @get("/delete/{username: str}", summary="Delete user（删除用户）")
-    async def delete_user(self, username: str, hh: models.SessionBase) -> Result:
+    @post("/delete", summary="Delete user（删除用户）")
+    async def delete_user(self, hh: models.SessionBase) -> Result:
         result = Result()
         try:
-            user = User.get_one(username)
+            user = User.get_one(hh.username)
             User.delete(user)
-            logger.info(Msg.CommonLog1.get_text(hh.lang).format("Delete user", username, hh.username, hh.ip))
+            logger.info(Msg.CommonLog1.get_text(hh.lang).format("Delete user", hh.username, hh.username, hh.ip))
+        except:
+            logger.error(traceback.format_exc())
+            result.code = 0
+        return result
+
+    @get("/group/list", summary="Group list（用户组列表）")
+    async def group_list(self, hh: models.SessionBase) -> Result:
+        result = Result()
+        try:
+            groups = Group.all().all()
+            result.data = [models.GroupList.from_orm_format(f).model_dump() for f in groups]
+            logger.info(Msg.CommonLog.get_text(hh.lang).format("Group list", hh.username, hh.ip))
+        except:
+            logger.error(traceback.format_exc())
+            result.code = 0
+        return result
+
+    @get("/group/user", summary="User list of Group（用户组下的用户列表）")
+    async def group_user(self, groupname: str, hh: models.SessionBase) -> Result:
+        result = Result()
+        try:
+            users = User.query(group_id=groupname).all()
+            result.data = [models.UserList.from_orm_format(f).model_dump() for f in users]
+            logger.info(Msg.CommonLog.get_text(hh.lang).format("Group list", hh.username, hh.ip))
         except:
             logger.error(traceback.format_exc())
             result.code = 0

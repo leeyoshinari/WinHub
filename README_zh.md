@@ -25,7 +25,7 @@
 
 
 ## 技术选型
-- 后端框架：FastApi<br>
+- 后端框架：Litestar<br>
 - 数据库：SQLite3 or MySQL<br>
 - 前端：html + js + css<br>
 
@@ -98,9 +98,6 @@ TURN 服务的用户名和密码
 
 ### winHubPipCmd
 pip命令，Windows系统默认pip，Linux和MacOS系统默认pip3。如果你用的是虚拟环境，那么这里需要配置命令的绝对路径。
-
-### winHubAerichCmd
-aerich命令，默认是aerich。如果你用的是虚拟环境，那么这里需要配置命令的绝对路径。
 
 ### winHubGunicornCmd
 gunicorn命令，默认是gunicorn。如果你用的是虚拟环境，那么这里需要配置命令的绝对路径。

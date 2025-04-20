@@ -113,7 +113,7 @@ class FileController(Controller):
         result = await views.move_to_folder(data, hh)
         return result
 
-    @post("/import", summary="Import files from local file in server (服务器本地文件直接导入，无登录校验)")
+    @post("/import", summary="Import files from local file in server (服务器本地文件直接导入)")
     async def import_file(self, data: models.ImportLocalFileByPath, hh: models.SessionBase) -> Result:
         result = await views.upload_file_by_path(data, hh)
         return result

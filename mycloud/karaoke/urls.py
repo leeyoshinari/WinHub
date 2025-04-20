@@ -30,7 +30,7 @@ async def read_file(file_path, start_index=0):
             yield chunk
 
 
-views.init_history()
+# views.init_history()
 
 
 class KaraokeController(Controller):

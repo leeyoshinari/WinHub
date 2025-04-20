@@ -683,7 +683,7 @@ let apps = {
                 $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
                 $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                 for(let i=0; i<tmp.length; i++) {
-                    if(tmp[i]['format'] === 'folder') {
+                    if(tmp[i]['format'] === 'ffolder') {
                         ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${tmp[i]['name']}', '${tmp[i]['id']}')">
                             <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                             <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
@@ -966,7 +966,7 @@ let apps = {
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'none';
                     $('#win-explorer>.page>.main>.content>.view').addClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['format'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a touchs files" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')"><img src="img/explorer/folder.svg" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
                         } else {
                             let f_src = icons[tmp[i]['format']] || default_icon;
@@ -986,7 +986,7 @@ let apps = {
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
                     $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['format'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item touchs files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')" oncontextmenu="showcm(event,'explorer.folder',['${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}']);return stop(event);">
                                 <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                                 <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
@@ -2710,7 +2710,7 @@ document.getElementById('search-file').addEventListener("keyup", function (event
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'none';
                     $('#win-explorer>.page>.main>.content>.view').addClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['format'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a files" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')"><img src="img/explorer/folder.svg" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
                         } else {
                             let f_src = icons[tmp[i]['format']] || default_icon;
@@ -2730,7 +2730,7 @@ document.getElementById('search-file').addEventListener("keyup", function (event
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
                     $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['format'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${tmp[i]['name']}', '${tmp[i]['id']}')" oncontextmenu="showcm(event,'search.folder',['${tmp[i]['name']}', '${tmp[i]['id']}']);return stop(event);">
                             <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                             <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;

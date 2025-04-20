@@ -23,7 +23,7 @@ async def create_file(folder_id: str, file_type: str, hh: models.SessionBase) ->
     result = Result()
     try:
         if len(folder_id) == 1:
-            folder_id = folder_id + hh.username
+            folder_id = folder_id + hh.groupname
         if len(folder_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
@@ -61,7 +61,7 @@ async def create_file(folder_id: str, file_type: str, hh: models.SessionBase) ->
             else:
                 f = open(file_path, 'w', encoding='utf-8')
                 f.close()
-        files = FileExplorer.create(id=file_id, name=file_name, format=file_type, parent_id=folder_id, size=0, username=hh.username)
+        files = FileExplorer.create(id=file_id, name=file_name, format=file_type, parent_id=folder_id, size=0, username=hh.groupname)
         result.data = files.id
         result.msg = f"{Msg.Create.get_text(hh.lang).format(files.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
@@ -80,7 +80,7 @@ async def get_all_files(parent_id: str, query: models.SearchItems, hh: models.Se
     result = Result()
     try:
         if len(parent_id) == 1:
-            parent_id = parent_id + hh.username
+            parent_id = parent_id + hh.groupname
         if len(parent_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
@@ -88,15 +88,15 @@ async def get_all_files(parent_id: str, query: models.SearchItems, hh: models.Se
         order_type = desc(getattr(FileExplorer, query.sort_field)) if query.sort_type == 'desc' else asc(getattr(FileExplorer, query.sort_field))
         not_equal_condition = {'status': -1}
         if parent_id == 'garbage':
-            folders = FileExplorer.query(username=hh.username, status=-1).order_by(order_type).all()
+            folders = FileExplorer.query(username=hh.groupname, status=-1).order_by(order_type).all()
             folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders]
         elif parent_id == 'search':
-            equal_condition = {'username': hh.username}
+            equal_condition = {'username': hh.groupname}
             like_condition = {'name': query.q}
             folders = FileExplorer.filter_condition(equal_condition=equal_condition, not_equal_condition=not_equal_condition, like_condition=like_condition).order_by(order_type).all()
             folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders]
         else:
-            equal_condition = {'parent_id': parent_id, 'username': hh.username}
+            equal_condition = {'parent_id': parent_id, 'username': hh.groupname}
             folders = FileExplorer.filter_condition(equal_condition=equal_condition, not_equal_condition=not_equal_condition).order_by(order_type).all()
             folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders]
         result.data = sort_file_list(folder_list)
@@ -245,7 +245,7 @@ async def copy_file(file_id: str, hh: models.SessionBase) -> Result:
             raise FileExistsError
         shutil.copy2(file_path, os.path.join(folder_path, file_name))
         new_file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file.format,
-                                       parent_id=file.parent_id, size=file.size, username=hh.username)
+                                       parent_id=file.parent_id, size=file.size, username=hh.groupname)
         result.data = new_file.id
         result.msg = f"{Msg.Copy.get_text(hh.lang).format(file.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, new_file.id, hh.username, hh.ip))
@@ -284,7 +284,7 @@ async def zip_file(query: models.DownloadFile, hh: models.SessionBase) -> Result
             return result
         zip_multiple_file(zip_path, files, parent_path)
         file = FileExplorer.create(id=str(int(time.time() * 10000)), name=f"{folder.name}.zip", format='zip', parent_id=folder.id,
-                                   size=os.path.getsize(zip_path), username=hh.username)
+                                   size=os.path.getsize(zip_path), username=hh.groupname)
         result.data = file.id
         result.msg = f"{Msg.Export.get_text(hh.lang).format(file.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file.id, hh.username, hh.ip))
@@ -308,7 +308,7 @@ async def share_file(query: models.ShareFile, hh: models.SessionBase) -> Result:
     try:
         file = FileExplorer.get_one(query.id)
         share = Shares.create(file_id=file.id, name=file.name, path=file.full_path,
-                              format=file.format, times=0, total_times=query.times, username=hh.username)
+                              format=file.format, times=0, total_times=query.times, username=hh.groupname)
         result.msg = f"{Msg.Share.get_text(hh.lang).format(share.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, share.id, hh.username, hh.ip))
     except:
@@ -321,23 +321,23 @@ async def share_file(query: models.ShareFile, hh: models.SessionBase) -> Result:
 async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        if len(query.parent_id) == 1:
-            query.parent_id = query.parent_id + hh.username
-        if len(query.parent_id) <= 3:
-            result.code = 1
-            result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
-            return result
+        # if len(query.parent_id) == 1:
+        #     query.parent_id = query.parent_id + hh.groupname
+        # if len(query.parent_id) <= 3:
+        #     result.code = 1
+        #     result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
+        #     return result
         if len(query.to_id) == 1:
-            query.to_id = query.to_id + hh.username
+            query.to_id = query.to_id + hh.groupname
         if len(query.to_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        from_path = FileExplorer.get_one(query.parent_id).full_path
+        # from_path = FileExplorer.get_one(query.parent_id).full_path
         to_path = FileExplorer.get_one(query.to_id).full_path
         for file_id in query.from_ids:
             file = FileExplorer.get_one(file_id)
-            shutil.move(os.path.join(from_path, file.name), to_path)
+            shutil.move(file.full_path, to_path)
             FileExplorer.update(file, parent_id=query.to_id)
         result.msg = f"{Msg.Move.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -356,19 +356,24 @@ async def upload_file_by_path(query: models.ImportLocalFileByPath, hh: models.Se
             file_path = os.path.join(query.path, file)
             if os.path.isfile(file_path):
                 try:
+                    file_size = os.path.getsize(file_path)
                     shutil.move(file_path, to_path)
                     file_obj = FileExplorer.create(id=str(int(time.time() * 10000)), name=file, format=file.split('.')[-1].lower(),
-                                                   parent_id=to_folder.id, size=os.path.getsize(file_path), username=hh.username)
+                                                   parent_id=to_folder.id, size=file_size, username=hh.groupname)
                     logger.info(f"{Msg.Upload.get_text(hh.lang).format(file_obj.name)}{Msg.Success.get_text(hh.lang)}")
                 except:
                     logger.error(traceback.format_exc())
                     logger.error(f"{Msg.Upload.get_text(hh.lang).format(file)}{Msg.Failure.get_text(hh.lang)}")
             else:
-                folder = FileExplorer.create(id=str(int(time.time() * 10000)), name=file, parent_id=query.id, format='folder', username=hh.username)
+                folder = FileExplorer.create(id=str(int(time.time() * 10000)), name=file, parent_id=query.id, format='ffolder', username=hh.groupname)
                 folder_path = folder.full_path
-                os.mkdir(folder_path)
-                query1 = models.ImportLocalFileByPath(id=folder.id, path=file_path)
-                await upload_file_by_path(query1, hh)
+                if not os.path.exists(folder_path):
+                    os.mkdir(folder_path)
+                    query1 = models.ImportLocalFileByPath(id=folder.id, path=file_path)
+                    await upload_file_by_path(query1, hh)
+                else:
+                    FileExplorer.delete(folder)
+                    logger.error(f"{Msg.FileExist.get_text(hh.lang).format(folder_path)}")
         logger.info(f"{Msg.Upload.get_text(hh.lang).format(query.path)}{Msg.Success.get_text(hh.lang)}")
         return Result(msg=f"{Msg.Upload.get_text(hh.lang).format(query.path)}{Msg.Success.get_text(hh.lang)}")
     except:
@@ -382,7 +387,7 @@ async def upload_file(query, hh: models.SessionBase) -> Result:
     parent_id = query['parent_id']
     file_name = query['file'].filename
     if len(parent_id) == 1:
-        parent_id = parent_id + hh.username
+        parent_id = parent_id + hh.groupname
     if len(parent_id) <= 3:
         result.code = 1
         result.data = file_name
@@ -417,7 +422,7 @@ async def upload_file(query, hh: models.SessionBase) -> Result:
         with open(file_path, 'wb') as f:
             f.write(data.read())
         file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_type,
-                                   parent_id=parent_id, size=os.path.getsize(file_path), username=hh.username)
+                                   parent_id=parent_id, size=os.path.getsize(file_path), username=hh.groupname)
         result.msg = f"{Msg.Upload.get_text(hh.lang).format(file_name)}{Msg.Success.get_text(hh.lang)}"
         result.data = file.name
         logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(result.msg, file.id, hh.username, hh.ip)}, content_type: {query['file'].content_type}")
@@ -538,7 +543,7 @@ async def save_shared_to_myself(share_id: int, folder_id: str, hh: models.Sessio
         target_folder_path = folder.full_path
         shutil.copy2(origin_file_path, target_folder_path)
         file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file.name, format=file.format, parent_id=folder_id,
-                                   size=file.size, username=hh.username)
+                                   size=file.size, username=hh.groupname)
         result.msg = f"{Msg.Save.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
@@ -551,10 +556,10 @@ async def save_shared_to_myself(share_id: int, folder_id: str, hh: models.Sessio
 def sort_file_list(file_list: list) -> list:
     if len(file_list) == 0:
         return file_list
-    folder_list = [f for f in file_list if f['format'] == 'folder']
-    f_list = [f for f in file_list if f['format'] != 'folder']
+    folder_list = [f for f in file_list if f['format'] == 'ffolder']
+    f_list = [f for f in file_list if f['format'] != 'ffolder']
     file_type = file_list[0]['format']
-    if file_type == 'folder':
+    if file_type == 'ffolder':
         return folder_list + f_list
     else:
         return f_list + folder_list

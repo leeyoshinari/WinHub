@@ -30,7 +30,7 @@ async def open_share_file(share_id: int, hh: models.SessionBase) -> dict:
 async def get_share_file(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        files = Shares.query(username=hh.username).order_by(desc(Shares.id)).all()
+        files = Shares.query(username=hh.groupname).order_by(desc(Shares.id)).all()
         result.data = [models.ShareFileList.from_orm_format(f).model_dump() for f in files]
         result.total = len(result.data)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"

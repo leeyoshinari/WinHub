@@ -115,7 +115,7 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
             'document': {
                 'file_id': file_id,
                 'title': filename,
-                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&lang={hh.lang}",
+                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&g={hh.groupname}&lang={hh.lang}",
                 'fileType': ext[1:],
                 'key': docKey,
                 'lang': hh.lang,
@@ -300,7 +300,7 @@ async def history_obj(file_id: str, request: Request, body: str, hh: models.Sess
         file = FileExplorer.get_one(file_id)
         storage_path = docManager.getStoragePath(file_id, file_id)
         doc_key = docManager.generateFileKey(file.full_path)
-        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&lang={hh.lang}"
+        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&g={hh.groupname}&lang={hh.lang}"
         response = historyManager.getHistoryObject(storage_path, file.name, doc_key, file_url, False, file_id, request_host)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.HistoryRecord.get_text(hh.lang), file_id, hh.username, hh.ip))
         return json.dumps(response, ensure_ascii=False)

@@ -12,6 +12,7 @@ from common.calc import beauty_size, beauty_time, time2date, beauty_chat_status,
 # 登陆会话验证模型
 class SessionBase(BaseModel):
     username: str
+    groupname: str
     ip: Optional[str] = None
     lang: str = 'en'
 
@@ -28,9 +29,8 @@ class CreateUser(UserBase):
     password1: str
 
 
-class UserList(BaseModel):
+class GroupList(BaseModel):
     id: str
-    nickname: str
     create_time: str
     update_time: str
 
@@ -41,7 +41,24 @@ class UserList(BaseModel):
     def from_orm_format(cls, obj):
         c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
         m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-        return cls(id=obj.id, nickname=obj.nickname, create_time=c, update_time=m)
+        return cls(id=obj.id, create_time=c, update_time=m)
+
+
+class UserList(BaseModel):
+    id: str
+    nickname: str
+    group: str
+    create_time: str
+    update_time: str
+
+    class Config:
+        from_attributes = True
+
+    @classmethod
+    def from_orm_format(cls, obj):
+        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        return cls(id=obj.id, nickname=obj.nickname, group=obj.group_id, create_time=c, update_time=m)
 
 
 # 搜索文件
@@ -91,7 +108,7 @@ class FolderList(BaseModel):
     def from_orm_format(cls, obj):
         c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
         m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-        file_size = "0" if obj.format == 'folder' else beauty_size(obj.size)
+        file_size = "0" if obj.format == 'ffolder' else beauty_size(obj.size)
         return cls(id=obj.id, name=obj.name, format=obj.format, size=file_size, create_time=c, update_time=m)
 
 
@@ -300,11 +317,11 @@ class KaraokeList(BaseModel):
     class Config:
         from_attributes = True
 
-    # @classmethod
-    # def from_orm_format(cls, obj: Files):
-    #     c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-    #     # m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-    #     return cls(id=obj.id, name=obj.name, create_time=c)
+    @classmethod
+    def from_orm_format(cls, obj):
+        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        # m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        return cls(id=obj.id, name=obj.name, create_time=c)
 
 
 # 卡拉OK历史记录

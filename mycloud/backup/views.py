@@ -55,7 +55,7 @@ async def index_backup(hh: models.SessionBase) -> Result:
         result.msg = Msg.SyncDataNo.get_text(hh.lang)
         return result
     try:
-        folders = FileExplorer.query(username=hh.username, status=99).all()
+        folders = FileExplorer.query(username=hh.groupname, status=99).all()
         folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders if f.id.startswith(tuple('123456789'))]
         result.data = folder_list
         result.total = len(result.data)

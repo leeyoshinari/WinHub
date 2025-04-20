@@ -48,7 +48,7 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
     try:
         folder_id = query.parent_id
         if len(folder_id) == 1:
-            folder_id = folder_id + hh.username
+            folder_id = folder_id + hh.groupname
         if len(folder_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
@@ -107,7 +107,7 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
     try:
         folder_id = query.parent_id
         if len(folder_id) == 1:
-            folder_id = folder_id + hh.username
+            folder_id = folder_id + hh.groupname
         if len(folder_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
@@ -250,7 +250,7 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
     try:
         parent_id = query.parent_id
         if len(parent_id) == 1:
-            parent_id = parent_id + hh.username
+            parent_id = parent_id + hh.groupname
         if len(parent_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)

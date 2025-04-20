@@ -197,12 +197,21 @@ class CRUDBase:
             Database.close_session()
 
 
+class Group(Base, CRUDBase):
+    __tablename__ = 'group'
+
+    id = Column(String(16), primary_key=True)
+    create_time = Column(DateTime, default=datetime.now)
+    update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
 class User(Base, CRUDBase):
     __tablename__ = 'user'
 
     id = Column(String(16), primary_key=True)
     nickname = Column(String(16), nullable=False)
     password = Column(String(32), nullable=False)
+    group_id = Column(String(16), ForeignKey('group.id'), nullable=False)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -211,7 +220,7 @@ class FileExplorer(Base, CRUDBase):
     __tablename__ = 'file_explorer'
 
     id = Column(String(16), primary_key=True)
-    parent_id = Column(String(16), ForeignKey('file_explorer.id', ondelete='CASCADE'), nullable=True)
+    parent_id = Column(String(16), ForeignKey('file_explorer.id', ondelete='CASCADE'), nullable=True, index=True)
     name = Column(String(64), nullable=False)
     format = Column(String(16), nullable=True)
     size = Column(BigInteger, nullable=True)
@@ -258,7 +267,7 @@ class Servers(Base, CRUDBase):
     cpu = Column(Integer, default=1)
     mem = Column(Integer, default=0.1)
     disk = Column(String(8), nullable=False)
-    creator = Column(String(16), nullable=False)
+    username = Column(String(16), nullable=False)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -282,7 +291,7 @@ class Games(Base, CRUDBase):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String(8), nullable=False)
-    name = Column(String(16), nullable=False)
+    username = Column(String(16), nullable=False)
     score = Column(Integer, default=0)
     create_time = Column(DateTime, default=datetime.now)
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)

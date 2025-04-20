@@ -28,7 +28,7 @@ A multi-functional platform integrating file storage, editing, communication, en
 View detailed page style, [Please click me.](https://github.com/leeyoshinari/WinHub/blob/main/web/detail.md)
 
 ## Technology
-- Framework: FastApi
+- Framework: Litestar
 - Database: SQLite3 or MySQL
 - Front-end: html + js + css
 
@@ -44,26 +44,14 @@ pip3 install -r requirements.txt
 ```
 Note: If you use Windows system, you need to install pywin32 package, run command: `pip install pywin32`。
 
-4.Initialize the database and execute the following commands in sequence
-```shell script
-aerich init -t settings.TORTOISE_ORM
-aerich init-db
-```
+4..Install download tool [aria2](https://github.com/aria2/aria2/releases), running `aria2c -v` to verify whether the installation is successful.
 
-5.Install download tool [aria2](https://github.com/aria2/aria2/releases), running `aria2c -v` to verify whether the installation is successful.
-
-6.Startup
+5.Startup
 ```shell script
 sh startup.sh
 ```
 
-7.Create user<br>
-In order to avoid malicious creation of users by others, the page does not open the entrance to create users. So, you can create a user in the API interface documentation, entering the `swagger-ui` page and finding the `createUser` interface.
-```shell script
-http://IP:Port/ prefix IN config.conf /swagger-ui
-```
-
-8.Configure and start `nginx`, the location configuration is as follows:<br>
+6.Configure and start `nginx`, the location configuration is as follows:<br>
 (1)Front-end configuration: The front-end file is in `web`, `/Windows` can be modified to any name you like.
 ```shell script
 location /Windows {
@@ -100,6 +88,18 @@ location /api/openapi {
 Usually nginx will limit the size of the request body, and you need to add `client_max_body_size 4096M;` to `nginx.conf`. There are other configurations, you can search for information and modify them online by yourself.
 
 If you don’t know nginx, please go to [nginx official website](http://nginx.org/en/download.html) to download nginx and install it. After the installation is completed, replace the installed `nginx.conf` with the `nginx.conf` in this project, and then restart nginx.
+
+7.Create group<br>
+Firstly, you need to create a group. All files are stored in groups. One group can have many users, who can view and edit all files under the group. For security, you can only create a group in the API interface documentation, entering the `swagger` page and finding the `/create/group` interface.
+```shell script
+http://IP:Port/ prefix IN config.conf /schema
+```
+
+8.Create user<br>
+For security, you can only create a user in the API interface documentation, entering the `swagger` page and finding the `/create/user` interface.
+```shell script
+http://IP:Port/ prefix IN config.conf /schema
+```
 
 9.Page, the url is `http://IP:Port/Windows` (the IP and port are the IP and port set in Nginx. `Windows` is the name of the front-end configuration in step 8)
 ![](https://github.com/leeyoshinari/WinHub/blob/main/web/img/pictures/login.jpg)
@@ -166,9 +166,6 @@ Log Level
 
 ### winHubPipCmd
 The pip command, the default for Windows is pip, and the default for Linux and MacOS is pip3. If you are using a virtual environment, you need to configure the absolute path of the pip command here.
-
-### winHubAerichCmd
-The aerich command, by default, is aerich. If you are using a virtual environment, you need to configure the absolute path of the aerich command here.
 
 ### winHubGunicornCmd
 The gunicorn command, by default, is gunicorn. If you are using a virtual environment, you need to configure the absolute path of the gunicorn command here.
