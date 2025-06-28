@@ -121,21 +121,12 @@ async def rename_folder(query: models.FilesBase, hh: models.SessionBase) -> Resu
 async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        # if len(query.parent_id) == 1:
-        #     query.parent_id = query.parent_id + hh.groupname
-        # if len(query.parent_id) <= 3:
-        #     result.code = 1
-        #     result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
-        #     return result
         if len(query.to_id) == 1:
             query.to_id = query.to_id + hh.groupname
         if len(query.to_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        # froms = FileExplorer.get_one(query.parent_id)
-        # from_path = froms.full_path
-        # tos = FileExplorer.get_one(query.to_id)
         to_path = FileExplorer.get_one(query.to_id).full_path
         for folder_id in query.from_ids:
             if folder_id == query.to_id:

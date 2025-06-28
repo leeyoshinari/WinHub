@@ -321,22 +321,17 @@ async def share_file(query: models.ShareFile, hh: models.SessionBase) -> Result:
 async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        # if len(query.parent_id) == 1:
-        #     query.parent_id = query.parent_id + hh.groupname
-        # if len(query.parent_id) <= 3:
-        #     result.code = 1
-        #     result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
-        #     return result
         if len(query.to_id) == 1:
             query.to_id = query.to_id + hh.groupname
         if len(query.to_id) <= 3:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        # from_path = FileExplorer.get_one(query.parent_id).full_path
         to_path = FileExplorer.get_one(query.to_id).full_path
         for file_id in query.from_ids:
             file = FileExplorer.get_one(file_id)
+            if file.parent_id == query.to_id:
+                continue
             shutil.move(file.full_path, to_path)
             FileExplorer.update(file, parent_id=query.to_id)
         result.msg = f"{Msg.Move.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"

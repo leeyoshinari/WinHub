@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 # @Author: leeyoshinari
 
+import os
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, BigInteger
 from sqlalchemy.orm import relationship, scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import text
 from datetime import datetime
-from settings import DB_URL, DB_POOL_SIZE
+from settings import DB_URL, DB_POOL_SIZE, BASE_PATH
 
 Base = declarative_base()
 
@@ -350,3 +352,37 @@ class MigrateSql(Base, CRUDBase):
     id = Column(Integer, primary_key=True)
     sql = Column(String(128), nullable=False)
     is_run = Column(Integer, default=0)
+
+
+def execute_sql(sql):
+    session = Database.get_session()
+    try:
+        session.execute(text(sql))
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        Database.close_session()
+
+
+def init_data():
+    migrate_lines_file = os.path.join(BASE_PATH, 'migrate_sql.txt')
+    if os.path.exists(migrate_lines_file):
+        with open(migrate_lines_file, 'r', encoding='utf-8') as f:
+            migrate_lines = f.readlines()
+        for line in migrate_lines:
+            sql_list = line.split('-')
+            if len(sql_list) == 2:
+                has_sql = MigrateSql.get(sql_list[0])
+                if not has_sql:
+                    MigrateSql.create(id=sql_list[0], sql=sql_list[1])
+
+        all_sql = MigrateSql.all()
+        for sql in all_sql:
+            if sql.is_run == 0:
+                try:
+                    execute_sql(sql.sql)
+                except:
+                    pass
+                MigrateSql.update(sql, is_run=1)

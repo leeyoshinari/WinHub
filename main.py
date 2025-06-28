@@ -23,10 +23,11 @@ from mycloud.chat.urls import ChatController
 from mycloud.games.urls import GameController
 from mycloud.karaoke.urls import KaraokeController
 from mycloud.health.urls import HealthController
-from mycloud.database import Database
+from mycloud.database import Database, init_data
 
 
-Database.init_db()
+Database.init_db()  # 初始化数据库
+init_data()     # 数据库更新
 modify_prefix(PREFIX)   # 将后端的 prefix 写入前端变量中
 modify_sw()     # 修改 sw.js 文件中的缓存版本号
 modify_manifest(PWA_URL)    # 修改 manifest.json 文件中的 url

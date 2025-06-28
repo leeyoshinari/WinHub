@@ -6,7 +6,7 @@ import os
 import sys
 import json
 import tzlocal
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
 
 if hasattr(sys, 'frozen'):
@@ -15,7 +15,20 @@ else:
     BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 TOKENs = {}
-load_dotenv()
+
+
+def sync_with_dotenv():
+    example_config = dotenv_values('.env.example')
+    if os.path.exists('.env'):
+        current_config = dotenv_values('.env')
+    else:
+        current_config = {}
+    new_keys = set(example_config.keys()) - set(current_config.keys())
+    if new_keys:
+        with open('.env', 'a', encoding='utf-8') as f:
+            f.write('\n# 以下为自动添加的新配置\n')
+            for key in new_keys:
+                f.write(f"{key} = {example_config[key]}\n")
 
 
 def get_config(key):
@@ -23,6 +36,8 @@ def get_config(key):
     return value
 
 
+sync_with_dotenv()  # 更新配置
+load_dotenv()   # 加载配置
 FRONT_END_PREFIX = get_config("winHubFrontEndPrefix")
 PREFIX = get_config("winHubBackEndPrefix")
 HOST = get_config("winHubHost")
