@@ -9,7 +9,6 @@ import shutil
 import traceback
 from datetime import datetime
 from fastapi import Request
-from tortoise import transactions
 from common.logging import logger
 from common.results import Result
 from common.messages import Msg
@@ -230,18 +229,16 @@ async def rename(file_id: str, body: str, hh: models.SessionBase):
 
         dockey = body['dockey']
         meta = {'title': newfilename}
-        async with transactions.in_transaction():
-            file = FileExplorer.get_one(file_id)
-            file_path = file.full_path
-            folder_path = os.path.dirname(file_path)
-            if os.path.exists(file_path):
-                raise FileExistsError
-            else:
-                os.rename(file_path, os.path.join(folder_path, newfilename))
-                FileExplorer.update(file, name=newfilename, format=body['ext'])
-            # trackManager.commandRequest('meta', dockey, meta)
-            response.setdefault('result', trackManager.commandRequest('meta', dockey, meta).json())
-            logger.info(f"{Msg.Rename.get_text(hh.lang).format(file_id)} {Msg.Success.get_text(hh.lang)}")
+        file = FileExplorer.get_one(file_id)
+        file_path = file.full_path
+        folder_path = os.path.dirname(file_path)
+        if os.path.exists(file_path):
+            raise FileExistsError
+        else:
+            os.rename(file_path, os.path.join(folder_path, newfilename))
+            FileExplorer.update(file, name=newfilename, format=body['ext'])
+        response.setdefault('result', trackManager.commandRequest('meta', dockey, meta).json())
+        logger.info(f"{Msg.Rename.get_text(hh.lang).format(file_id)} {Msg.Success.get_text(hh.lang)}")
     except:
         logger.error(traceback.format_exc())
         response.setdefault("error", 1)
