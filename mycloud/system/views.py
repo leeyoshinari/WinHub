@@ -15,7 +15,7 @@ import platform
 import psutil
 import requests
 from mycloud import models
-from settings import TMP_PATH, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE, PIP_CMD, AERICH_CMD
+from settings import TMP_PATH, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE, PIP_CMD
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
 from common.scheduler import scheduler, get_schedule_time
 from common.results import Result
@@ -290,15 +290,6 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
                 pip_command += ["-i", "https://mirrors.ustc.edu.cn/pypi/simple/", "--trusted-host", "mirrors.ustc.edu.cn"]
             logger.info(f"Run pip command: {pip_command}, user: {hh.username}, IP: {hh.ip}")
             subprocess.run(pip_command, check=True, capture_output=True, text=True, timeout=60)
-
-            # 更新数据库
-            aerich_command = [AERICH_CMD, "migrate"]
-            cmd_res = subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
-            if 'No changes detected' not in cmd_res.stdout:
-                time.sleep(1)
-                aerich_command = [AERICH_CMD, "upgrade"]
-                subprocess.run(aerich_command, check=True, capture_output=True, text=True, timeout=15)
-                logger.info(f"DataBase update, user: {hh.username}, IP: {hh.ip}")
 
             update_info_res = await get_new_version(hh)
             newest_version = update_info_res.data['name'] if update_info_res.data else ""
