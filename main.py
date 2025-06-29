@@ -57,7 +57,7 @@ async def lifespan(app: Litestar):
 
 render_file = SwaggerRenderPlugin(js_url=f'{FRONT_END_PREFIX}/js/swagger-ui-bundle.js', css_url=f'{FRONT_END_PREFIX}/css/swagger-ui.css')
 openapi_config = OpenAPIConfig(title="WinHub", version="1.0", description="This is API of WinHub.", path=PREFIX + "/schema", render_plugins=[render_file])
-app = Litestar(route_handlers=route_handlers, openapi_config=openapi_config, lifespan=[lifespan])
+app = Litestar(route_handlers=route_handlers, openapi_config=openapi_config, lifespan=[lifespan], logging_config=None)
 
 
 if __name__ == "__main__":
