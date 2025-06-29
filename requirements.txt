@@ -1,8 +1,7 @@
-aerich>=0.7.2
-aiomysql>=0.2.0
-aiosqlite>=0.20.0
 fastapi>=0.103.1
-tortoise-orm>=0.19.3
+litestar>=2.15.2
+litestar-htmx>=0.4.1
+SQLAlchemy>=2.0.40
 uvicorn>=0.23.2
 gunicorn>=21.0.0
 pydantic>=1.10.6
