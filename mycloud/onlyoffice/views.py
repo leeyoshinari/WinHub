@@ -14,6 +14,7 @@ from common.logging import logger
 from common.results import Result
 from common.messages import Msg
 from mycloud import models
+from mycloud.database import FileExplorer
 from mycloud.onlyoffice.configuration.configuration import ConfigurationManager
 from mycloud.onlyoffice.utils import docManager, fileUtils, users, jwtManager, historyManager, trackManager
 from settings import PREFIX, TOKENs, ONLYOFFICE_SERVER
@@ -38,18 +39,14 @@ async def track(file_id: str, body: str, hh: models.SessionBase):
                     # create a command request with the forcasave method
                     trackManager.commandRequest('forcesave', body['key'])
 
-        file = await models.Files.get(id=file_id).select_related('parent')
-        folder_path = await file.parent.get_all_path()
-        file_path = os.path.join(folder_path, file.name)
+        file = FileExplorer.get_one(file_id)
+        file_path = file.full_path
 
         if (status == 2) | (status == 3):  # mustsave, corrupted
             trackManager.processSave(body, file.name, file_path, file_id)
-            file.size = os.path.getsize(file_path)
-            await file.save()
         if (status == 6) | (status == 7):  # mustforcesave, corruptedforcesave
             trackManager.processForceSave(body, file.name, file_path, file_id)
-            file.size = os.path.getsize(file_path)
-            await file.save()
+        FileExplorer.update(file, size=os.path.getsize(file_path))
 
     except:
         logger.error(traceback.format_exc())
@@ -67,11 +64,10 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
         request_url = request.headers.get('referer')
         url_list = request_url.split('/')
         request_host = f"{url_list[0]}//{url_list[2]}"
-        file = await models.Files.get(id=file_id).select_related('parent')
-        folder_path = await file.parent.get_all_path()
+        file = FileExplorer.get_one(file_id)
         filename = file.name
         ext = fileUtils.getFileExt(filename)
-        docKey = docManager.generateFileKey(os.path.join(folder_path, file.name))
+        docKey = docManager.generateFileKey(file.full_path)
         fileType = fileUtils.getFileType(filename)
 
         # get the editor mode: view/edit/review/comment/fillForms/embedded (the default mode is edit)
@@ -119,8 +115,7 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
             'document': {
                 'file_id': file_id,
                 'title': filename,
-                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&"
-                       f"u={hh.username}&lang={hh.lang}",
+                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&g={hh.groupname}&lang={hh.lang}",
                 'fileType': ext[1:],
                 'key': docKey,
                 'lang': hh.lang,
@@ -236,16 +231,14 @@ async def rename(file_id: str, body: str, hh: models.SessionBase):
         dockey = body['dockey']
         meta = {'title': newfilename}
         async with transactions.in_transaction():
-            file = await models.Files.get(id=file_id).select_related('parent')
-            folder_path = await file.parent.get_all_path()
-            origin_name = file.name
-            file.name = newfilename
-            file.format = body['ext']
-            await file.save()
-            if os.path.exists(os.path.join(folder_path, file.name)):
+            file = FileExplorer.get_one(file_id)
+            file_path = file.full_path
+            folder_path = os.path.dirname(file_path)
+            if os.path.exists(file_path):
                 raise FileExistsError
             else:
-                os.rename(os.path.join(folder_path, origin_name), os.path.join(folder_path, newfilename))
+                os.rename(file_path, os.path.join(folder_path, newfilename))
+                FileExplorer.update(file, name=newfilename, format=body['ext'])
             # trackManager.commandRequest('meta', dockey, meta)
             response.setdefault('result', trackManager.commandRequest('meta', dockey, meta).json())
             logger.info(f"{Msg.Rename.get_text(hh.lang).format(file_id)} {Msg.Success.get_text(hh.lang)}")
@@ -304,11 +297,10 @@ async def history_obj(file_id: str, request: Request, body: str, hh: models.Sess
             logger.error(Msg.FileNotExist.get_text(hh.lang).format(file_id))
             return json.dumps(response, ensure_ascii=False)
 
-        file = await models.Files.get(id=file_id).select_related('parent')
-        folder_path = await file.parent.get_all_path()
+        file = FileExplorer.get_one(file_id)
         storage_path = docManager.getStoragePath(file_id, file_id)
-        doc_key = docManager.generateFileKey(os.path.join(folder_path, file.name))
-        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&lang={hh.lang}"
+        doc_key = docManager.generateFileKey(file.full_path)
+        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&g={hh.groupname}&lang={hh.lang}"
         response = historyManager.getHistoryObject(storage_path, file.name, doc_key, file_url, False, file_id, request_host)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.HistoryRecord.get_text(hh.lang), file_id, hh.username, hh.ip))
         return json.dumps(response, ensure_ascii=False)
@@ -333,11 +325,10 @@ async def download_history(file_id: str, request: Request):
 async def restore(file_id: str, body: str, hh: models.SessionBase):
     try:
         body = json.loads(body)
-        file = await models.Files.get(id=file_id).select_related('parent')
-        folder_path = await file.parent.get_all_path()
+        file = FileExplorer.get_one(file_id)
         version: int = body['version']
         source_extension = f".{file.format}"
-        source_file = os.path.join(folder_path, file.name)
+        source_file = file.full_path
         history_directory = historyManager.getHistoryDir(docManager.getStoragePath(file_id, file_id))
         recovery_version_directory = historyManager.getVersionDir(history_directory, version)
         recovery_file = historyManager.getPrevFilePath(recovery_version_directory, source_extension)
@@ -357,8 +348,7 @@ async def restore(file_id: str, body: str, hh: models.SessionBase):
             f.write(json.dumps(bumped_changes, ensure_ascii=False))
         shutil.copy(source_file, bumped_file)
         shutil.copy(recovery_file, source_file)
-        file.size = os.path.getsize(source_file)
-        await file.save()
+        FileExplorer.update(file, size=os.path.getsize(source_file))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.RestoreFromHistory.get_text(hh.lang), file_id, hh.username, hh.ip))
         return "{}"
     except:

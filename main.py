@@ -2,60 +2,62 @@
 # -*- coding: utf-8 -*-
 # @Author: leeyoshinari
 
-from fastapi import FastAPI
-from fastapi.openapi.docs import get_swagger_ui_html
-from tortoise.contrib.fastapi import register_tortoise
+from litestar import Litestar, Router
+from litestar.openapi import OpenAPIConfig
+from litestar.openapi.plugins import SwaggerRenderPlugin
+from contextlib import asynccontextmanager
 from common.calc import modify_prefix, modify_sw, modify_manifest
 from common.scheduler import scheduler
-from settings import PREFIX, TORTOISE_ORM, HOST, PORT, PWA_URL, FRONT_END_PREFIX
-import mycloud.user.urls as user_urls
-import mycloud.folders.urls as folder_urls
-import mycloud.files.urls as file_urls
-import mycloud.music.urls as music_urls
-import mycloud.SSH.urls as ssh_urls
-import mycloud.share.urls as share_urls
-import mycloud.games.urls as game_urls
-import mycloud.system.urls as system_urls
-import mycloud.karaoke.urls as karaoke_urls
-import mycloud.downloader.urls as downloader_urls
-import mycloud.onlyoffice.urls as onlyoffice_urls
-import mycloud.backup.urls as backup_urls
-import mycloud.chat.urls as chat_urls
-import mycloud.health.urls as health_urls
+from settings import PREFIX, HOST, PORT, PWA_URL, FRONT_END_PREFIX
+from mycloud.user.urls import UserContoller
+from mycloud.files.urls import FileController
+from mycloud.folders.urls import FolderController
+from mycloud.system.urls import SystemController
+from mycloud.SSH.urls import ServerController
+from mycloud.share.urls import ShareController
+from mycloud.music.urls import MusicController
+from mycloud.downloader.urls import DownloaderController
+from mycloud.onlyoffice.urls import OnlyofficeController
+from mycloud.backup.urls import SyncController
+from mycloud.chat.urls import ChatController
+from mycloud.games.urls import GameController
+from mycloud.karaoke.urls import KaraokeController
+from mycloud.health.urls import HealthController
+from mycloud.database import Database, init_data
 
 
-app = FastAPI(docs_url=None, redoc_url=None, root_path='/api/openapi')
-register_tortoise(app=app, config=TORTOISE_ORM)
+Database.init_db()  # 初始化数据库
+init_data()     # 数据库更新
 modify_prefix(PREFIX)   # 将后端的 prefix 写入前端变量中
 modify_sw()     # 修改 sw.js 文件中的缓存版本号
 modify_manifest(PWA_URL)    # 修改 manifest.json 文件中的 url
+route_handlers = [
+    Router(path=PREFIX, route_handlers=[UserContoller]),
+    Router(path=PREFIX, route_handlers=[FolderController]),
+    Router(path=PREFIX, route_handlers=[FileController]),
+    Router(path=PREFIX, route_handlers=[SystemController]),
+    Router(path=PREFIX, route_handlers=[ShareController]),
+    Router(path=PREFIX, route_handlers=[MusicController]),
+    Router(path=PREFIX, route_handlers=[DownloaderController]),
+    Router(path=PREFIX, route_handlers=[OnlyofficeController]),
+    Router(path=PREFIX, route_handlers=[ServerController]),
+    Router(path=PREFIX, route_handlers=[SyncController]),
+    Router(path=PREFIX, route_handlers=[ChatController]),
+    Router(path=PREFIX, route_handlers=[GameController]),
+    Router(path=PREFIX, route_handlers=[KaraokeController]),
+    Router(path=PREFIX, route_handlers=[HealthController]),
+]
 
 
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: Litestar):
     scheduler.start()
+    yield
+    scheduler.shutdown()
 
-
-@app.get(PREFIX + "/swagger-ui", include_in_schema=False)
-async def get_docs():
-    return get_swagger_ui_html(openapi_url='/api/openapi/openapi.json', title='Windows swagger-ui',
-                               swagger_js_url=f'{FRONT_END_PREFIX}/js/swagger-ui-bundle.js', swagger_css_url=f'{FRONT_END_PREFIX}/css/swagger-ui.css')
-
-
-app.include_router(user_urls.router, prefix=PREFIX)
-app.include_router(folder_urls.router, prefix=PREFIX)
-app.include_router(file_urls.router, prefix=PREFIX)
-app.include_router(ssh_urls.router, prefix=PREFIX)
-app.include_router(music_urls.router, prefix=PREFIX)
-app.include_router(share_urls.router, prefix=PREFIX)
-app.include_router(downloader_urls.router, prefix=PREFIX)
-app.include_router(onlyoffice_urls.router, prefix=PREFIX)
-app.include_router(game_urls.router, prefix=PREFIX)
-app.include_router(system_urls.router, prefix=PREFIX)
-app.include_router(karaoke_urls.router, prefix=PREFIX)
-app.include_router(backup_urls.router, prefix=PREFIX)
-app.include_router(chat_urls.router, prefix=PREFIX)
-app.include_router(health_urls.router, prefix=PREFIX)
-app.add_event_handler("startup", startup_event)
+render_file = SwaggerRenderPlugin(js_url=f'{FRONT_END_PREFIX}/js/swagger-ui-bundle.js', css_url=f'{FRONT_END_PREFIX}/css/swagger-ui.css')
+openapi_config = OpenAPIConfig(title="WinHub", version="1.0", description="This is API of WinHub.", path=PREFIX + "/schema", render_plugins=[render_file])
+app = Litestar(route_handlers=route_handlers, openapi_config=openapi_config, lifespan=[lifespan])
 
 
 if __name__ == "__main__":

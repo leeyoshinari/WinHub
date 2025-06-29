@@ -5,7 +5,8 @@
 import time
 import uuid
 import traceback
-from fastapi import WebSocket
+from litestar import WebSocket
+from mycloud.database import ChatRoom, User
 from mycloud import models
 from settings import WEBRTC_TURN, WEBRTC_STUN, WEBRTC_USER, WEBRTC_CRED
 from common.scheduler import scheduler, get_schedule_time
@@ -21,7 +22,7 @@ async def create_code(chat_mode: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         room_code = str(uuid.uuid4())[:6]
-        await models.ChatRoom.create(code=room_code, mode=chat_mode)
+        ChatRoom.create(code=room_code, mode=chat_mode)
         result.msg = f"{Msg.MeetingCreate.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         result.data = room_code
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
@@ -36,15 +37,14 @@ async def start_chat(room_code: str, chat_mode: int, hh: models.SessionBase) -> 
     result = Result()
     try:
         if room_code not in rooms:
-            room = await models.ChatRoom.filter(code=room_code, mode=chat_mode, end_time=0)
+            room = ChatRoom.query(code=room_code, mode=chat_mode, end_time=0).all()
             if not room or len(room) > 1:
                 result.code = 1
                 result.msg = Msg.FileNotExist.get_text(hh.lang).format(room_code)
                 logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
                 return result
             rooms[room_code] = {"users": [], "usernames": {}, "mode": chat_mode}
-            room[0].start_time = int(time.time())
-            await room[0].save()
+            ChatRoom.update(room[0], start_time=int(time.time()))
         if rooms[room_code]['mode'] != chat_mode:
             result.code = 1
             result.msg = Msg.FileNotExist.get_text(hh.lang).format(room_code)
@@ -75,8 +75,8 @@ async def get_stun_server(room_param: str, hh: models.SessionBase) -> Result:
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
             return result
-        user = await models.User.get(username=hh.username)
-        result.data = {'stun': WEBRTC_STUN, 'turn': WEBRTC_TURN, 'user': WEBRTC_USER, 'cred': WEBRTC_CRED, 'username': user.username, 'nickname': user.nickname}
+        user = User.get_one(hh.username)
+        result.data = {'stun': WEBRTC_STUN, 'turn': WEBRTC_TURN, 'user': WEBRTC_USER, 'cred': WEBRTC_CRED, 'username': user.id, 'nickname': user.nickname}
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_code, hh.username, hh.ip))
     except:
@@ -89,8 +89,8 @@ async def get_stun_server(room_param: str, hh: models.SessionBase) -> Result:
 async def delete_code(room_id: int, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        room = await models.ChatRoom.get(id=room_id)
-        await room.delete()
+        room = ChatRoom.get_one(room_id)
+        ChatRoom.delete(room)
         result.msg = f"{Msg.Delete.get_text(hh.lang).format(room.code)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, room_id, hh.username, hh.ip))
     except:
@@ -102,10 +102,10 @@ async def delete_code(room_id: int, hh: models.SessionBase) -> Result:
 
 async def clear_expire_chat_code():
     try:
-        room = await models.ChatRoom.filter(start_time=0)
+        room = ChatRoom.query(start_time=0).all()
         for r in room:
             if time.time() - r.create_time.timestamp() > 172800:
-                await r.delete()
+                ChatRoom.delete(r)
                 logger.info(f"Delete expire room code for {r.code} successfully.")
     except:
         logger.error(traceback.format_exc())
@@ -114,7 +114,7 @@ async def clear_expire_chat_code():
 async def get_room_list(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        room = await models.ChatRoom.all().order_by("-id")
+        room = ChatRoom.all().all()
         room_list = [models.ChatList.from_orm_format(r, hh.lang).model_dump() for r in room]
         result.data = room_list
         result.total = len(room_list)
@@ -144,10 +144,9 @@ async def leave_room(room_code, websocket: WebSocket, username: str):
         del rooms[room_code]["usernames"][username]
         logger.info(f"{Msg.MeetingQuit.get_text('en')}{Msg.Success.get_text('en')}, username: {username}")
         if not rooms[room_code]["users"]:
-            room = await models.ChatRoom.get(code=room_code, end_time=0)
+            room = ChatRoom.query(code=room_code, end_time=0).first()
             del rooms[room_code]
-            room.end_time = int(time.time())
-            await room.save()
+            ChatRoom.update(room, end_time=int(time.time()))
             logger.info(f"Meeting Code: {room_code} is completed ~")
 
 

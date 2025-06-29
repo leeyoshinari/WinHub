@@ -6,7 +6,7 @@ import os
 import sys
 import json
 import tzlocal
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
 
 if hasattr(sys, 'frozen'):
@@ -15,7 +15,20 @@ else:
     BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 TOKENs = {}
-load_dotenv()
+
+
+def sync_with_dotenv():
+    example_config = dotenv_values('.env.example')
+    if os.path.exists('.env'):
+        current_config = dotenv_values('.env')
+    else:
+        current_config = {}
+    new_keys = set(example_config.keys()) - set(current_config.keys())
+    if new_keys:
+        with open('.env', 'a', encoding='utf-8') as f:
+            f.write('\n# 以下为自动添加的新配置\n')
+            for key in new_keys:
+                f.write(f"{key} = {example_config[key]}\n")
 
 
 def get_config(key):
@@ -23,6 +36,8 @@ def get_config(key):
     return value
 
 
+sync_with_dotenv()  # 更新配置
+load_dotenv()   # 加载配置
 FRONT_END_PREFIX = get_config("winHubFrontEndPrefix")
 PREFIX = get_config("winHubBackEndPrefix")
 HOST = get_config("winHubHost")
@@ -30,6 +45,8 @@ PORT = int(get_config("winHubPort"))
 TRACKER_URL = get_config("winHubTrackerUrls")
 ROOT_PATH = json.loads(get_config("winHubRootPath"))
 PWA_URL = get_config("winHubPwaUrl")
+DB_URL = get_config("winHubDbUrl")
+DB_POOL_SIZE = int(get_config("winHubConnectionPoolSize"))
 ENABLE_ONLYOFFICE = get_config("winHubEnableOnlyoffice")
 ONLYOFFICE_SERVER = get_config("winHubOnlyOfficeServer")
 ONLYOFFICE_SECRET = get_config("winHubOnlyOfficeSecret")
@@ -56,17 +73,6 @@ if ENABLE_BACKUP == 1 and not os.path.exists(BACKUP_PATH):
     os.mkdir(BACKUP_PATH)
 if not os.path.exists(KARAOKE_PATH):
     os.mkdir(KARAOKE_PATH)
-
-TORTOISE_ORM = {
-    "connections": {"default": get_config("winHubDbUrl")},
-    "apps": {
-        "models": {
-            "models": ["mycloud.models", "aerich.models"],
-            "default_connection": "default"
-        }
-    },
-    "timezone": TIME_ZONE
-}
 
 CONTENT_TYPE = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': 'image/bmp', 'png': 'image/png', 'pdf': 'application/pdf',
                 'mp4': 'video/mp4', 'zip': 'application/zip', 'mp3': 'audio/mpeg', 'html': 'text/html', 'py': 'text/x-python',

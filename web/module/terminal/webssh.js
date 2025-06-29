@@ -173,7 +173,7 @@ function upload_file(path) {
                 progressBar.value = success_num;
                 percentageDiv.innerHTML = (success_num / total_files * 100).toFixed(2) + "%";
                 if (xhr.readyState === 4) {
-                    if(xhr.status === 200) {
+                    if(xhr.status === 200 || xhr.status === 201) {
                         let res = JSON.parse(xhr.responseText);
                         if (res['code'] === 0) {
                             success_num += 1;
@@ -183,7 +183,6 @@ function upload_file(path) {
                         }
                     } else {
                         failure_num += 1;
-                        failure_file.push(res['data']);
                     }
 
                     if ((success_num + failure_num) === total_files) {

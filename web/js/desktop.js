@@ -683,7 +683,7 @@ let apps = {
                 $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
                 $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                 for(let i=0; i<tmp.length; i++) {
-                    if(tmp[i]['folder_type'] === 'folder') {
+                    if(tmp[i]['format'] === 'ffolder') {
                         ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${tmp[i]['name']}', '${tmp[i]['id']}')">
                             <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                             <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
@@ -966,7 +966,7 @@ let apps = {
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'none';
                     $('#win-explorer>.page>.main>.content>.view').addClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['folder_type'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a touchs files" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')"><img src="img/explorer/folder.svg" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
                         } else {
                             let f_src = icons[tmp[i]['format']] || default_icon;
@@ -986,7 +986,7 @@ let apps = {
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
                     $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['folder_type'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item touchs files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')" oncontextmenu="showcm(event,'explorer.folder',['${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}']);return stop(event);">
                                 <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                                 <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
@@ -2597,7 +2597,7 @@ function getSelectedIds(is_all = false) {
     return ids;
 }
 
-function delete_file(ids, file_type, is_delete= 1, delete_type = 0) {
+function delete_file(ids, file_type, is_delete= -1, delete_type = 0) {
     let post_data = {
         ids: ids,
         file_type: file_type,
@@ -2659,7 +2659,7 @@ function copy_selected() {
     apps.explorer.copy(ids.file[0]);
 }
 
-function delete_selected(del_type = 1, is_delete= 1, delete_type = 0) {
+function delete_selected(del_type = 1, is_delete= -1, delete_type = 0) {
     if (delete_type === 1 || delete_type === 3) {
         show_modal_cover();
     }
@@ -2710,7 +2710,7 @@ document.getElementById('search-file').addEventListener("keyup", function (event
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'none';
                     $('#win-explorer>.page>.main>.content>.view').addClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['folder_type'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" title="${tmp[i]['name']}"><input type="checkbox" id="check${tmp[i]['id']}"><a class="a files" style="padding-left:0;" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${path}/${tmp[i]['name']}', '${path_id}/${tmp[i]['id']}')"><img src="img/explorer/folder.svg" alt="default" loading="lazy"><div>${tmp[i]['name']}</div></a></div>`;
                         } else {
                             let f_src = icons[tmp[i]['format']] || default_icon;
@@ -2730,7 +2730,7 @@ document.getElementById('search-file').addEventListener("keyup", function (event
                     $('#win-explorer>.page>.main>.content>.header')[0].style.display = 'flex';
                     $('#win-explorer>.page>.main>.content>.view').removeClass("icon-view");
                     for (let i = 0; i < tmp.length; i++) {
-                        if (tmp[i]['folder_type'] === 'folder') {
+                        if (tmp[i]['format'] === 'ffolder') {
                             ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item files" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.goto('${tmp[i]['name']}', '${tmp[i]['id']}')" oncontextmenu="showcm(event,'search.folder',['${tmp[i]['name']}', '${tmp[i]['id']}']);return stop(event);">
                             <span style="width: 40%;"><img style="float: left;" src="img/explorer/folder.svg" alt="folder.svg" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${i18next.t('explore.window.file.list.folder.type.name')}</span>
                             <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
@@ -2978,7 +2978,7 @@ document.getElementById("update_time-sort").addEventListener("click", function (
 
 function queryAllFiles(parent_id, q="", sort_field='update_time', sort_type='desc') {
     let res = [];
-    let url = server + '/file/get/' + parent_id + '?q=' + q + '&sort_field=' + sort_field + '&sort_type=' + sort_type;
+    let url = server + '/file/get?file_id=' + parent_id + '&q=' + q + '&sort_field=' + sort_field + '&sort_type=' + sort_type;
     $.ajax({
         type: "GET",
         url: url,
@@ -3073,7 +3073,7 @@ function upload_file() {
             xhr.onreadystatechange = function() {
                 progressBar.value = success_num;
                 if (xhr.readyState === 4) {
-                    if(xhr.status === 200) {
+                    if(xhr.status === 200 || xhr.status === 201) {
                         let res = JSON.parse(xhr.responseText);
                         if (res['code'] === 0) {
                             success_num += 1;
@@ -3229,7 +3229,7 @@ function modify_nickname() {
     }
     $.ajax({
         type: 'GET',
-        url: server + '/user/modify/nickname/' + nickname,
+        url: server + '/user/modify/nickname?nickname=' + nickname,
         success: function (data) {
             if (data['code'] === 0) {
                 nickName = data['data'];
@@ -3496,7 +3496,7 @@ function get_server_list(event) {
                 data['data'].forEach(item => {
                     s += `<div><div style="width: 16%;">${item['host']}</div><div>${item['port']}</div><div>${item['user']}</div><div style="width: 21%;">${item['system']}</div><div>${item['cpu']}${i18next.t('setting.window.shell.server.list.cpu.core')}</div><div>${item['mem']}G</div><div>${item['disk']}</div><div style="width:15%;"><a href="module/terminal.html?id=${item['id']}&host=${item['host']}&lang=${lang}" style="color:blue;">${i18next.t('setting.window.shell.server.list.action.open')}</a><a href="javascript:void(0);" onclick="delete_server(${item['id']});return false;" style="color:blue;margin-left:15px;">${i18next.t('setting.window.shell.server.list.action.delete')}</a></div></div><br />`;
                 })
-                $('.server-item')[0].innerHTML = s;
+                $('.server>.server-item')[0].innerHTML = s;
                 $('.dp.app-color.server').toggleClass('show');
             } else {
                 $.Toast(data['msg'], 'error');

@@ -353,3 +353,20 @@
 .tools-grid>div:active {
     filter: opacity(0.75);
 }
+
+.server-title>div {
+    width: 9%;
+    float: left;
+    font-weight: bold;
+    text-align: center;
+}
+
+.server-item>div>div {
+    margin-top: 8px;
+    width: 9%;
+    float: left;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

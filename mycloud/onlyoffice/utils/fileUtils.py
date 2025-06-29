@@ -26,7 +26,7 @@ format_manager = FormatManager()
 # get file name from the document url
 def getFileName(uri):
     ind = uri.rfind('/')
-    return uri[ind+1:]
+    return uri[ind + 1:]
 
 
 # get file name without extension from the document url
