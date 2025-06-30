@@ -42,8 +42,8 @@ class ShareController(Controller):
     @get("/get/{file_id: int}", summary="Open share link (打开文件分享链接)")
     async def get_share_file(self, file_id: int, request: Request) -> Union[Stream, Response]:
         try:
-            hh = models.SessionBase(ip=request.headers.get('x-real-ip', ''), lang=request.headers.get('lang', 'en'), username='')
-            result = await views.open_share_file(file_id, hh)
+            h1 = models.SessionBase(ip=request.headers.get('x-real-ip', ''), lang=request.headers.get('lang', 'en'), username='', groupname='')
+            result = await views.open_share_file(file_id, h1)
             if result['type'] == 0:
                 if result["format"] in ['md', 'docu', 'py']:
                     res = Result()
@@ -78,8 +78,8 @@ class ShareController(Controller):
     @get("/export/{file_id: int}", summary="Export file (导出文件)")
     async def export_share_file(self, file_id: int, request: Request) -> Union[Stream, Response]:
         try:
-            hh = models.SessionBase(ip=request.headers.get('x-real-ip', ''), lang=request.headers.get('lang', 'en'), username='')
-            result = await views.open_share_file(file_id, hh)
+            h1 = models.SessionBase(ip=request.headers.get('x-real-ip', ''), lang=request.headers.get('lang', 'en'), username='', groupname='')
+            result = await views.open_share_file(file_id, h1)
             if result['type'] == 0:
                 if result["format"] == 'xmind':
                     file_path = generate_xmind8(result['file_id'], result['name'], result['path'])
