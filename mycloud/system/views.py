@@ -310,7 +310,7 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
 
 async def auto_update():
     try:
-        hh = models.SessionBase(username='system', lang='en', ip='127.0.0.1')
+        hh = models.SessionBase(username='system', lang='en', ip='127.0.0.1', groupname='')
         version = await get_new_version(hh)
         if version.code == 0 and version.data['status'] == 2:
             result = await update_system(hh)
