@@ -347,20 +347,21 @@ async def upload_file_by_path(query: models.ImportLocalFileByPath, hh: models.Se
     try:
         to_folder = FileExplorer.get_one(query.id)
         to_path = to_folder.full_path
-        for file in os.listdir(query.path):
-            file_path = os.path.join(query.path, file)
-            if os.path.isfile(file_path):
+        file_path_list = sorted(os.scandir(query.path), key=lambda x: x.stat().st_mtime)
+        for entry in file_path_list:
+            file_path = entry.path
+            if entry.is_file():
                 try:
                     file_size = os.path.getsize(file_path)
                     shutil.move(file_path, to_path)
-                    file_obj = FileExplorer.create(id=str(int(time.time() * 10000)), name=file, format=file.split('.')[-1].lower(),
+                    file_obj = FileExplorer.create(id=str(int(time.time() * 10000)), name=entry.name, format=entry.name.split('.')[-1].lower(),
                                                    parent_id=to_folder.id, size=file_size, username=hh.groupname)
                     logger.info(f"{Msg.Upload.get_text(hh.lang).format(file_obj.name)}{Msg.Success.get_text(hh.lang)}")
                 except:
                     logger.error(traceback.format_exc())
-                    logger.error(f"{Msg.Upload.get_text(hh.lang).format(file)}{Msg.Failure.get_text(hh.lang)}")
+                    logger.error(f"{Msg.Upload.get_text(hh.lang).format(entry.name)}{Msg.Failure.get_text(hh.lang)}")
             else:
-                folder = FileExplorer.create(id=str(int(time.time() * 10000)), name=file, parent_id=query.id, format='ffolder', username=hh.groupname)
+                folder = FileExplorer.create(id=str(int(time.time() * 10000)), name=entry.name, parent_id=query.id, format='ffolder', username=hh.groupname)
                 folder_path = folder.full_path
                 if not os.path.exists(folder_path):
                     os.mkdir(folder_path)

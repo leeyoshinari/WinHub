@@ -35,8 +35,12 @@ async def get_all_mp3(folder_id: str, hh: models.SessionBase) -> Result:
         music_list = FileExplorer.query(parent_id=folder_id, format='mp3').order_by(desc(FileExplorer.id)).all()
         file_list = []
         for f in music_list:
-            mp3_info = eyed3.load(f.full_path)
-            file_list.append(models.MP3List.from_orm_format(f, beauty_mp3_time(mp3_info.info.time_secs)).model_dump())
+            try:
+                mp3_info = eyed3.load(f.full_path)
+                file_list.append(models.MP3List.from_orm_format(f, beauty_mp3_time(mp3_info.info.time_secs)).model_dump())
+            except:
+                logger.error(f"load {f.full_path} error.")
+                logger.error(traceback.format_exc())
         result.data = file_list
         result.total = len(result.data)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
@@ -70,10 +74,10 @@ async def get_mp3_history(order_by: str, hh: models.SessionBase) -> Result:
 async def set_mp3_history(query: models.MusicHistory, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        try:
-            mp3 = Musics.get_one(query.file_id)
-            Musics.update(mp3, times=mp3.times + 1)
-        except NoResultFound:
+        mp3 = Musics.query(file_id=query.file_id).all()
+        if mp3:
+            Musics.update(mp3[0], times=mp3[0].times + 1)
+        else:
             _ = Musics.create(file_id=query.file_id, name=query.name, singer=query.singer, duration=query.duration, username=hh.username)
         result.msg = Msg.MusicRecord.get_text(hh.lang).format(query.name)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, query.file_id, hh.username, hh.ip))
@@ -87,11 +91,9 @@ async def set_mp3_history(query: models.MusicHistory, hh: models.SessionBase) ->
 async def delete_mp3_history(file_id, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        try:
-            mp3 = Musics.get_one(file_id=file_id)
-            Musics.delete(mp3)
-        except NoResultFound:
-            pass
+        mp3 = Musics.query(file_id=file_id).all()
+        if mp3:
+            Musics.delete(mp3[0])
         result.msg = f"{Msg.Delete.get_text(hh.lang).format(file_id)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
     except:
