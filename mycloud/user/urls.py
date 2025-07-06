@@ -204,7 +204,7 @@ class UserContoller(Controller):
         result = Result()
         try:
             users = User.all().all()
-            result.data = [models.UserList.from_orm_format(f).model_dump() for f in users]
+            result.data = [models.UserList.from_orm_format(f).model_dump() for f in users if f.group_id == hh.groupname and f.id == hh.username] + [models.UserList.from_orm_format(f).model_dump() for f in users if f.group_id == hh.groupname and f.id != hh.username]
             logger.info(Msg.CommonLog.get_text(hh.lang).format("user list", hh.username, hh.ip))
         except:
             logger.error(traceback.format_exc())

@@ -79,7 +79,8 @@ class FileController(Controller):
         try:
             result = await views.download_file(file_id, hh)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
@@ -90,7 +91,8 @@ class FileController(Controller):
         try:
             result = await views.download_file(file_id, hh_url)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
@@ -163,7 +165,8 @@ class FileController(Controller):
             file_size = os.path.getsize(result['path'])
             content_range = f"bytes {start_index}-{file_size-1}/{file_size}"
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(file_size - start_index),
-                       'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path'], start_index=start_index), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=206)
         except:
             logger.error(traceback.format_exc())
@@ -174,7 +177,8 @@ class FileController(Controller):
         try:
             result = await views.export_xmind_file(file_id, hh)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())

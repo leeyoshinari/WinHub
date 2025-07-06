@@ -71,7 +71,8 @@ class OnlyofficeController(Controller):
         if 'path' in result:
             file_name = urllib.parse.quote(os.path.basename(result['path']))
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'attachment;filename="{file_name}"', 'Access-Control-Allow-Origin': '*'}
+                       'Content-Disposition': f'attachment;filename="{file_name}"', 'Access-Control-Allow-Origin': '*',
+                       'content-type': "application/zip"}
             return Stream(result['path'], 200, headers=headers, media_type='application/zip')
         else:
             return Response(json.dumps(result, ensure_ascii=False), media_type='application/json', status_code=200)
@@ -83,7 +84,8 @@ class OnlyofficeController(Controller):
             file_name = os.listdir(folder_path)[0]
             file_path = os.path.join(folder_path, file_name)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(file_path)),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"',
+                       'content-type': "application/octet-stream"}
             logger.info(Msg.Download.get_text(hh.lang).format(file_path))
             return Stream(read_file(file_path), media_type='application/octet-stream', headers=headers)
         except:

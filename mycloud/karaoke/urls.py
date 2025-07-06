@@ -136,7 +136,8 @@ class KaraokeController(Controller):
             file_path = os.path.join(KARAOKE_PATH, file_name)
             file_format = file_name.split('.')[-1]
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(file_path)),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"',
+                       'content-type': f'{CONTENT_TYPE.get(file_format, "application/octet-stream")}'}
             return Stream(read_file(file_path), media_type=CONTENT_TYPE.get(file_format, 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
@@ -149,7 +150,8 @@ class KaraokeController(Controller):
             file_path = os.path.join(KTV_TMP_PATH, file_name)
             file_format = file_name.split('.')[-1]
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(file_path)),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"',
+                       'content-type': f'{CONTENT_TYPE.get(file_format, "application/octet-stream")}'}
             return Stream(read_file(file_path), media_type=CONTENT_TYPE.get(file_format, 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())

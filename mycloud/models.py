@@ -395,6 +395,7 @@ class ChatList(BaseModel):
 
 # 设置健康数据
 class HealthData(BaseModel):
+    username: str
     healthType: int
     value: float
     value1: Optional[float] = None

@@ -629,6 +629,8 @@ let apps = {
                     disk_group = disk_group + '<a class="a item act" ondblclick="apps.explorer.goto(\'' + c['disk'] + ':\'' + ',\'' + c['disk'] + '\')" ontouchend="apps.explorer.goto(\'' + c['disk'] + ':\'' + ',\'' + c['disk'] + '\')"><img src="img/explorer/disk.svg" alt="disk.svg" loading="lazy"><div><p class="name">' + i18next.t('explore.window.file.disk.name') + ' (' + c['disk'] + ':)</p><div class="bar"><div class="content" style="width: ' + c['used'] + '%;"></div></div><p class="info">' + c['free'] + i18next.t('explore.window.file.disk.size') + c['total'] + '</p></div></a>';
                 });
                 document.getElementsByClassName('group')[0].innerHTML = disk_group;
+                $('#item-total').text(res.data.length + 1 + i18next.t('explore.window.menu.item.num.total'));
+                $('#item-selected').text('');
                 if (localStorage.getItem('transparent') === '1') {
                     $('#win-explorer>.page>.main>.content>.view>.group>.item').addClass('transparent');
                 } else {
@@ -712,6 +714,9 @@ let apps = {
                         }
                     }, false);
                 })
+                document.querySelectorAll('#win-explorer>.page>.main>.content>.view>.row>input').forEach(item => {
+                    item.addEventListener('click', () => {displaySelectedNum();})
+                })
             }
         },
         share_list: () => {
@@ -751,6 +756,8 @@ let apps = {
                             })
                             $('#win-explorer>.page>.main-share>.content>.view')[0].innerHTML = ht;
                         }
+                        $('#item-total').text(data['data'].length + i18next.t('explore.window.menu.item.num.total'));
+                        $('#item-selected').text('');
                     } else {
                         $.Toast(data['msg'], 'error');
                     }
@@ -838,6 +845,8 @@ let apps = {
                             })
                             $('#win-explorer>.page>.main-download>.content>.view')[0].innerHTML = ht;
                         }
+                        $('#item-total').text(data['data'].length + i18next.t('explore.window.menu.item.num.total'));
+                        $('#item-selected').text('');
                     } else {
                         $.Toast(data['msg'], 'error');
                     }
@@ -1015,6 +1024,9 @@ let apps = {
                             item.ondblclick(e);
                         }
                     }, false);
+                })
+                document.querySelectorAll('#win-explorer>.page>.main>.content>.view>.row>input').forEach(item => {
+                    item.addEventListener('click', () => {displaySelectedNum();})
                 })
             }
             if (pathl.length === 1) {
@@ -2597,6 +2609,14 @@ function getSelectedIds(is_all = false) {
     return ids;
 }
 
+function displaySelectedNum() {
+    let items = document.querySelectorAll('#win-explorer>.page>.main>.content>.view>.row>input');
+    let item_num = 0;
+    for (let i=0; i<items.length; i++) {if (items[i].checked) {item_num += 1;}}
+    if (item_num === 0) {$('#item-selected').text('');}
+    else {$('#item-selected').text(', ' + item_num + i18next.t('explore.window.menu.item.num.selected'));}
+}
+
 function delete_file(ids, file_type, is_delete= -1, delete_type = 0) {
     let post_data = {
         ids: ids,
@@ -2760,6 +2780,9 @@ document.getElementById('search-file').addEventListener("keyup", function (event
                         }
                     }, false);
                 })
+                document.querySelectorAll('#win-explorer>.page>.main>.content>.view>.row>input').forEach(item => {
+                    item.addEventListener('click', () => {displaySelectedNum();})
+                })
             }
         } else {
             $.Toast(i18next.t('msg.search.file.error1'), "error");
@@ -2839,22 +2862,41 @@ function set_health_window(health_type) {
     }
     if (health_type === 3) {
         $('#notice>.cnt').html(`
-                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
-                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label2)}</label><input id="health_value2" type="text" placeholder="${i18next.t(placeholder2)}" style="width:80%;height:39px;"></div>
+            <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t('user')}</label><select id="health_user" style="width:80%;height:39px;"></select></div>
+            <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
+            <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label2)}</label><input id="health_value2" type="text" placeholder="${i18next.t(placeholder2)}" style="width:80%;height:39px;"></div>
         `);
     } else {
         $('#notice>.cnt').html(`
-                <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
+            <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t('user')}</label><select id="health_user" style="width:80%;height:39px;"></select></div>
+            <div style="margin-top:2%;"><label style="width:80px;display:inline-flex;margin-left:2%;">${i18next.t(label1)}</label><input id="health_value1" type="text" placeholder="${i18next.t(placeholder1)}" style="width:80%;height:39px;"></div>
         `);
     }
     $('#notice>.btns').html(`<a class="a btn main" onclick="set_health_data(${health_type});">${i18next.t('submit')}</a><a class="a btn detail" onclick="closenotice();">${i18next.t('cancel')}</a>`);
     $('#notice-back').addClass('show');
     $('#notice')[0].style.width = '50%';
+    $.ajax({
+        type: 'GET',
+        url: server + '/user/list',
+        success: function(data) {
+            if (data['code'] === 0) {
+                let select_item = document.getElementById('health_user');
+                data['data'].forEach(item => {
+                    let option = new Option(item.nickname, item.id);
+                    select_item.add(option);
+                })
+            } else {
+                $.Toast(data['msg'], 'error');
+            }
+        }
+    })
 }
 
 function set_health_data(health_type) {
     let value = document.getElementById('health_value1').value;
+    let select_user = document.getElementById('health_user').value;
     let post_data = {
+        username: select_user,
         healthType: health_type,
         value: value
     }
@@ -2959,6 +3001,17 @@ document.getElementById("all_files").addEventListener("click", function () {
     for (let i=0; i<items.length; i++) {
         items[i].getElementsByTagName('input')[0].checked = this.checked;
     }
+    let item_num = 0;
+    for (let i=0; i<items.length; i++) {
+        if (items[i].getElementsByTagName('input')[0].checked) {
+            item_num += 1;
+        }
+    }
+    if (item_num === 0) {
+        $('#item-selected').text('');
+    } else {
+        $('#item-selected').text(', ' + item_num + i18next.t('explore.window.menu.item.num.selected'));
+    }
 })
 
 document.getElementById("id-sort").addEventListener("click", function () {
@@ -2991,6 +3044,8 @@ function queryAllFiles(parent_id, q="", sort_field='update_time', sort_type='des
             }
         }
     })
+    $('#item-total').text(res.length + i18next.t('explore.window.menu.item.num.total'));
+    $('#item-selected').text('');
     return res;
 }
 
@@ -3724,29 +3779,46 @@ function health_visualize() {
     $('.window.chart')[0].style.height = '490px';
     $('.window.chart>.titbar>span>.title')[0].innerText = i18next.t("tools.windows.health.chart.title");
     $('#dock-box>.dock>.chart')[0].setAttribute('win12_title', i18next.t("tools.windows.health.chart.title"));
-    let s = `<div style="text-align: center;"><div><select id="health-chart-select" style="height:32px;width:199px;border-radius:10px;opacity:0.5;" onchange="plot_health_chart();">
+    let s = `<div style="text-align: center;"><div><select id="health-chart-user" style="height:32px;width:199px;border-radius:10px;opacity:0.5;margin-right:2%;" onchange="plot_health_chart();"></select><select id="health-chart-select" style="height:32px;width:199px;border-radius:10px;opacity:0.5;" onchange="plot_health_chart();">
             <option value="1">BMI</option><option value="3">${i18next.t("tools.windows.health.bloodPressure")}</option><option value="4">${i18next.t("tools.windows.health.Bloodglucose")}</option><option value="5">${i18next.t("tools.windows.health.spo2.fullname")}</option>
             </select></div><div id="health-chart" style="width:100%;height:400px;margin:0 auto;"></div></div>`;
     document.getElementById("win-chart").innerHTML = s;
-    if ($('#win-chart>script').length < 1) {
-        let script_link = document.createElement('script');
-        script_link.setAttribute('type', 'text/javascript');
-        script_link.setAttribute('src', 'js/plot.chart.js');
-        $('#win-chart')[0].appendChild(script_link);
+    $.ajax({
+        type: 'GET',
+        url: server + '/user/list',
+        success: function(data) {
+            if (data['code'] === 0) {
+                let select_item = document.getElementById('health-chart-user');
+                data['data'].forEach(item => {
+                    let option = new Option(item.nickname, item.id);
+                    select_item.add(option);
+                })
+            } else {
+                $.Toast(data['msg'], 'error');
+                return;
+            }
+            if ($('#win-chart>script').length < 1) {
+                let script_link = document.createElement('script');
+                script_link.setAttribute('type', 'text/javascript');
+                script_link.setAttribute('src', 'js/plot.chart.js');
+                $('#win-chart')[0].appendChild(script_link);
 
-        script_link = document.createElement('script');
-        script_link.setAttribute('type', 'text/javascript');
-        script_link.setAttribute('src', 'js/echarts.common.js');
-        script_link.onload = function() {plot_health_chart();}
-        $('#win-chart')[0].appendChild(script_link);
-    } else {plot_health_chart();}
+                script_link = document.createElement('script');
+                script_link.setAttribute('type', 'text/javascript');
+                script_link.setAttribute('src', 'js/echarts.common.js');
+                script_link.onload = function() {plot_health_chart();}
+                $('#win-chart')[0].appendChild(script_link);
+            } else {plot_health_chart();}
+        }
+    })
 }
 
 function plot_health_chart() {
     let value = document.getElementById('health-chart-select').value;
+    let select_user = document.getElementById('health-chart-user').value;
     $.ajax({
         type: 'GET',
-        url: server + '/health/get/' + value,
+        url: server + '/health/get/' + value + '/' + select_user,
         success: function (data) {
             if (data['code'] === 0) {
                 $('#health-chart').removeAttr("_echarts_instance_").empty();

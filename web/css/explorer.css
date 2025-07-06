@@ -23,6 +23,9 @@
 }
 
 #win-explorer>.page>.menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     min-width: 175px;
     width: 16%;
     height: 100%;
@@ -38,6 +41,13 @@
     padding: 4px;
     box-shadow: 0 1px 2px 1px var(--s3d);
     /* border: 1.5px solid #6f6f6f30; */
+}
+
+#win-explorer>.page>.menu>.item-num>p {
+    text-align: right;
+    font-size: small;
+    margin-bottom: 6px;
+    color: #505257;
 }
 
 #win-explorer>.page>.menu>.card>.title {
