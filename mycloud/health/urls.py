@@ -15,9 +15,9 @@ class HealthController(Controller):
     tags = ['health (健康)']
     dependencies = {"hh": Provide(auth)}
 
-    @get("/get/{health_type: int}", summary="Get all datas (获取所有数据，用于可视化)")
-    async def get_all_data(self, health_type: int, hh: models.SessionBase) -> Result:
-        result = await views.get_all_data(health_type, hh)
+    @get("/get/{health_type: int}/{username: str}", summary="Get all datas (获取所有数据，用于可视化)")
+    async def get_all_data(self, health_type: int, username: str, hh: models.SessionBase) -> Result:
+        result = await views.get_all_data(health_type, username, hh)
         return result
 
     @post("/set", summary="Set health data (设置数据)")

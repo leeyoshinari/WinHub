@@ -65,7 +65,8 @@ class ShareController(Controller):
                     return res
                 else:
                     if os.path.exists(result['path']):
-                        headers = {'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"', 'Cache-Control': 'no-store'}
+                        headers = {'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"', 'Cache-Control': 'no-store',
+                                   'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
                         return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
                     else:
                         return Response(status_code=404, content=HTML404, media_type="text/html")
@@ -85,7 +86,8 @@ class ShareController(Controller):
                     file_path = generate_xmind8(result['file_id'], result['name'], result['path'])
                     result['path'] = file_path
                 headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                           'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                           'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                           'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
                 return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
             else:
                 return Response(status_code=404, content=HTML404, media_type="text/html")

@@ -50,7 +50,8 @@ class ServerController(Controller):
             logger.error(f"{Msg.CommonLog.get_text(hh.lang).format(Msg.SSHExport.get_text(hh.lang), hh.username, hh.ip)}")
             return Result(code=1, msg=Msg.SSHExport.get_text(hh.lang))
         fp = await views.download_file_from_linux(server_id, file_path, hh)
-        headers = {'Accept-Ranges': 'bytes', 'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"'}
+        headers = {'Accept-Ranges': 'bytes', 'Content-Disposition': f'inline;filename="{urllib.parse.quote(file_name)}"',
+                   'content-type': "application/octet-stream"}
         return Stream(fp, media_type='application/octet-stream', headers=headers)
 
     @websocket('/open')

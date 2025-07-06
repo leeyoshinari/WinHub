@@ -79,7 +79,8 @@ class FileController(Controller):
         try:
             result = await views.download_file(file_id, hh)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
@@ -90,7 +91,8 @@ class FileController(Controller):
         try:
             result = await views.download_file(file_id, hh_url)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
@@ -128,22 +130,6 @@ class FileController(Controller):
         result = await views.upload_image(request, hh)
         return result
 
-    # @get("/background/getImage", summary="get image (获取用户背景图片)")
-    # async def get_image(self, request: Request, hh: models.SessionBase) -> Result:
-    #     try:
-    #         image_path = os.path.join(path, 'mycloud/static_files', hh.username + '.jpg')
-    #         if not os.path.exists(image_path):
-    #             image_path = os.path.join(path, 'mycloud/static_files', 'background.jpg')
-    #         last_modify_time = str(os.path.getmtime(image_path))
-    #         if request.headers.get("if-modified-since", "") == last_modify_time:
-    #             return MyResponse(status_code=304, media_type="image/jpeg")
-    #         headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(image_path)),
-    #                    'Content-Disposition': f'inline;filename="{hh.username}.jpg"', 'Last-Modified': last_modify_time}
-    #         return StreamResponse(read_file(image_path), media_type="image/jpeg", headers=headers)
-    #     except:
-    #         logger.error(traceback.format_exc())
-    #         return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
-
     @post("/share", summary="Share file (分享文件)")
     async def share_file(self, data: models.ShareFile, hh: models.SessionBase) -> Result:
         result = await views.share_file(data, hh)
@@ -163,7 +149,8 @@ class FileController(Controller):
             file_size = os.path.getsize(result['path'])
             content_range = f"bytes {start_index}-{file_size-1}/{file_size}"
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(file_size - start_index),
-                       'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path'], start_index=start_index), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=206)
         except:
             logger.error(traceback.format_exc())
@@ -174,7 +161,8 @@ class FileController(Controller):
         try:
             result = await views.export_xmind_file(file_id, hh)
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
-                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
+                       'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
+                       'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
             return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())

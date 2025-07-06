@@ -168,7 +168,7 @@ async def history_list(query_type: str, hh: models.SessionBase) -> Result:
             songs = Karaoke.query(is_sing=2).order_by(desc(Karaoke.update_time)).offset(0).limit(200).all()
             logger.info(f"{Msg.Query.get_text(hh.lang)}{Msg.HistoryRecords.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}")
         elif query_type == "usually":
-            songs = Karaoke.query(is_sing=2).order_by('-times').offset(0).limit(200).all()
+            songs = Karaoke.query(is_sing=2).order_by(desc(Karaoke.times)).offset(0).limit(200).all()
             logger.info(f"{Msg.Query.get_text(hh.lang)}{Msg.HistoryRecords.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}")
         elif query_type == "pendingAll":
             songs = Karaoke.query(is_sing=-1).all()
