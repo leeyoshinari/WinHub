@@ -130,22 +130,6 @@ class FileController(Controller):
         result = await views.upload_image(request, hh)
         return result
 
-    # @get("/background/getImage", summary="get image (获取用户背景图片)")
-    # async def get_image(self, request: Request, hh: models.SessionBase) -> Result:
-    #     try:
-    #         image_path = os.path.join(path, 'mycloud/static_files', hh.username + '.jpg')
-    #         if not os.path.exists(image_path):
-    #             image_path = os.path.join(path, 'mycloud/static_files', 'background.jpg')
-    #         last_modify_time = str(os.path.getmtime(image_path))
-    #         if request.headers.get("if-modified-since", "") == last_modify_time:
-    #             return MyResponse(status_code=304, media_type="image/jpeg")
-    #         headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(image_path)),
-    #                    'Content-Disposition': f'inline;filename="{hh.username}.jpg"', 'Last-Modified': last_modify_time}
-    #         return StreamResponse(read_file(image_path), media_type="image/jpeg", headers=headers)
-    #     except:
-    #         logger.error(traceback.format_exc())
-    #         return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
-
     @post("/share", summary="Share file (分享文件)")
     async def share_file(self, data: models.ShareFile, hh: models.SessionBase) -> Result:
         result = await views.share_file(data, hh)
