@@ -179,9 +179,10 @@ async def write_aria2c_task_to_db(gid, parent_id):
                 file_path = files[0]['path']
                 file_name = os.path.basename(file_path)
                 folder = FileExplorer.get_one(parent_id)
+                file_size = os.path.getsize(file_path)
                 shutil.move(file_path, folder.full_path)
                 file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
-                                           parent_id=parent_id, size=os.path.getsize(file_path), username=folder.username)
+                                           parent_id=parent_id, size=file_size, username=folder.username)
                 logger.info(f"{file.id} - {file.name}")
                 aria2c_downloader.update_task(gid, "cancel")
                 aria2c_downloader.delete_gid_dict(gid)

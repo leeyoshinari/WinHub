@@ -147,6 +147,7 @@ logs/
 sqlite3.db
 sqlite3.db-shm
 sqlite3.db-wal
+.DS_Store
 string*/
 demo/
 highlight/
