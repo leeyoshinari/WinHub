@@ -8,7 +8,7 @@ from litestar.openapi.plugins import SwaggerRenderPlugin
 from contextlib import asynccontextmanager
 from common.calc import modify_prefix, modify_sw, modify_manifest
 from common.scheduler import scheduler
-from settings import PREFIX, HOST, PORT, PWA_URL, FRONT_END_PREFIX
+from settings import PREFIX, HOST, PORT, PWA_URL, FRONT_END_PREFIX, REQUEST_BODY_SIZE
 from mycloud.user.urls import UserContoller
 from mycloud.files.urls import FileController
 from mycloud.folders.urls import FolderController
@@ -57,7 +57,7 @@ async def lifespan(app: Litestar):
 
 render_file = SwaggerRenderPlugin(js_url=f'{FRONT_END_PREFIX}/js/swagger-ui-bundle.js', css_url=f'{FRONT_END_PREFIX}/css/swagger-ui.css')
 openapi_config = OpenAPIConfig(title="WinHub", version="1.0", description="This is API of WinHub.", path=PREFIX + "/schema", render_plugins=[render_file])
-app = Litestar(route_handlers=route_handlers, openapi_config=openapi_config, lifespan=[lifespan], logging_config=None)
+app = Litestar(route_handlers=route_handlers, openapi_config=openapi_config, lifespan=[lifespan], logging_config=None, request_max_body_size=REQUEST_BODY_SIZE * 1024 * 1024 * 1024)
 
 
 if __name__ == "__main__":
