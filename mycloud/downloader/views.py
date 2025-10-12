@@ -180,6 +180,9 @@ async def write_aria2c_task_to_db(gid, parent_id):
                 file_name = os.path.basename(file_path)
                 folder = FileExplorer.get_one(parent_id)
                 file_size = os.path.getsize(file_path)
+                target_file = os.path.join(folder.full_path, file_name)
+                if os.path.exists(target_file):
+                    os.remove(target_file)
                 shutil.move(file_path, folder.full_path)
                 file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
                                            parent_id=parent_id, size=file_size, username=folder.username)
@@ -261,7 +264,7 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
             file_name = os.path.join(TMP_PATH, query.file_name)
         else:
             file_name = os.path.join(TMP_PATH, f"{url_parse.path[1:].replace('/', '-')}.mp4")
-        cmd = ['ffmpeg', '-i', query.url, '-c', 'copy', file_name]
+        cmd = ['ffmpeg', '-i', query.url, '-c', 'copy', '-y', file_name]
         if query.cookie:
             cmd = ['ffmpeg', '-headers', f'Cookie: {query.cookie}', '-i', query.url, '-c', 'copy', file_name]
         Thread(target=run_async_write_m3u8_to_db, args=(cmd, parent_id, file_name,)).start()
@@ -302,6 +305,9 @@ async def write_m3u8_task_to_db(cmd, parent_id, file_path):
         file_name = os.path.basename(file_path)
         folder = FileExplorer.get_one(parent_id)
         file_size = os.path.getsize(file_path)
+        target_file = os.path.join(folder.full_path, file_name)
+        if os.path.exists(target_file):
+            os.remove(target_file)
         shutil.move(file_path, folder.full_path)
         file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
                                    parent_id=parent_id, size=file_size, username=folder.username)
