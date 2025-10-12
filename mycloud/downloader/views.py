@@ -301,9 +301,10 @@ async def write_m3u8_task_to_db(cmd, parent_id, file_path):
     if process.returncode == 0:
         file_name = os.path.basename(file_path)
         folder = FileExplorer.get_one(parent_id)
+        file_size = os.path.getsize(file_path)
         shutil.move(file_path, folder.full_path)
         file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
-                                   parent_id=parent_id, size=os.path.getsize(file_path), username=folder.username)
+                                   parent_id=parent_id, size=file_size, username=folder.username)
         logger.info(f"Download m3u8 completed successfully! fileId: {file.id}, fileName: {file.name}")
     else:
         logger.info(f"Download m3u8 failed with error code: {process.returncode}, fileName: {file_path}")
