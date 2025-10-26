@@ -110,11 +110,12 @@ class KaraokeController(Controller):
 
         async def event_generator() -> AsyncGenerator[str, None]:
             try:
-                while True:
-                    if await request.is_disconnected():
-                        break
-                    message = await client_queue.get()
-                    yield message
+                while request.is_connected:
+                    try:
+                        message = await client_queue.get()
+                        yield message
+                    except:
+                        continue
             except:
                 logger.error(traceback.format_exc())
             finally:
