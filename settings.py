@@ -64,15 +64,12 @@ REQUEST_BODY_SIZE = int(get_config("winHubRequestBodySize"))
 PIP_CMD = get_config("winHubPipCmd")
 TMP_PATH = os.path.join(BASE_PATH, 'tmp')
 KTV_TMP_PATH = os.path.join(TMP_PATH, 'ktv')
-KARAOKE_PATH = os.path.join(ROOT_PATH['D'], 'karaoke_ktv')
 TIME_ZONE = str(tzlocal.get_localzone())
 
 if not os.path.exists(TMP_PATH):
     os.mkdir(TMP_PATH)
 if ENABLE_BACKUP == 1 and not os.path.exists(BACKUP_PATH):
     os.mkdir(BACKUP_PATH)
-if not os.path.exists(KARAOKE_PATH):
-    os.mkdir(KARAOKE_PATH)
 
 CONTENT_TYPE = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'bmp': 'image/bmp', 'png': 'image/png', 'pdf': 'application/pdf',
                 'mp4': 'video/mp4', 'zip': 'application/zip', 'mp3': 'audio/mpeg', 'html': 'text/html', 'py': 'text/x-python',

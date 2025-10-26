@@ -308,34 +308,6 @@ class ShortCutsInfo(BaseModel):
         from_attributes = True
 
 
-# 卡拉OK曲库列表
-class KaraokeList(BaseModel):
-    id: int
-    name: str
-    create_time: str
-
-    class Config:
-        from_attributes = True
-
-    @classmethod
-    def from_orm_format(cls, obj):
-        c = obj.create_time.strftime("%Y-%m-%d %H:%M:%S")
-        # m = obj.update_time.strftime("%Y-%m-%d %H:%M:%S")
-        return cls(id=obj.id, name=obj.name, create_time=c)
-
-
-# 卡拉OK历史记录
-class KaraokeHistoryList(BaseModel):
-    id: int
-    name: str
-    times: int
-    is_sing: int
-    is_top: int
-
-    class Config:
-        from_attributes = True
-
-
 # BT 种子文件下载列表
 class BtFileList(BaseModel):
     index: str
