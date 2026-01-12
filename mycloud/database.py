@@ -185,7 +185,7 @@ class FileExplorer(Base, CRUDBase):
             paths.append(current_node.name)
             current_node = current_node.get(current_node.parent_id)
         return '/'.join(paths[::-1])
-    
+
     @property
     def full_id(self):
         paths = []
