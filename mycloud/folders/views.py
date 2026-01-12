@@ -147,18 +147,11 @@ async def get_file_path(folder_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         folder = FileExplorer.get_one(folder_id)
-        path_id_list = []
-        path_name_list = []
-        while folder.parent:
-            folder = FileExplorer.get(folder.parent_id)
-            if folder.name == hh.username:
-                path_id_list.append(folder.parent_id)
-                path_name_list.append(folder.parent_id + ':')
-                break
-            else:
-                path_name_list.append(folder.name)
-                path_id_list.append(folder.id)
-        result.data = {'name': '/'.join(path_name_list[::-1]), 'id': '/'.join(path_id_list[::-1])}
+        folder_ids = folder.full_id
+        folder_names = folder.full_path
+        disk_no = folder_ids.split('/')[0]
+        position = folder_names.index(hh.groupname)
+        result.data = {'name': disk_no + ':' + folder_names[position + len(hh.groupname)], 'id': folder_ids}
         result.msg = f"{Msg.GetFilePath.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder_id, hh.username, hh.ip))
     except NoResultFound:

@@ -4,7 +4,7 @@
 
 import os
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, BigInteger
-from sqlalchemy.orm import relationship, scoped_session, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import text
 from datetime import datetime
@@ -16,15 +16,14 @@ Base = declarative_base()
 class Database:
     engine = create_engine(DB_URL, echo=False, pool_size=DB_POOL_SIZE, max_overflow=DB_POOL_SIZE * 2, pool_timeout=30, pool_recycle=3600, pool_pre_ping=True, pool_use_lifo=True)
     session_factory = sessionmaker(bind=engine)
-    session = scoped_session(session_factory)
 
     @classmethod
     def get_session(cls):
-        return cls.session()
+        return cls.session_factory()
 
-    @classmethod
-    def close_session(cls):
-        cls.session.remove()
+    # @classmethod
+    # def close_session(cls):
+    #     cls.session.remove()
 
     @classmethod
     def init_db(cls):
@@ -34,31 +33,20 @@ class Database:
 class CRUDBase:
     @classmethod
     def create(cls, **kwargs):
-        session = Database.get_session()
-        try:
-            instance = cls(**kwargs)
-            session.add(instance)
-            session.commit()
+        with Database.get_session() as session:
+            with session.begin():
+                instance = cls(**kwargs)
+                session.add(instance)
             session.refresh(instance)
             return instance
-        except:
-            session.rollback()
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def get(cls, value):
         """
         user = User.get("cat001")
         """
-        session = Database.get_session()
-        try:
+        with Database.get_session() as session:
             return session.get(cls, value)
-        except:
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def get_one(cls, value):
@@ -66,13 +54,8 @@ class CRUDBase:
         If not existed, raise NoResultFound
         user = User.get_one("cat001")
         """
-        session = Database.get_session()
-        try:
+        with Database.get_session() as session:
             return session.get_one(cls, value)
-        except:
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def all(cls):
@@ -80,26 +63,16 @@ class CRUDBase:
         Query all datas.
         users = User.all()
         """
-        session = Database.get_session()
-        try:
+        with Database.get_session() as session:
             return session.query(cls)
-        except:
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def query(cls, **kwargs):
         """
         users = User.query(name="Documents", is_delete=0).all()
         """
-        session = Database.get_session()
-        try:
+        with Database.get_session() as session:
             return session.query(cls).filter_by(**kwargs)
-        except:
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def filter(cls, *filters, **kwargs):
@@ -107,18 +80,13 @@ class CRUDBase:
         users = User.filter(like(Catalog.name, "%Doc%"), is_delete=0).all()
         users = User.filter(or_(User.nickname == "John", User.nickname == "Jane")).all()
         """
-        session = Database.get_session()
-        try:
+        with Database.get_session() as session:
             query = session.query(cls)
             for filter_condition in filters:
                 query = query.filter(filter_condition)
             for key, value in kwargs.items():
                 query = query.filter(getattr(cls, key) == value)
             return query
-        except:
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def filter_condition(cls, equal_condition: dict = None, not_equal_condition: dict = None, like_condition: dict = None):
@@ -126,8 +94,7 @@ class CRUDBase:
         users = User.filter_condition(equal_condition={'status': 1, 'name': '222'}, not_equal_condition={'description': 'temp'})
         SELECT * FROM catuseralog WHERE status = 1 AND name = '222' AND description != 'temp';
         """
-        session = Database.get_session()
-        try:
+        with Database.get_session() as session:
             query = session.query(cls)
             if equal_condition:
                 for column, value in equal_condition.items():
@@ -139,64 +106,41 @@ class CRUDBase:
                 for column, value in not_equal_condition.items():
                     query = query.filter(getattr(cls, column) != value)
             return query
-        except:
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def update(cls, instance, **kwargs):
         """
         updated_user = User.update(user, name="New Name", is_backup=1)
         """
-        session = Database.get_session()
-        try:
-            if instance in session:
-                current_instance = instance
-            else:
-                current_instance = session.merge(instance, load=False)
-            for key, value in kwargs.items():
-                setattr(current_instance, key, value)
-            # session.add(instance)
-            session.commit()
+        with Database.get_session() as session:
+            with session.begin():
+                if instance in session:
+                    current_instance = instance
+                else:
+                    current_instance = session.merge(instance, load=False)
+                for key, value in kwargs.items():
+                    setattr(current_instance, key, value)
             session.refresh(current_instance)
             return current_instance
-        except:
-            session.rollback()
-            raise
-        finally:
-            Database.close_session()
 
     @classmethod
     def batch_update(cls, filter_criteria, update_values):
         """
         User.bulk_update(filter_criteria={"role": "admin"}, update_values={"is_active": True})
         """
-        session = Database.get_session()
-        try:
-            session.query(cls).filter_by(**filter_criteria).update(update_values)
-            session.commit()
-        except:
-            session.rollback()
-            raise
-        finally:
-            Database.close_session()
+        with Database.get_session() as session:
+            with session.begin():
+                session.query(cls).filter_by(**filter_criteria).update(update_values)
 
     @classmethod
     def delete(cls, instance):
         """
         User.delete(user)
         """
-        session = Database.get_session()
-        try:
-            current_instance = session.get(cls, instance.id)
-            session.delete(current_instance)
-            session.commit()
-        except:
-            session.rollback()
-            raise
-        finally:
-            Database.close_session()
+        with Database.get_session() as session:
+            with session.begin():
+                current_instance = session.get(cls, instance.id)
+                session.delete(current_instance)
 
 
 class Group(Base, CRUDBase):
@@ -239,6 +183,15 @@ class FileExplorer(Base, CRUDBase):
         current_node = self
         while current_node:
             paths.append(current_node.name)
+            current_node = current_node.get(current_node.parent_id)
+        return '/'.join(paths[::-1])
+    
+    @property
+    def full_id(self):
+        paths = []
+        current_node = self
+        while current_node:
+            paths.append(current_node.id)
             current_node = current_node.get(current_node.parent_id)
         return '/'.join(paths[::-1])
 

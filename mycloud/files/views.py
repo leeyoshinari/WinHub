@@ -117,11 +117,6 @@ async def rename_file(query: models.FilesBase, hh: models.SessionBase) -> Result
         file = FileExplorer.get_one(query.id)
         file_path = file.full_path
         folder_path = os.path.dirname(file_path)
-        new_file_path = os.path.join(folder_path, query.name)
-        if os.path.exists(new_file_path):
-            raise FileExistsError
-        else:
-            os.rename(file_path, new_file_path)
         if len(file_list) > 1:
             new_file_name = query.name
             new_file_format = file_list[-1].lower()
@@ -131,6 +126,11 @@ async def rename_file(query: models.FilesBase, hh: models.SessionBase) -> Result
                 new_file_name = f"{query.name}.{file.format}"
             else:
                 new_file_name = query.name
+        new_file_path = os.path.join(folder_path, new_file_name)
+        if os.path.exists(new_file_path):
+            raise FileExistsError
+        else:
+            os.rename(file_path, new_file_path)
         FileExplorer.update(file, name=new_file_name, format=new_file_format)
         result.data = query.id
         result.msg = f"{Msg.Rename.get_text(hh.lang).format(file.name)}{Msg.Success.get_text(hh.lang)}"
@@ -184,19 +184,13 @@ async def get_file_by_id(file_id: str, hh: models.SessionBase) -> Result:
 async def get_file_path(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        folder = FileExplorer.get_one(file_id)
-        path_id_list = []
-        path_name_list = []
-        while folder.parent:
-            folder = folder.get_one(folder.id)
-            if folder.name == hh.username:
-                path_id_list.append(folder.parent_id)
-                path_name_list.append(folder.parent_id + ':')
-                break
-            else:
-                path_name_list.append(folder.name)
-                path_id_list.append(folder.id)
-        result.data = {'name': '/'.join(path_name_list[::-1]), 'id': '/'.join(path_id_list[::-1])}
+        file = FileExplorer.get_one(file_id)
+        folder = FileExplorer.get_one(file.parent_id)
+        folder_ids = folder.full_id
+        folder_names = folder.full_path
+        disk_no = folder_ids.split('/')[0]
+        position = folder_names.index(hh.groupname)
+        result.data = {'name': disk_no + ':' + folder_names[position + len(hh.groupname)], 'id': folder_ids}
         result.msg = f"{Msg.GetFilePath.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
     except NoResultFound:

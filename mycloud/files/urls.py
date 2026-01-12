@@ -147,7 +147,7 @@ class FileController(Controller):
             header_range = request.headers.get('range', '0-')
             start_index = int(header_range.strip('bytes=').split('-')[0])
             file_size = os.path.getsize(result['path'])
-            content_range = f"bytes {start_index}-{file_size-1}/{file_size}"
+            content_range = f"bytes {start_index}-{file_size - 1}/{file_size}"
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(file_size - start_index),
                        'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
                        'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
