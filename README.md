@@ -16,7 +16,6 @@ A multi-functional platform integrating file storage, editing, communication, en
 - Support remote connection to Linux server
 - Support peer-to-peer video chat and screen sharing (based on WebRTC)
 - Music player, supports playing music from this cloud-drive (Server) and local (Client)
-- Karaoke, supports building your own song library
 - Integrate aria2, and support multiple download protocols such as HTTP, FTP, BitTorrent, etc.
 - Add game center, supports Snake, tetris games (plans to support more games in the future).
 - Support restart and automatic update

@@ -1544,7 +1544,6 @@ let apps = {
     video: {init: () => {return null;}},
     music: {init: () => {return null;}},
     chat: {init: () => {return null;}},
-    karaoke: {init: () => {return null;}},
     xmind: {init: () => {return null;}},
     sheet: {init: () => {return null;}},
     word: {init: () => {return null;}},
@@ -3442,14 +3441,6 @@ function open_music(file_id) {
     document.getElementsByClassName("music")[0].style.display = 'block';
     document.getElementById("iframe_music").src = 'module/music.html?server=' + server + '&id=' + file_id;
     $('.window.music>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_music").src = 'about:blank';hidewin('music');`);
-}
-
-function open_karaoke() {
-    $('.window.karaoke>.titbar>span>.title')[0].innerText = i18next.t('karaoke');
-    openapp('karaoke');
-    document.getElementsByClassName("karaoke")[0].style.display = 'block';
-    document.getElementById("iframe_karaoke").src = 'module/karaoke/index.html?server=' + server;
-    $('.window.karaoke>.titbar>div>.wbtg.red').attr("onclick", `document.getElementById("iframe_karaoke").src = 'about:blank';hidewin('karaoke');`);
 }
 
 function open_md(file_id) {

@@ -380,11 +380,11 @@ expandAndPickup.addEventListener('click', () => {
     img_src = expandAndPickup.src;
     if (img_src.indexOf("expand.svg") > 1) {
         remoteVideos.style.display = 'none';
-        expandAndPickup.src = "karaoke/img/pickup.svg";
+        expandAndPickup.src = "chat/pickup.svg";
         document.getElementsByClassName("setting-video")[0].style.transform = "translateX(0)";
     } else {
         remoteVideos.style.display = '';
-        expandAndPickup.src = "karaoke/img/expand.svg";
+        expandAndPickup.src = "chat/expand.svg";
         document.getElementsByClassName("setting-video")[0].style.transform = "translateX(17px)";
     }
 })

@@ -264,19 +264,6 @@ class Shortcuts(Base, CRUDBase):
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
-class Karaoke(Base, CRUDBase):
-    __tablename__ = 'karaoke'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(64), nullable=False)
-    status = Column(Integer, default=0)  # 0 - Cannot sing, 1 - Can sing
-    times = Column(Integer, default=0)
-    is_sing = Column(Integer, default=0)  # 0 - Never sung, 1 - Clicked but not sung, 2 - Sung, -1 - Singing now
-    is_top = Column(Integer, default=0)  # 0 - Not pinned, 1 - Pinned
-    create_time = Column(DateTime, default=datetime.now)
-    update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-
-
 class ChatRoom(Base, CRUDBase):
     __tablename__ = 'chat_room'
 

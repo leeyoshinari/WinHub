@@ -21,7 +21,6 @@ from mycloud.onlyoffice.urls import OnlyofficeController
 from mycloud.backup.urls import SyncController
 from mycloud.chat.urls import ChatController
 from mycloud.games.urls import GameController
-from mycloud.karaoke.urls import KaraokeController
 from mycloud.health.urls import HealthController
 from mycloud.database import Database, init_data
 
@@ -44,7 +43,6 @@ route_handlers = [
     Router(path=PREFIX, route_handlers=[SyncController]),
     Router(path=PREFIX, route_handlers=[ChatController]),
     Router(path=PREFIX, route_handlers=[GameController]),
-    Router(path=PREFIX, route_handlers=[KaraokeController]),
     Router(path=PREFIX, route_handlers=[HealthController]),
 ]
 
