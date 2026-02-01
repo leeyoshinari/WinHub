@@ -47,7 +47,7 @@ class SystemController(Controller):
 
     @get("/update/status", summary="Get update status (获取更新状态)")
     async def get_update_status(self, hh: models.SessionBase) -> Result:
-        return Result(code=0, data=views.get_update_status(hh))
+        return Result(code=0, data=await views.get_update_status(hh))
 
     @get("/version", summary="Get newest version (获取最新版本)")
     async def get_version(self, hh: models.SessionBase) -> Result:

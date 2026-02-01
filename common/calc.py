@@ -5,6 +5,7 @@
 import time
 import hashlib
 import os.path
+import aiofiles
 from common.messages import Msg
 
 
@@ -24,10 +25,15 @@ def calc_md5(f):
     return myhash.hexdigest()
 
 
-def calc_file_md5(file_path: str):
-    with open(file_path, 'rb') as f:
-        res = calc_md5(f)
-    return res
+async def calc_file_md5(file_path: str) -> str:
+    async with aiofiles.open(file_path, 'rb') as f:
+        myhash = hashlib.md5()
+        while True:
+            b = await f.read(8096)
+            if not b:
+                break
+            myhash.update(b)
+        return myhash.hexdigest()
 
 
 def time2date(timestamp: int) -> str:
@@ -93,32 +99,32 @@ def beauty_chat_mode(mode: int, lang: str) -> str:
     return Msg.ChatMode.get_text(lang)[mode]
 
 
-def modify_prefix(prefix='/mycloud'):
+async def modify_prefix(prefix='/mycloud'):
     if os.path.exists('web/head.js'):
-        with open('web/head.js', 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+        async with aiofiles.open('web/head.js', 'r', encoding='utf-8') as f:
+            lines = await f.readlines()
         lines[0] = f"const server = '{prefix}';\n"
-        with open('web/head.js', 'w', encoding='utf-8') as f:
-            f.writelines(lines)
+        async with aiofiles.open('web/head.js', 'w', encoding='utf-8') as f:
+            await f.writelines(lines)
 
 
-def modify_sw():
+async def modify_sw():
     current_date = time.strftime("%Y-%m-%d-%H-%M-%S")
     if os.path.exists('web/sw.js'):
-        with open('web/sw.js', 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+        async with aiofiles.open('web/sw.js', 'r', encoding='utf-8') as f:
+            lines = await f.readlines()
         lines[0] = f"const CACHE_NAME = 'winhub-{current_date}';\n"
-        with open('web/sw.js', 'w', encoding='utf-8') as f:
-            f.writelines(lines)
+        async with aiofiles.open('web/sw.js', 'w', encoding='utf-8') as f:
+            await f.writelines(lines)
 
 
-def modify_manifest(pwa_url):
+async def modify_manifest(pwa_url):
     if os.path.exists('web/manifest.json'):
-        with open('web/manifest.json', 'r', encoding='utf-8') as f:
-            lines = f.readlines()
+        async with aiofiles.open('web/manifest.json', 'r', encoding='utf-8') as f:
+            lines = await f.readlines()
         lines[4] = f'    "start_url": "{pwa_url}",\n'
-        with open('web/manifest.json', 'w', encoding='utf-8') as f:
-            f.writelines(lines)
+        async with aiofiles.open('web/manifest.json', 'w', encoding='utf-8') as f:
+            await f.writelines(lines)
 
 
 def parse_pwd(password: str, s: str):

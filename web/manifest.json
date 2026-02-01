@@ -2,7 +2,7 @@
     "name": "WinHub",
     "short_name": "WinHub",
     "display": "standalone",
-    "start_url": "/",
+    "start_url": "https://xx.google.com/Windows",
     "background_color": "#fff",
     "theme_color": "#00000000",
     "scope": "/",

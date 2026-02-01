@@ -29,33 +29,33 @@ class UserContoller(Controller):
         token = request.cookies.get("token", None)
         if not username or username not in TOKENs or token != TOKENs[username]:
             return Result(code=-1)
-        user = User.get(username)
+        user = await User.get(username)
         return Result(data=user.nickname)
 
     @post("/create/group", summary="Create group (创建用户组)")
     async def create_group(self, group_name: str, hh_no: models.SessionBase) -> Result:
         result = Result()
         try:
-            group = Group.get(group_name.strip())
+            group = await Group.get(group_name.strip())
             if group:
                 result.code = 1
                 result.msg = Msg.FileExist.get_text(hh_no.lang).format(group_name)
                 logger.error(f"{result.msg}, IP: {hh_no.ip}")
                 return result
-            group = Group.create(id=group_name)
+            group = await Group.create2return(id=group_name)
             try:
                 for k, v in ROOT_PATH.items():
-                    folder = FileExplorer.get(k)
+                    folder = await FileExplorer.get(k)
                     if not folder:
-                        FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
-                    folder = FileExplorer.get(f"{k}{group.id}")
+                        await FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
+                    folder = await FileExplorer.get(f"{k}{group.id}")
                     if not folder:
-                        FileExplorer.create(id=f"{k}{group.id}", name=group.id, parent_id=k, format='ffolder', username='system')
+                        await FileExplorer.create(id=f"{k}{group.id}", name=group.id, parent_id=k, format='ffolder', username='system')
                     user_path = os.path.join(v, group.id)
                     if not os.path.exists(user_path):
                         os.mkdir(user_path)
             except:
-                Group.delete(group)
+                await Group.query().equal(id=group.id).delete()
                 logger.error(traceback.format_exc())
             result.msg = f"{Msg.Create.get_text(hh_no.lang).format(group.id)}{Msg.Success.get_text(hh_no.lang)}"
             logger.info(f"{result.msg}, IP: {hh_no.ip}")
@@ -78,28 +78,28 @@ class UserContoller(Controller):
                 result.msg = Msg.UserCheckPassword.get_text(hh_no.lang)
                 return result
             try:
-                group = Group.get_one(groupname)
+                group = await Group.get_one(groupname)
             except:
                 result.code = 1
                 result.msg = Msg.FileNotExist.get_text(hh_no.lang).format(groupname)
                 logger.error(f"{result.msg}, IP: {hh_no.ip}")
                 return result
-            user = User.get(username.strip())
+            user = await User.get(username.strip())
             if user:
                 result.code = 1
                 result.msg = Msg.ExistUserError.get_text(hh_no.lang).format(username)
                 logger.error(f"{result.msg}, IP: {hh_no.ip}")
                 return result
             password = str_md5(password)
-            user = User.create(nickname=nickname, id=username, password=password, group_id=group.id)
+            user = await User.create2return(nickname=nickname, id=username, password=password, group_id=group.id)
             try:
                 for k, v in ROOT_PATH.items():
-                    folder = FileExplorer.get(k)
+                    folder = await FileExplorer.get(k)
                     if not folder:
-                        FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
-                    folder = FileExplorer.get(f"{k}{user.group_id}")
+                        await FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
+                    folder = await FileExplorer.get(f"{k}{user.group_id}")
                     if not folder:
-                        FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
+                        await FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
                     user_path = os.path.join(v, user.group_id)
                     if not os.path.exists(user_path):
                         os.mkdir(user_path)
@@ -112,7 +112,7 @@ class UserContoller(Controller):
                 shutil.copy(source_file, target_file)
                 shutil.copy(source_file, login_file)
             except:
-                User.delete(user)
+                await User.query().equal(id=user.id).delete()
                 logger.error(traceback.format_exc())
             result.msg = f"{Msg.CreateUser.get_text(hh_no.lang).format(user.id)}{Msg.Success.get_text(hh_no.lang)}"
             logger.info(f"{result.msg}, IP: {hh_no.ip}")
@@ -130,8 +130,8 @@ class UserContoller(Controller):
                 result.code = 1
                 result.msg = Msg.UserCheckPassword.get_text(hh.lang)
                 return result
-            user = User.get(data.username)
-            User.update(user, password=str_md5(parse_pwd(data.password, data.t)))
+            user = await User.get(data.username)
+            await User.update(user.id, password=str_md5(parse_pwd(data.password, data.t)))
             result.msg = f"{Msg.ModifyPwd.get_text(hh.lang).format(user.id)}{Msg.Success.get_text(hh.lang)}"
             logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
         except:
@@ -144,8 +144,8 @@ class UserContoller(Controller):
     async def modify_nickname(self, nickname: str, hh: models.SessionBase) -> Result:
         result = Result()
         try:
-            user = User.get(hh.username)
-            user = User.update(user, nickname=nickname)
+            user = await User.get(hh.username)
+            await User.update(user.id, nickname=nickname)
             result.data = nickname
             result.msg = f"{Msg.ModifyStr.get_text(hh.lang).format(user.nickname)}{Msg.Success.get_text(hh.lang)}"
             logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -159,15 +159,15 @@ class UserContoller(Controller):
     async def login(self, data: models.UserBase, hh_no: models.SessionBase) -> Result:
         result = Result()
         try:
-            user = User.get(data.username)
+            user = await User.get(data.username)
             if user and user.password == str_md5(parse_pwd(data.password, data.t)):
                 for k, v in ROOT_PATH.items():
-                    folder = FileExplorer.get(k)
+                    folder = await FileExplorer.get(k)
                     if not folder:
-                        FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
-                    folder = FileExplorer.get(f"{k}{user.group_id}")
+                        await FileExplorer.create(id=k, parent=None, name=v, format='ffolder', username='system')
+                    folder = await FileExplorer.get(f"{k}{user.group_id}")
                     if not folder:
-                        FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
+                        await FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
                     user_path = os.path.join(v, user.group_id)
                     if not os.path.exists(user_path):
                         os.mkdir(user_path)
@@ -203,7 +203,7 @@ class UserContoller(Controller):
     async def user_list(self, hh: models.SessionBase) -> Result:
         result = Result()
         try:
-            users = User.all().all()
+            users = await User.query().all()
             result.data = [models.UserList.from_orm_format(f).model_dump() for f in users if f.group_id == hh.groupname and f.id == hh.username] + [models.UserList.from_orm_format(f).model_dump() for f in users if f.group_id == hh.groupname and f.id != hh.username]
             logger.info(Msg.CommonLog.get_text(hh.lang).format("user list", hh.username, hh.ip))
         except:
@@ -215,8 +215,8 @@ class UserContoller(Controller):
     async def delete_user(self, hh: models.SessionBase) -> Result:
         result = Result()
         try:
-            user = User.get_one(hh.username)
-            User.delete(user)
+            user = await User.get_one(hh.username)
+            await User.query().equal(id=user.id).delete()
             logger.info(Msg.CommonLog1.get_text(hh.lang).format("Delete user", hh.username, hh.username, hh.ip))
         except:
             logger.error(traceback.format_exc())
@@ -227,7 +227,7 @@ class UserContoller(Controller):
     async def group_list(self, hh: models.SessionBase) -> Result:
         result = Result()
         try:
-            groups = Group.all().all()
+            groups = await Group.query().all()
             result.data = [models.GroupList.from_orm_format(f).model_dump() for f in groups]
             logger.info(Msg.CommonLog.get_text(hh.lang).format("Group list", hh.username, hh.ip))
         except:
@@ -239,7 +239,7 @@ class UserContoller(Controller):
     async def group_user(self, groupname: str, hh: models.SessionBase) -> Result:
         result = Result()
         try:
-            users = User.query(group_id=groupname).all()
+            users = await User.query().equal(group_id=groupname).all()
             result.data = [models.UserList.from_orm_format(f).model_dump() for f in users]
             logger.info(Msg.CommonLog.get_text(hh.lang).format("Group list", hh.username, hh.ip))
         except:

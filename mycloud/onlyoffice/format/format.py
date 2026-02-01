@@ -15,6 +15,7 @@
 #
 
 import os
+import aiofiles
 from msgspec.json import decode
 from msgspec import Struct
 from settings import BASE_PATH
@@ -32,33 +33,33 @@ class Format(Struct):
 
 
 class FormatManager():
-    def fillable_extensions(self) -> list[str]:
-        formats = self.fillable()
+    async def fillable_extensions(self) -> list[str]:
+        formats = await self.fillable()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def fillable(self) -> list[Format]:
-        formats = self.all()
+    async def fillable(self) -> list[Format]:
+        formats = await self.all()
         filtered = filter(lambda format: 'fill' in format.actions, formats)
         return list(filtered)
 
-    def viewable_extensions(self) -> list[str]:
-        formats = self.viewable()
+    async def viewable_extensions(self) -> list[str]:
+        formats = await self.viewable()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def viewable(self) -> list[Format]:
-        formats = self.all()
+    async def viewable(self) -> list[Format]:
+        formats = await self.all()
         filtered = filter(lambda format: 'view' in format.actions, formats)
         return list(filtered)
 
-    def editable_extensions(self) -> list[str]:
-        formats = self.editable()
+    async def editable_extensions(self) -> list[str]:
+        formats = await self.editable()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def editable(self) -> list[Format]:
-        formats = self.all()
+    async def editable(self) -> list[Format]:
+        formats = await self.all()
         filtered = filter(
             lambda format: (
                 'edit' in format.actions or
@@ -68,13 +69,13 @@ class FormatManager():
         )
         return list(filtered)
 
-    def convertible_extensions(self) -> list[str]:
-        formats = self.convertible()
+    async def convertible_extensions(self) -> list[str]:
+        formats = await self.convertible()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def convertible(self) -> list[Format]:
-        formats = self.all()
+    async def convertible(self) -> list[Format]:
+        formats = await self.all()
         filtered = filter(
             lambda format: (
                 'auto-convert' in format.actions
@@ -83,43 +84,43 @@ class FormatManager():
         )
         return list(filtered)
 
-    def spreadsheet_extensions(self) -> list[str]:
-        formats = self.spreadsheets()
+    async def spreadsheet_extensions(self) -> list[str]:
+        formats = await self.spreadsheets()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def spreadsheets(self) -> list[Format]:
-        formats = self.all()
+    async def spreadsheets(self) -> list[Format]:
+        formats = await self.all()
         filtered = filter(lambda format: format.type == 'cell', formats)
         return list(filtered)
 
-    def presentation_extensions(self) -> list[str]:
-        formats = self.presentations()
+    async def presentation_extensions(self) -> list[str]:
+        formats = await self.presentations()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def presentations(self) -> list[Format]:
-        formats = self.all()
+    async def presentations(self) -> list[Format]:
+        formats = await self.all()
         filtered = filter(lambda format: format.type == 'slide', formats)
         return list(filtered)
 
-    def document_extensions(self) -> list[str]:
-        formats = self.documents()
+    async def document_extensions(self) -> list[str]:
+        formats = await self.documents()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def documents(self) -> list[Format]:
-        formats = self.all()
+    async def documents(self) -> list[Format]:
+        formats = await self.all()
         filtered = filter(lambda format: format.type == 'word', formats)
         return list(filtered)
 
-    def all_extensions(self) -> list[str]:
-        formats = self.all()
+    async def all_extensions(self) -> list[str]:
+        formats = await self.all()
         mapped = map(lambda format: format.extension(), formats)
         return list(mapped)
 
-    def all(self) -> list[Format]:
+    async def all(self) -> list[Format]:
         file_path = os.path.join(BASE_PATH, 'onlyoffice-formats.json')
-        with open(file_path, 'r', encoding='utf-8') as file:
-            contents = file.read()
+        async with aiofiles.open(file_path, 'r', encoding='utf-8') as file:
+            contents = await file.read()
             return decode(contents, type=list[Format])

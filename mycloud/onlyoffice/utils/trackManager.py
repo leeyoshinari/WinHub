@@ -19,7 +19,8 @@
 import json
 import os
 import shutil
-import requests
+import aiofiles
+from common.httpRequest import http
 from mycloud.onlyoffice.configuration.configuration import ConfigurationManager
 from . import jwtManager, docManager, historyManager, fileUtils, serviceConverter
 
@@ -28,7 +29,7 @@ config_manager = ConfigurationManager()
 
 
 # file saving process
-def processSave(body, filename, file_path, file_id: str):
+async def processSave(body, filename, file_path, file_id: str):
     # body = resolve_process_save_body(raw_body)
     download = body.get('url')
     if download is None:
@@ -67,14 +68,14 @@ def processSave(body, filename, file_path, file_id: str):
     # get the path to the previous file version and rename the storage path with it
     shutil.copy2(file_path, historyManager.getPrevFilePath(versionDir, curExt))
 
-    docManager.saveFile(data, file_path)
+    await docManager.saveFile(data, file_path)
 
     if changesUri:
         dataChanges = docManager.downloadFileFromUri(changesUri)  # download changes file
         if dataChanges is None:
             raise Exception("Downloaded changes is null")
         # save file changes to the diff.zip archive
-        docManager.saveFile(dataChanges, historyManager.getChangesZipPath(versionDir))
+        await docManager.saveFile(dataChanges, historyManager.getChangesZipPath(versionDir))
 
     hist = body.get('changeshistory')
     if (not hist) & ('history' in body):
@@ -91,7 +92,7 @@ def processSave(body, filename, file_path, file_id: str):
 
 
 # file force saving process
-def processForceSave(body, filename, file_path, file_id):
+async def processForceSave(body, filename, file_path, file_id):
     download = body.get('url')
     if download is None:
         raise Exception("DownloadUrl is null")
@@ -128,7 +129,7 @@ def processForceSave(body, filename, file_path, file_id):
             filename = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + downloadExt, file_id)
         forcesavePath = file_path
 
-    docManager.saveFile(data, forcesavePath)  # save document file
+    await docManager.saveFile(data, forcesavePath)  # save document file
 
     if isSubmitForm:
         uid = body['actions'][0]['userid']  # get the user id
@@ -144,14 +145,14 @@ def processForceSave(body, filename, file_path, file_id):
             if forms_data is None:
                 raise Exception("Document editing service didn't return forms_data")
             else:
-                with open(data_path, 'w') as file:
-                    file.write(forms_data.text)
+                async with aiofiles.open(data_path, 'w') as file:
+                    await file.write(forms_data.text)
         else:
             raise Exception('Document editing service did not return forms_data_url')
 
 
 # create a command request
-def commandRequest(method, key, meta=None):
+async def commandRequest(method, key, meta=None):
     payload = {'c': method, 'key': key}
     if meta:
         payload['meta'] = meta
@@ -164,8 +165,8 @@ def commandRequest(method, key, meta=None):
         headers[config_manager.jwt_header()] = f'Bearer {headerToken}'
 
         payload['token'] = jwtManager.encode(payload)  # encode a payload object into a body token
-    response = requests.post(config_manager.document_server_command_url().geturl(), json=payload, headers=headers,
-                             verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
+    response = await http.post(config_manager.document_server_command_url().geturl(), json=payload, headers=headers,
+                               verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
 
     if meta:
         return response

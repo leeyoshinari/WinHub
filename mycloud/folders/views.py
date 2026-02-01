@@ -44,9 +44,10 @@ async def get_folders_by_id(folder_id: str, hh: models.SessionBase) -> Result:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        folders = FileExplorer.filter_condition(equal_condition={'parent_id': folder_id, 'format': 'ffolder'}, not_equal_condition={'status': -1}).all()
+        folders = await FileExplorer.query().equal(parent_id=folder_id, format='ffolder').not_equal(status=-1).all()
         folder_list = [models.CatalogGetInfo.model_validate(f) for f in folders if f.id.startswith(tuple('123456789'))]
-        folder_path = FileExplorer.get_one(folder_id).full_path
+        folder = await FileExplorer.get_one(folder_id)
+        folder_path = await folder.full_path()
         for k, v in ROOT_PATH.items():
             tmp1 = folder_path.replace('\\', '/')
             tmp2 = v.replace('\\', '/') + '/' + hh.groupname
@@ -74,10 +75,11 @@ async def create_folder(parent_id: str, hh: models.SessionBase) -> Result:
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        folder = FileExplorer.create(id=str(int(time.time() * 10000)), name=Msg.Folder.get_text(hh.lang), parent_id=parent_id, format='ffolder', username=hh.groupname)
-        folder_path = FileExplorer.get_one(folder.id).full_path
+        folder = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=Msg.Folder.get_text(hh.lang), parent_id=parent_id, format='ffolder', username=hh.groupname)
+        folder_p = await FileExplorer.get_one(folder.id)
+        folder_path = await folder_p.full_path()
         if os.path.exists(folder_path):
-            FileExplorer.delete(folder)
+            await FileExplorer.query().equal(id=folder.id).delete()
             raise FileExistsError
         else:
             os.mkdir(folder_path)
@@ -97,14 +99,14 @@ async def create_folder(parent_id: str, hh: models.SessionBase) -> Result:
 async def rename_folder(query: models.FilesBase, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        folder = FileExplorer.get_one(query.id)
-        folder_path = folder.full_path
+        folder = await FileExplorer.get_one(query.id)
+        folder_path = await folder.full_path()
         new_path = os.path.join(os.path.dirname(folder_path), query.name)
         if os.path.exists(new_path):
             raise FileExistsError
         else:
             os.rename(folder_path, new_path)
-            FileExplorer.update(folder, name=query.name)
+            await FileExplorer.update(folder.id, name=query.name)
         result.data = query.id
         result.msg = f"{Msg.Rename.get_text(hh.lang).format(query.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip))
@@ -127,13 +129,14 @@ async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) ->
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        to_path = FileExplorer.get_one(query.to_id).full_path
+        folder_p = await FileExplorer.get_one(query.to_id)
+        to_path = await folder_p.full_path()
         for folder_id in query.from_ids:
             if folder_id == query.to_id:
                 continue
-            folder = FileExplorer.get_one(folder_id)
-            shutil.move(folder.full_path, to_path)
-            FileExplorer.update(folder, parent_id=query.to_id)
+            folder = await FileExplorer.get_one(folder_id)
+            shutil.move(await folder.full_path(), to_path)
+            await FileExplorer.update(folder.id, parent_id=query.to_id)
         result.msg = f"{Msg.Move.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:
@@ -146,9 +149,9 @@ async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) ->
 async def get_file_path(folder_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        folder = FileExplorer.get_one(folder_id)
-        folder_ids = folder.full_id
-        folder_names = folder.full_path
+        folder = await FileExplorer.get_one(folder_id)
+        folder_ids = await folder.full_id()
+        folder_names = await folder.full_path()
         disk_no = folder_ids.split('/')[0]
         position = folder_names.index(hh.groupname)
         result.data = {'name': disk_no + ':' + folder_names[position + len(hh.groupname)], 'id': folder_ids}
@@ -170,29 +173,29 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
     try:
         if query.delete_type == 0:      # 软删除 或者 从回收站还原
             for file_id in query.ids:
-                folder = FileExplorer.get_one(file_id)
-                FileExplorer.update(folder, status=query.is_delete)
+                folder = await FileExplorer.get_one(file_id)
+                await FileExplorer.update(folder.id, status=query.is_delete)
                 logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(folder.name) + Msg.Success.get_text(hh.lang), folder.id, hh.username, hh.ip))
 
         if query.delete_type == 1 or query.delete_type == 2:       # 硬删除，从回收站彻底删除
             if query.file_type == 'folder':
-                folders = FileExplorer.filter(FileExplorer.id.in_(query.ids)).all()
+                folders = await FileExplorer.query().isin(id=query.ids).all()
                 for folder in folders:
                     try:
-                        folder_path = folder.full_path
+                        folder_path = await folder.full_path()
                         shutil.rmtree(folder_path)
                     except FileNotFoundError:
                         result.code = 1
                         result.msg = Msg.FileNotExist.get_text(hh.lang).format(folder.name)
                         logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip))
                         logger.error(traceback.format_exc())
-                    FileExplorer.delete(folder)
+                    await FileExplorer.query().equal(id=folder.id).delete()
                     logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(folder.name) + Msg.Success.get_text(hh.lang), folder.id, hh.username, hh.ip))
             if query.file_type == 'file':
-                files = FileExplorer.filter(FileExplorer.id.in_(query.ids)).all()
+                files = await FileExplorer.query().isin(id=query.ids).all()
                 for file in files:
                     try:
-                        os.remove(file.full_path)
+                        os.remove(await file.full_path())
                         if file.format in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
                             remove(file.id, hh)
                     except FileNotFoundError:
@@ -200,7 +203,7 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
                         result.msg = Msg.FileNotExist.get_text(hh.lang).format(file.name)
                         logger.error(Msg.CommonLog1.get_text(hh.lang).format(Msg.FileNotExist.get_text(hh.lang).format(file.name), file.id, hh.username, hh.ip))
                         logger.error(traceback.format_exc())
-                    FileExplorer.delete(file)
+                    await FileExplorer.query().equal(id=file.id).delete()
                     logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Delete.get_text(hh.lang).format(file.name) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip))
 
         if query.delete_type == 0 and query.is_delete == 0:

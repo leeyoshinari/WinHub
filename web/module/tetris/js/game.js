@@ -391,7 +391,7 @@ var Game = function()
 					let scoreList = data.data;
 					let rankString = '';
 					for(let i=0; i<scoreList.length; i++){
-						rankString += '<p><span class="user-name">' + scoreList[i].name + '</span>:<span class="score-num">' + scoreList[i].score + '</span></p>';
+						rankString += '<p><span class="user-name">' + scoreList[i].username + '</span>:<span class="score-num">' + scoreList[i].score + '</span></p>';
 					}
 					document.getElementsByClassName('ranking')[0].innerHTML = rankString;
 				} else {

@@ -33,11 +33,11 @@ async def start_backup(hh: models.SessionBase) -> Result:
 
 async def start_sync(username: str = None):
     if username:
-        folders = FileExplorer.query(username=username, status=99).all()
+        folders = await FileExplorer.query().equal(username=username, status=99).all()
     else:
-        folders = FileExplorer.query(status=99).all()
+        folders = await FileExplorer.query().equal(status=99).all()
     for folder in folders:
-        folder_path = folder.full_path
+        folder_path = await folder.full_path()
         for k, v in ROOT_PATH.items():
             if folder_path.startswith(v):
                 relative_path = folder_path[len(v) + 1:]
@@ -55,7 +55,7 @@ async def index_backup(hh: models.SessionBase) -> Result:
         result.msg = Msg.SyncDataNo.get_text(hh.lang)
         return result
     try:
-        folders = FileExplorer.query(username=hh.groupname, status=99).all()
+        folders = await FileExplorer.query().equal(username=hh.groupname, status=99).all()
         folder_list = [models.FolderList.from_orm_format(f).model_dump() for f in folders if f.id.startswith(tuple('123456789'))]
         result.data = folder_list
         result.total = len(result.data)
@@ -76,8 +76,7 @@ async def add_backup(folder_id: str, is_backup: int, hh: models.SessionBase) -> 
         return result
     try:
         is_backup = 1 if is_backup > 0 else 0
-        folder = FileExplorer.get_one(folder_id)
-        FileExplorer.update(folder, status=99)
+        await FileExplorer.update(folder_id, status=99)
         result.msg = f"{Msg.Setting.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder_id, hh.username, hh.ip))
     except:

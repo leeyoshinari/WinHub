@@ -1,4 +1,4 @@
-const CACHE_NAME = 'winhub';
+const CACHE_NAME = 'winhub-2026-02-01-17-38-28';
 const staticFileExtensions = ['/img/', '/css/', '/js/', '.html', '.json', '/module/', 'head.js', 'sw.js'];
 const excludeFiles = ['/background.jpg', '/avatar.jpg'];
 const regex = new RegExp(`(${staticFileExtensions.join('|').replace(/\./g, '\\.')})`, 'i');

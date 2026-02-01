@@ -27,9 +27,9 @@ class MusicController(Controller):
 
     @get("/history/get/{flag: int}", summary="query music history list (查询播放历史列表)")
     async def get_music_history_list(self, flag: int, hh: models.SessionBase) -> Result:
-        order_by = 'update_time'
+        order_by = '-update_time'
         if flag == 2:
-            order_by = 'times'
+            order_by = '-times'
         result = await views.get_mp3_history(order_by, hh)
         return result
 

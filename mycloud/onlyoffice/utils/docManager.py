@@ -19,8 +19,9 @@
 import os
 import shutil
 import re
-import requests
+import aiofiles
 from settings import ONLYOFFICE_SERVER
+from common.httpRequest import http
 from mycloud.onlyoffice.configuration.configuration import ConfigurationManager
 from mycloud.onlyoffice.format.format import FormatManager
 from . import fileUtils
@@ -30,28 +31,28 @@ config_manager = ConfigurationManager()
 format_manager = FormatManager()
 
 
-def isCanFillForms(ext):
-    return ext in format_manager.fillable_extensions()
+async def isCanFillForms(ext):
+    return ext in await format_manager.fillable_extensions()
 
 
 # check if the file extension can be viewed
-def isCanView(ext):
-    return ext in format_manager.viewable_extensions()
+async def isCanView(ext):
+    return ext in await format_manager.viewable_extensions()
 
 
 # check if the file extension can be edited
-def isCanEdit(ext):
-    return ext in format_manager.editable_extensions()
+async def isCanEdit(ext):
+    return ext in await format_manager.editable_extensions()
 
 
 # check if the file extension can be converted
-def isCanConvert(ext):
-    return ext in format_manager.convertible_extensions()
+async def isCanConvert(ext):
+    return ext in await format_manager.convertible_extensions()
 
 
 # check if the file extension is supported by the editor (it can be viewed or edited or converted)
-def isSupportedExt(ext):
-    return isCanView(ext) | isCanEdit(ext) | isCanConvert(ext) | isCanFillForms(ext)
+async def isSupportedExt(ext):
+    return await isCanView(ext) | await isCanEdit(ext) | await isCanConvert(ext) | await isCanFillForms(ext)
 
 
 # get internal extension for a given file type
@@ -158,22 +159,22 @@ def getForcesavePath(filename, file_id: str, create):
 
 
 # save file
-def saveFile(response, path):
-    with open(path, 'wb') as file:
+async def saveFile(response, path):
+    async with aiofiles.open(path, 'wb') as file:
         for chunk in response.iter_content(chunk_size=8192):
-            file.write(chunk)
+            await file.write(chunk)
 
 
 # download file from the given url
-def downloadFileFromUri(uri, path=None, withSave=False):
-    resp = requests.get(uri, stream=True, verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
+async def downloadFileFromUri(uri, path=None, withSave=False):
+    resp = await http.get(uri, stream=True, verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
     status_code = resp.status_code
     if status_code != 200:  # checking status code
         raise RuntimeError(f'Document editing service returned status: {status_code}')
     if withSave:
         if path is None:
             raise RuntimeError('Path for saving file is null')
-        saveFile(resp, path)
+        await saveFile(resp, path)
     return resp
 
 

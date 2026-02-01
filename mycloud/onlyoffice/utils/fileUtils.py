@@ -44,13 +44,13 @@ def getFileExt(uri):
 
 
 # get file type
-def getFileType(uri):
+async def getFileType(uri):
     ext = getFileExt(uri)
-    if ext in format_manager.document_extensions():
+    if ext in await format_manager.document_extensions():
         return 'word'
-    if ext in format_manager.spreadsheet_extensions():
+    if ext in await format_manager.spreadsheet_extensions():
         return 'cell'
-    if ext in format_manager.presentation_extensions():
+    if ext in await format_manager.presentation_extensions():
         return 'slide'
 
     return 'word'  # default file type is word

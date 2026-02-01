@@ -7,6 +7,7 @@ import json
 import time
 import shutil
 import traceback
+import aiofiles
 from datetime import datetime
 from litestar import Request
 from common.logging import logger
@@ -36,16 +37,16 @@ async def track(file_id: str, body: str, hh: models.SessionBase):
                 user = body['actions'][0]['userid']  # the user who finished editing
                 if user not in body['users']:
                     # create a command request with the forcasave method
-                    trackManager.commandRequest('forcesave', body['key'])
+                    await trackManager.commandRequest('forcesave', body['key'])
 
-        file = FileExplorer.get_one(file_id)
-        file_path = file.full_path
+        file = await FileExplorer.get_one(file_id)
+        file_path = await file.full_path()
 
         if (status == 2) | (status == 3):  # mustsave, corrupted
-            trackManager.processSave(body, file.name, file_path, file_id)
+            await trackManager.processSave(body, file.name, file_path, file_id)
         if (status == 6) | (status == 7):  # mustforcesave, corruptedforcesave
-            trackManager.processForceSave(body, file.name, file_path, file_id)
-        FileExplorer.update(file, size=os.path.getsize(file_path))
+            await trackManager.processForceSave(body, file.name, file_path, file_id)
+        await FileExplorer.update(file.id, size=os.path.getsize(file_path))
 
     except:
         logger.error(traceback.format_exc())
@@ -63,17 +64,17 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
         request_url = request.headers.get('referer')
         url_list = request_url.split('/')
         request_host = f"{url_list[0]}//{url_list[2]}"
-        file = FileExplorer.get_one(file_id)
+        file = await FileExplorer.get_one(file_id)
         filename = file.name
         ext = fileUtils.getFileExt(filename)
-        docKey = docManager.generateFileKey(file.full_path)
-        fileType = fileUtils.getFileType(filename)
+        docKey = docManager.generateFileKey(await file.full_path())
+        fileType = await fileUtils.getFileType(filename)
 
         # get the editor mode: view/edit/review/comment/fillForms/embedded (the default mode is edit)
         edMode = 'edit' if hh.username else 'view'
-        canEdit = docManager.isCanEdit(ext)  # check if the file with this extension can be edited
+        canEdit = await docManager.isCanEdit(ext)  # check if the file with this extension can be edited
 
-        if (((not canEdit) and edMode == 'edit') or edMode == 'fillForms') and docManager.isCanFillForms(ext):
+        if (((not canEdit) and edMode == 'edit') or edMode == 'fillForms') and await docManager.isCanFillForms(ext):
             edMode = 'fillForms'
             canEdit = True
         # if the Submit form button is displayed or hidden
@@ -229,15 +230,15 @@ async def rename(file_id: str, body: str, hh: models.SessionBase):
 
         dockey = body['dockey']
         meta = {'title': newfilename}
-        file = FileExplorer.get_one(file_id)
-        file_path = file.full_path
+        file = await FileExplorer.get_one(file_id)
+        file_path = await file.full_path()
         folder_path = os.path.dirname(file_path)
         if os.path.exists(file_path):
             raise FileExistsError
         else:
             os.rename(file_path, os.path.join(folder_path, newfilename))
-            FileExplorer.update(file, name=newfilename, format=body['ext'])
-        response.setdefault('result', trackManager.commandRequest('meta', dockey, meta).json())
+            await FileExplorer.update(file.id, name=newfilename, format=body['ext'])
+        response.setdefault('result', json.loads(await trackManager.commandRequest('meta', dockey, meta).text))
         logger.info(f"{Msg.Rename.get_text(hh.lang).format(file_id)} {Msg.Success.get_text(hh.lang)}")
     except:
         logger.error(traceback.format_exc())
@@ -253,7 +254,7 @@ async def save_as(file_id, body: str, hh: models.SessionBase):
         title = body['title']
         filename = docManager.getCorrectName(title, file_id)
         curExt = fileUtils.getFileExt(filename)
-        if not docManager.isSupportedExt(curExt):  # check if the file extension is supported by the document manager
+        if not await docManager.isSupportedExt(curExt):  # check if the file extension is supported by the document manager
             response.setdefault('error', Msg.FileTypeNotSupport.get_text(hh.lang))
             raise Exception(Msg.FileTypeNotSupport.get_text(hh.lang))
 
@@ -294,9 +295,9 @@ async def history_obj(file_id: str, request: Request, body: str, hh: models.Sess
             logger.error(Msg.FileNotExist.get_text(hh.lang).format(file_id))
             return json.dumps(response, ensure_ascii=False)
 
-        file = FileExplorer.get_one(file_id)
+        file = await FileExplorer.get_one(file_id)
         storage_path = docManager.getStoragePath(file_id, file_id)
-        doc_key = docManager.generateFileKey(file.full_path)
+        doc_key = docManager.generateFileKey(await file.full_path())
         file_url = f"{request_host}/file/onlyoffice/{file_id}?token={TOKENs[hh.username]}&u={hh.username}&g={hh.groupname}&lang={hh.lang}"
         response = historyManager.getHistoryObject(storage_path, file.name, doc_key, file_url, False, file_id, request_host)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.HistoryRecord.get_text(hh.lang), file_id, hh.username, hh.ip))
@@ -322,10 +323,10 @@ async def download_history(file_id: str, request: Request):
 async def restore(file_id: str, body: str, hh: models.SessionBase):
     try:
         body = json.loads(body)
-        file = FileExplorer.get_one(file_id)
+        file = await FileExplorer.get_one(file_id)
         version: int = body['version']
         source_extension = f".{file.format}"
-        source_file = file.full_path
+        source_file = await file.full_path()
         history_directory = historyManager.getHistoryDir(docManager.getStoragePath(file_id, file_id))
         recovery_version_directory = historyManager.getVersionDir(history_directory, version)
         recovery_file = historyManager.getPrevFilePath(recovery_version_directory, source_extension)
@@ -339,13 +340,13 @@ async def restore(file_id: str, body: str, hh: models.SessionBase):
             'changes': [{'created': datetime.today().strftime('%Y-%m-%d %H:%M:%S'), 'user': {'id': hh.username, 'name': hh.username}}]
         }
 
-        with open(bumped_key_file, 'w', encoding='utf-8') as f:
-            f.write(bumped_key)
-        with open(bumped_changes_file, 'w', encoding='utf-8') as f:
-            f.write(json.dumps(bumped_changes, ensure_ascii=False))
+        async with aiofiles.open(bumped_key_file, 'w', encoding='utf-8') as f:
+            await f.write(bumped_key)
+        async with aiofiles.open(bumped_changes_file, 'w', encoding='utf-8') as f:
+            await f.write(json.dumps(bumped_changes, ensure_ascii=False))
         shutil.copy(source_file, bumped_file)
         shutil.copy(recovery_file, source_file)
-        FileExplorer.update(file, size=os.path.getsize(source_file))
+        await FileExplorer.update(file.id, size=os.path.getsize(source_file))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.RestoreFromHistory.get_text(hh.lang), file_id, hh.username, hh.ip))
         return "{}"
     except:

@@ -5,6 +5,7 @@
 import os
 import time
 import json
+import asyncio
 import shutil
 import zipfile
 import subprocess
@@ -13,11 +14,12 @@ import socket
 import signal
 import platform
 import psutil
-import requests
+import aiofiles
 from mycloud import models
 from settings import TMP_PATH, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE, PIP_CMD
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
 from common.scheduler import scheduler, get_schedule_time
+from common.httpRequest import http
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
@@ -39,13 +41,13 @@ async def get_system_info(hh: models.SessionBase) -> Result:
         cpu_run_time = beauty_time_pretty(beauty_time(uptime_seconds).split(':'), Msg.DateFormatPretty.get_text(hh.lang))  # 系统运行时间
         if os_name == "Windows":
             os_version = f"{os_name} {os_version}"
-            os_processor = get_windows_cpu_model()
+            os_processor = await get_windows_cpu_model()
         elif os_name == "Darwin":
             os_version = os_version.split(":")[0].strip()
             os_processor = platform.processor()
         else:
-            os_version = get_linux_system_version()
-            os_processor = get_linux_cpu_model()
+            os_version = await get_linux_system_version()
+            os_processor = await get_linux_cpu_model()
         total_memory = psutil.virtual_memory().total / 1073741824
         total_size = 0
         for partition in psutil.disk_partitions():
@@ -101,9 +103,9 @@ async def get_cpu_info(hh: models.SessionBase) -> Result:
         logical_cores = psutil.cpu_count(logical=True)    # 逻辑核心数
         os_name = platform.system()
         if os_name == "Linux":
-            cpu_model = get_linux_cpu_model()
+            cpu_model = await get_linux_cpu_model()
         elif os_name == "Windows":
-            cpu_model = get_windows_cpu_model()
+            cpu_model = await get_windows_cpu_model()
         else:
             cpu_model = platform.processor()
         result.data = {'core': logical_cores, 'model': cpu_model}
@@ -177,13 +179,13 @@ async def remove_tmp_folder(hh: models.SessionBase) -> Result:
         for root, _, files in os.walk(TMP_PATH):
             for file in files:
                 file_path = os.path.join(root, file)
-                os.remove(file_path)
+                await asyncio.to_thread(os.remove, file_path)
                 log_str = f"{Msg.Delete.get_text(hh.lang).format(file_path)}{Msg.Success.get_text(hh.lang)}"
                 logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
 
         folders = os.listdir(TMP_PATH)
         for folder in folders:
-            shutil.rmtree(os.path.join(TMP_PATH, folder))
+            await asyncio.to_thread(shutil.rmtree, os.path.join(TMP_PATH, folder))
             log_str = f"{Msg.Delete.get_text(hh.lang).format(folder)}{Msg.Success.get_text(hh.lang)}"
             logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
         result.msg = Msg.Delete.get_text(hh.lang).format('') + Msg.Success.get_text(hh.lang)
@@ -198,18 +200,18 @@ async def get_new_version(hh: models.SessionBase) -> Result:
     result = Result()
     global UPDATE_STATUE
     try:
-        res = requests.get("https://api.github.com/repos/leeyoshinari/WinHub/releases/latest", timeout=30)
+        res = await http.get("https://api.github.com/repos/leeyoshinari/WinHub/releases/latest", timeout=30)
         if res.status_code == 200:
             res_json = json.loads(res.text)
             latest_version = res_json['name']
             current_version = ""
             if os.path.exists(UPDATE_DATE_PATH):
-                with open(UPDATE_DATE_PATH, 'r') as f:
-                    update_info = f.read()
+                async with aiofiles.open(UPDATE_DATE_PATH, 'r') as f:
+                    update_info = await f.read()
                 current_version = update_info.split('_')[0]
             UPDATE_STATUE = 1 if current_version == latest_version else 2
-            with open(UPDATE_DATE_PATH, 'w') as f:
-                f.write(f'{current_version}_{time.strftime("%Y-%m-%d %H:%M:%S")}')
+            async with aiofiles.open(UPDATE_DATE_PATH, 'w') as f:
+                await f.write(f'{current_version}_{time.strftime("%Y-%m-%d %H:%M:%S")}')
             result.data = {'zip_url': res_json['zipball_url'], 'status': UPDATE_STATUE, 'check_time': time.strftime("%Y-%m-%d %H:%M:%S"), 'name': latest_version}
         result.msg = f"{Msg.SystemVersionInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -223,7 +225,7 @@ async def get_new_version(hh: models.SessionBase) -> Result:
 async def get_version_log(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        res = requests.get("https://api.github.com/repos/leeyoshinari/WinHub/releases", timeout=30)
+        res = await http.get("https://api.github.com/repos/leeyoshinari/WinHub/releases", timeout=30)
         if res.status_code == 200:
             res_json = json.loads(res.text)
             body = []
@@ -246,12 +248,7 @@ async def update_system(hh: models.SessionBase) -> Result:
         update_info_res = await get_new_version(hh)
         zip_url = update_info_res.data['zip_url'] if update_info_res.data else ""
         package_path = os.path.join(BASE_PATH, 'WinHub.zip')
-        res = requests.get(zip_url, stream=True, timeout=3600)
-        res.raise_for_status()
-        with open(package_path, 'wb') as f:
-            for chunk in res.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
+        await http.download(zip_url, package_path, timeout=3600)
         result.msg = f"{Msg.SystemUpdateInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         UPDATE_STATUE = 3
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -269,15 +266,9 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
         if start_type == 1:
             package_path = os.path.join(BASE_PATH, 'WinHub.zip')
             if os.path.exists(package_path):
-                with zipfile.ZipFile(package_path, 'r') as f:
-                    zip_files = f.namelist()
-                    tmp_name = zip_files[0][: zip_files[0].index('/')]
-                    f.extractall(BASE_PATH)
-                origin_path = os.path.join(BASE_PATH, tmp_name)
-                shutil.copytree(origin_path, BASE_PATH, dirs_exist_ok=True)
-                shutil.rmtree(origin_path)
+                await asyncio.to_thread(extract_zip, package_path)
             # 安装第三方包
-            time.sleep(1)
+            await asyncio.sleep(1)
             if current_platform == "windows":
                 windows_cmd = PIP_CMD
                 if PIP_CMD.startswith("pip"):
@@ -289,18 +280,24 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
             if TIME_ZONE == 'Asia/Shanghai':
                 pip_command += ["-i", "https://mirrors.ustc.edu.cn/pypi/simple/", "--trusted-host", "mirrors.ustc.edu.cn"]
             logger.info(f"Run pip command: {pip_command}, user: {hh.username}, IP: {hh.ip}")
-            subprocess.run(pip_command, check=True, capture_output=True, text=True, timeout=60)
+            # subprocess.run(pip_command, check=True, capture_output=True, text=True, timeout=60)
+            process = await asyncio.create_subprocess_exec(*pip_command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            stdout, stderr = await process.communicate()
+            if process.returncode != 0:
+                logger.error(f"pip install failed, cmd: {pip_command}, err: {stderr.decode()}")
 
             update_info_res = await get_new_version(hh)
             newest_version = update_info_res.data['name'] if update_info_res.data else ""
-            with open(UPDATE_DATE_PATH, 'w') as f:
-                f.write(f'{newest_version}_{time.strftime("%Y-%m-%d %H:%M:%S")}')
+            async with aiofiles.open(UPDATE_DATE_PATH, 'w') as f:
+                await f.write(f'{newest_version}_{time.strftime("%Y-%m-%d %H:%M:%S")}')
         result.msg = f"{Msg.SystemRestartInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
         if current_platform == "windows":
-            subprocess.run(['sc', 'stop', 'WinHubService'], check=True, capture_output=True, text=True)
+            # subprocess.run(['sc', 'stop', 'WinHubService'], check=True, capture_output=True, text=True)
+            await run_async_subprocess(['sc', 'stop', 'WinHubService'])
         else:
-            os.kill(os.getppid(), signal.SIGHUP)
+            # os.kill(os.getppid(), signal.SIGHUP)
+            await asyncio.to_thread(os.kill, os.getppid(), signal.SIGHUP)
     except:
         logger.error(traceback.format_exc())
         result.code = 1
@@ -321,27 +318,31 @@ async def auto_update():
         logger.error(traceback.format_exc())
 
 
-def get_update_status(hh: models.SessionBase):
+async def get_update_status(hh: models.SessionBase):
     update_date = ''
     if os.path.exists(UPDATE_DATE_PATH):
-        with open(UPDATE_DATE_PATH, 'r') as f:
-            update_date = f.read()
+        async with aiofiles.open(UPDATE_DATE_PATH, 'r') as f:
+            update_date = await f.read()
     logger.info(f"Get system status, username: {hh.username}, ip: {hh.ip}")
     return {'status': UPDATE_STATUE, 'date': update_date.split('_')[-1]}
 
 
-def get_windows_cpu_model() -> str:
+async def get_windows_cpu_model() -> str:
     try:
-        result = subprocess.run(['wmic', 'cpu', 'get', 'name'], capture_output=True, text=True, check=True)
-        return result.stdout.replace('Name', '').strip()
+        # result = subprocess.run(['wmic', 'cpu', 'get', 'name'], capture_output=True, text=True, check=True)
+        process = await asyncio.create_subprocess_exec(['wmic', 'cpu', 'get', 'name'], stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await process.communicate()
+        if process.returncode == 0:
+            return stdout.decode().replace('Name', '').strip()
+        return ''
     except:
         logger.error(traceback.format_exc())
         return ''
 
 
-def get_linux_cpu_model() -> str:
+async def get_linux_cpu_model() -> str:
     try:
-        res = exec_cmd('cat /proc/cpuinfo |grep "model name"')
+        res = await exec_cmd('cat /proc/cpuinfo |grep "model name"')
         cpu_model = res[0].split(':')[-1].strip()
         return cpu_model
     except:
@@ -349,17 +350,17 @@ def get_linux_cpu_model() -> str:
         return ''
 
 
-def get_linux_system_version() -> str:
+async def get_linux_system_version() -> str:
     try:
-        result = exec_cmd("cat /etc/os-release |grep PRETTY_NAME | awk '{print$1}' |awk -F '=' '{print $2}'")[0]
-        version = exec_cmd("cat /etc/os-release |grep VERSION_ID |awk -F '=' '{print $2}'")[0]
+        result = (await exec_cmd("cat /etc/os-release |grep PRETTY_NAME | awk '{print$1}' |awk -F '=' '{print $2}'"))[0]
+        version = (await exec_cmd("cat /etc/os-release |grep VERSION_ID |awk -F '=' '{print $2}'"))[0]
         system_name = result.strip().replace('"', '')
         system_version = version.strip().replace('"', '')
         result = f"{system_name} {system_version}"
     except:
         logger.warning(traceback.format_exc())
-        system_a = exec_cmd('uname -s')[0]  # system kernel version
-        system_r = exec_cmd('uname -r')[0]
+        system_a = (await exec_cmd('uname -s'))[0]  # system kernel version
+        system_r = (await exec_cmd('uname -r'))[0]
         result = f"{system_a.strip()} {system_r.strip()}"
     return result
 
@@ -375,10 +376,32 @@ def parse_update_log(log_str: str):
     return result
 
 
-def exec_cmd(cmd):
-    with os.popen(cmd) as p:
-        res = p.readlines()
-    return res
+async def exec_cmd(cmd):
+    # with os.popen(cmd) as p:
+    #     res = p.readlines()
+    # return res
+    process = await asyncio.create_subprocess_shell(cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await process.communicate()
+    if process.returncode == 0:
+        return stdout.decode().splitlines()
+    else:
+        logger.error(f"Command run failed, cmd: {cmd}, err: {stderr.decode()}")
+        return []
+
+
+async def run_async_subprocess(cmd):
+    process = await asyncio.create_subprocess_shell(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    await process.communicate()
+
+
+async def extract_zip(zip_path):
+    with zipfile.ZipFile(zip_path, 'r') as f:
+        zip_files = f.namelist()
+        tmp_name = zip_files[0][: zip_files[0].index('/')]
+        f.extractall(BASE_PATH)
+    origin_path = os.path.join(BASE_PATH, tmp_name)
+    shutil.copytree(origin_path, BASE_PATH, dirs_exist_ok=True)
+    shutil.rmtree(origin_path)
 
 
 if ENABLED_AUTO_UPDATE == 1:

@@ -4,8 +4,7 @@
 import os
 import traceback
 import eyed3
-from sqlalchemy import asc, desc
-from sqlalchemy.exc import NoResultFound
+import aiofiles
 from mycloud import models
 from mycloud.database import FileExplorer, Musics
 from common.results import Result
@@ -17,8 +16,8 @@ from common.calc import beauty_mp3_time
 async def get_mp3_info(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        file = FileExplorer.get_one(file_id)
-        mp3_info = eyed3.load(file.full_path)
+        file = await FileExplorer.get_one(file_id)
+        mp3_info = eyed3.load(await file.full_path())
         result.data = {'id': file.id, 'name': file.name, 'duration': beauty_mp3_time(mp3_info.info.time_secs)}
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
@@ -32,14 +31,14 @@ async def get_mp3_info(file_id: str, hh: models.SessionBase) -> Result:
 async def get_all_mp3(folder_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        music_list = FileExplorer.query(parent_id=folder_id, format='mp3').order_by(desc(FileExplorer.id)).all()
+        music_list = await FileExplorer.query().equal(parent_id=folder_id, format='mp3').order_by(FileExplorer.id.desc()).all()
         file_list = []
         for f in music_list:
             try:
-                mp3_info = eyed3.load(f.full_path)
+                mp3_info = eyed3.load(await f.full_path())
                 file_list.append(models.MP3List.from_orm_format(f, beauty_mp3_time(mp3_info.info.time_secs)).model_dump())
             except:
-                logger.error(f"load {f.full_path} error.")
+                logger.error(f"load {await f.full_path()} error.")
                 logger.error(traceback.format_exc())
         result.data = file_list
         result.total = len(result.data)
@@ -56,9 +55,9 @@ async def get_mp3_history(order_by: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         page_size = 200
-        if order_by == 'times':
+        if order_by == '-times':
             page_size = 100
-        music_list = Musics.query(username=hh.username).order_by(desc(getattr(Musics, order_by))).limit(page_size).all()
+        music_list = await Musics.query().equal(username=hh.username).order_by_key(Musics, order_by).limit(page_size).all()
         file_list = [models.MusicList.from_orm_format(f).model_dump() for f in music_list]
         result.data = file_list
         result.total = len(result.data)
@@ -74,11 +73,11 @@ async def get_mp3_history(order_by: str, hh: models.SessionBase) -> Result:
 async def set_mp3_history(query: models.MusicHistory, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        mp3 = Musics.query(file_id=query.file_id).all()
+        mp3 = await Musics.query().equal(file_id=query.file_id).all()
         if mp3:
-            Musics.update(mp3[0], times=mp3[0].times + 1)
+            await Musics.update(mp3[0].id, times=mp3[0].times + 1)
         else:
-            _ = Musics.create(file_id=query.file_id, name=query.name, singer=query.singer, duration=query.duration, username=hh.username)
+            await Musics.create(file_id=query.file_id, name=query.name, singer=query.singer, duration=query.duration, username=hh.username)
         result.msg = Msg.MusicRecord.get_text(hh.lang).format(query.name)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, query.file_id, hh.username, hh.ip))
     except:
@@ -91,9 +90,7 @@ async def set_mp3_history(query: models.MusicHistory, hh: models.SessionBase) ->
 async def delete_mp3_history(file_id, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        mp3 = Musics.query(file_id=file_id).all()
-        if mp3:
-            Musics.delete(mp3[0])
+        await Musics.query().equal(file_id=file_id).delete()
         result.msg = f"{Msg.Delete.get_text(hh.lang).format(file_id)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
     except:
@@ -106,12 +103,13 @@ async def delete_mp3_history(file_id, hh: models.SessionBase) -> Result:
 async def get_mp3_lyric(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        mp3_file = FileExplorer.get_one(file_id)
+        mp3_file = await FileExplorer.get_one(file_id)
         lrc_file_name = mp3_file.name.replace('.mp3', '.lrc')
-        lrc_file_path = mp3_file.full_path.replace('.mp3', '.lrc')
+        mp3_file_path = await mp3_file.full_path()
+        lrc_file_path = mp3_file_path.replace('.mp3', '.lrc')
         if os.path.exists(lrc_file_path):
-            with open(lrc_file_path, 'rb') as f:
-                result.data = f.read()
+            async with aiofiles.open(lrc_file_path, 'rb') as f:
+                result.data = await f.read()
             result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
             logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
         else:

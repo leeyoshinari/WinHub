@@ -290,7 +290,7 @@ class GamesScoreInfo(BaseModel):
 
 # 游戏得分排序
 class GamesRankInfo(BaseModel):
-    name: str
+    username: str
     score: int
 
     class Config:

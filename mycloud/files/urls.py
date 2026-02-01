@@ -5,6 +5,7 @@
 import os
 import traceback
 import urllib.parse
+import aiofiles
 from typing import Union
 from litestar import Controller, get, post, Request
 from litestar.response import Stream, Response
@@ -19,10 +20,10 @@ from settings import CONTENT_TYPE
 
 
 async def read_file(file_path, start_index=0):
-    with open(file_path, 'rb') as f:
-        f.seek(start_index)
+    async with aiofiles.open(file_path, 'rb') as f:
+        await f.seek(start_index)
         while True:
-            chunk = f.read(65536)
+            chunk = await f.read(65536)
             if not chunk:
                 break
             yield chunk

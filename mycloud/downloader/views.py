@@ -30,7 +30,7 @@ async def get_download_list(hh: models.SessionBase) -> Result:
         if not aria2c_downloader.process:
             result.data = []
             return result
-        file_lists = aria2c_downloader.list_download_tasks()
+        file_lists = await aria2c_downloader.list_download_tasks()
         download_list = [models.DownloadList.from_orm_format(d).model_dump() for d in file_lists if aria2c_downloader.gid_dict.get(d['gid'], '') == hh.username]
         result.data = download_list
         result.total = len(download_list)
@@ -54,8 +54,8 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
         file_path = TMP_PATH
-        gid = aria2c_downloader.add_http_task(query.url, TMP_PATH, query.file_name, query.cookie)
-        res = aria2c_downloader.get_completed_task_info(gid)
+        gid = await aria2c_downloader.add_http_task(query.url, TMP_PATH, query.file_name, query.cookie)
+        res = await aria2c_downloader.get_completed_task_info(gid)
         completed_length = res['completedLength']
         start_time = time.time()
         while res['completedLength'] == completed_length:
@@ -65,32 +65,32 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
                     file_path = res['files'][0]['path']
                     result.msg = Msg.FileExist.get_text(hh.lang).format(file_path.split('/')[-1])
                     logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, query.url, hh.username, hh.ip))
-                    aria2c_downloader.close_aria2c_downloader()
+                    await aria2c_downloader.close_aria2c_downloader()
                     return result
                 if res['errorCode'] == '1' and not res['files'][0]['path'] and not res['files'][0]['uris']:
                     result.code = 1
                     result.msg = Msg.DownloadOnlineProtocol.get_text(hh.lang)
                     logger.error(Msg.CommonLog1.get_text(hh.lang).format(res, query.url, hh.username, hh.ip))
-                    aria2c_downloader.close_aria2c_downloader()
+                    await aria2c_downloader.close_aria2c_downloader()
                     return result
                 result.code = 1
                 result.msg = res['errorMessage']
                 logger.error(Msg.CommonLog1.get_text(hh.lang).format(res, query.url, hh.username, hh.ip))
-                aria2c_downloader.close_aria2c_downloader()
+                await aria2c_downloader.close_aria2c_downloader()
                 return result
             else:
                 if time.time() - start_time > 30:
                     result.code = 1
                     result.msg = Msg.DownloadOnlineProtocol.get_text(hh.lang)
                     logger.error(Msg.CommonLog1.get_text(hh.lang).format(result.msg, query.url, hh.username, hh.ip))
-                    _ = aria2c_downloader.update_task(gid, 'cancel')
-                    time.sleep(2)
-                    _ = aria2c_downloader.update_task(gid, 'remove')
-                    time.sleep(2)
-                    aria2c_downloader.close_aria2c_downloader()
+                    _ = await aria2c_downloader.update_task(gid, 'cancel')
+                    await asyncio.sleep(2)
+                    _ = await aria2c_downloader.update_task(gid, 'remove')
+                    await asyncio.sleep(2)
+                    await aria2c_downloader.close_aria2c_downloader()
                     return result
-                time.sleep(1)
-                res = aria2c_downloader.get_completed_task_info(gid)
+                await asyncio.sleep(1)
+                res = await aria2c_downloader.get_completed_task_info(gid)
         Thread(target=run_async_write_aria2c_to_db, args=(gid, folder_id, )).start()
         aria2c_downloader.add_gid_dict(gid, hh.username)
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
@@ -112,18 +112,18 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
             result.code = 1
             result.msg = Msg.AccessPermissionNon.get_text(hh.lang)
             return result
-        gid = aria2c_downloader.add_bt_task(query.url, TMP_PATH)
-        res = aria2c_downloader.get_completed_task_info(gid)
+        gid = await aria2c_downloader.add_bt_task(query.url, TMP_PATH)
+        res = await aria2c_downloader.get_completed_task_info(gid)
         while res['status'] != 'complete':
             logger.info(res)
-            time.sleep(1)
-            res = aria2c_downloader.get_completed_task_info(gid)
-        res = aria2c_downloader.get_completed_task_info(gid)
+            await asyncio.sleep(1)
+            res = await aria2c_downloader.get_completed_task_info(gid)
+        res = await aria2c_downloader.get_completed_task_info(gid)
         new_gid = res['followedBy'][0]
-        file_list = aria2c_downloader.get_file_list(new_gid)
-        aria2c_downloader.update_task(new_gid, 'pause')
+        file_list = await aria2c_downloader.get_file_list(new_gid)
+        await aria2c_downloader.update_task(new_gid, 'pause')
         bt_file_list = [models.BtFileList.from_orm_format(f, new_gid, folder_id).model_dump() for f in file_list if int(f['length']) > 1024]
-        aria2c_downloader.update_task(gid, "remove")
+        await aria2c_downloader.update_task(gid, "remove")
         aria2c_downloader.add_gid_dict(new_gid, hh.username)
         result.data = bt_file_list
         result.total = len(result.data)
@@ -139,15 +139,15 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
 async def open_torrent(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        file = FileExplorer.get_one(file_id)
-        gid = aria2c_downloader.add_bt_file(base64.b64encode(open(file.full_path, 'rb').read()).decode('ascii'), TMP_PATH)
-        res = aria2c_downloader.get_completed_task_info(gid)
+        file = await FileExplorer.get_one(file_id)
+        gid = await aria2c_downloader.add_bt_file(base64.b64encode(open(await file.full_path(), 'rb').read()).decode('ascii'), TMP_PATH)
+        res = await aria2c_downloader.get_completed_task_info(gid)
         new_gid = res['gid']
-        file_list = aria2c_downloader.get_file_list(new_gid)
-        aria2c_downloader.update_task(new_gid, 'pause')
+        file_list = await aria2c_downloader.get_file_list(new_gid)
+        await aria2c_downloader.update_task(new_gid, 'pause')
         bt_file_list = [models.BtFileList.from_orm_format(f, new_gid, file.parent_id).model_dump() for f in file_list if int(f['length']) > 1024]
         aria2c_downloader.add_gid_dict(new_gid, hh.username)
-        aria2c_downloader.update_task(gid, "remove")
+        await aria2c_downloader.update_task(gid, "remove")
         result.data = bt_file_list
         result.total = len(result.data)
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
@@ -173,38 +173,38 @@ def run_async_write_aria2c_to_db(gid, parent_id):
 async def write_aria2c_task_to_db(gid, parent_id):
     while True:
         try:
-            res = aria2c_downloader.get_completed_task_info(gid)
+            res = await aria2c_downloader.get_completed_task_info(gid)
             files = [r for r in res['files'] if r['selected'] == 'true']
             if files and files[0]['completedLength'] == files[0]['length']:
                 file_path = files[0]['path']
                 file_name = os.path.basename(file_path)
-                folder = FileExplorer.get_one(parent_id)
+                folder = await FileExplorer.get_one(parent_id)
                 file_size = os.path.getsize(file_path)
-                target_file = os.path.join(folder.full_path, file_name)
+                target_file = os.path.join(await folder.full_path(), file_name)
                 if os.path.exists(target_file):
                     os.remove(target_file)
-                shutil.move(file_path, folder.full_path)
-                file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
-                                           parent_id=parent_id, size=file_size, username=folder.username)
+                shutil.move(file_path, await folder.full_path())
+                file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
+                                                        parent_id=parent_id, size=file_size, username=folder.username)
                 logger.info(f"{file.id} - {file.name}")
-                aria2c_downloader.update_task(gid, "cancel")
+                await aria2c_downloader.update_task(gid, "cancel")
                 aria2c_downloader.delete_gid_dict(gid)
-                time.sleep(2)
-                aria2c_downloader.update_task(gid, "remove")
-                time.sleep(3)
-                aria2c_downloader.close_aria2c_downloader()
+                await asyncio.sleep(2)
+                await aria2c_downloader.update_task(gid, "remove")
+                await asyncio.sleep(3)
+                await aria2c_downloader.close_aria2c_downloader()
                 break
             elif not files:
                 logger.info(res)
                 break
             else:
                 logger.info(f"{res['gid']} - {res['status']} - {files[0]['completedLength']} - {files[0]['length']}")
-                time.sleep(1)
+                await asyncio.sleep(1)
         except:
             logger.error(traceback.format_exc())
-            aria2c_downloader.update_task(gid, "remove")
-            time.sleep(3)
-            aria2c_downloader.close_aria2c_downloader()
+            await aria2c_downloader.update_task(gid, "remove")
+            await asyncio.sleep(3)
+            await aria2c_downloader.close_aria2c_downloader()
             break
 
 
@@ -213,11 +213,11 @@ async def update_area2c_task_status(query: models.DownloadFileOnlineStatus, hh: 
     try:
         status_list = query.status.split(',')
         for s in status_list:
-            res = aria2c_downloader.update_task(query.gid, s)
+            res = await aria2c_downloader.update_task(query.gid, s)
             if s in ['remove', 'cancel']:
-                time.sleep(1)
+                await asyncio.sleep(1)
                 aria2c_downloader.delete_gid_dict(query.gid)
-                aria2c_downloader.close_aria2c_downloader()
+                await aria2c_downloader.close_aria2c_downloader()
                 break
             result.data = res
         result.msg = Msg.UpdateStatus.get_text(hh.lang)
@@ -230,10 +230,10 @@ async def update_area2c_task_status(query: models.DownloadFileOnlineStatus, hh: 
 async def download_selected_file(query: models.BtSelectedFiles, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        res = aria2c_downloader.select_files_to_download(query.gid, query.index)
+        res = await aria2c_downloader.select_files_to_download(query.gid, query.index)
         logger.info(res)
         if 'result' in res and res['result'] == 'OK':
-            res = aria2c_downloader.update_task(query.gid, "continue")
+            res = await aria2c_downloader.update_task(query.gid, "continue")
         else:
             result.code = 1
             result.msg = res['error']["message"]
@@ -303,14 +303,14 @@ async def write_m3u8_task_to_db(cmd, parent_id, file_path):
     process.wait()
     if process.returncode == 0:
         file_name = os.path.basename(file_path)
-        folder = FileExplorer.get_one(parent_id)
+        folder = await FileExplorer.get_one(parent_id)
         file_size = os.path.getsize(file_path)
-        target_file = os.path.join(folder.full_path, file_name)
+        target_file = os.path.join(await folder.full_path(), file_name)
         if os.path.exists(target_file):
             os.remove(target_file)
-        shutil.move(file_path, folder.full_path)
-        file = FileExplorer.create(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
-                                   parent_id=parent_id, size=file_size, username=folder.username)
+        shutil.move(file_path, await folder.full_path())
+        file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
+                                                parent_id=parent_id, size=file_size, username=folder.username)
         logger.info(f"Download m3u8 completed successfully! fileId: {file.id}, fileName: {file.name}")
     else:
         logger.info(f"Download m3u8 failed with error code: {process.returncode}, fileName: {file_path}")

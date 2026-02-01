@@ -3,7 +3,6 @@
 # Author: leeyoshinari
 
 import traceback
-from sqlalchemy import asc, desc
 from mycloud import models
 from mycloud.database import Health
 from common.results import Result
@@ -16,9 +15,9 @@ async def get_all_data(health_type: int, username: str, hh: models.SessionBase) 
     try:
         x = []
         y1 = []
-        datas = Health.query(mode=health_type, username=username).with_entities(Health.create_time, Health.value).order_by(asc(Health.create_time)).all()
+        datas = await Health.query().select('create_time', 'value').equal(mode=health_type, username=username).order_by(Health.create_time.asc()).all()
         if health_type == 1:    # 体重 + BMI
-            height_obj = Health.query(mode=0, username=username).order_by(desc(Health.id)).first()
+            height_obj = await Health.query().equal(mode=0, username=username).order_by(Health.id.desc()).first()
             y2 = []
             for d in datas:
                 x.append(d[0].strftime("%Y-%m-%d"))
@@ -27,8 +26,8 @@ async def get_all_data(health_type: int, username: str, hh: models.SessionBase) 
             result.data = {'x': x, 'y1': y1, 'y2': y2}
 
         elif health_type == 3:  # 血压和心跳
-            y3_data = Health.query(mode=2, username=username).with_entities(Health.create_time, Health.value).order_by(asc(Health.create_time)).all()
-            y2_data = Health.query(mode=333, username=username).with_entities(Health.create_time, Health.value).order_by(asc(Health.create_time)).all()
+            y3_data = await Health.query().select('create_time', 'value').equal(mode=2, username=username).order_by(Health.create_time.asc()).all()
+            y2_data = await Health.query().select('create_time', 'value').equal(mode=333, username=username).order_by(Health.create_time.asc()).all()
             y2 = []
             y3 = []
             for i in range(len(datas)):
@@ -60,10 +59,10 @@ async def get_all_data(health_type: int, username: str, hh: models.SessionBase) 
 async def set_data(query: models.HealthData, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        if query.healthType == 3:
+        if query.healthType == 3:   # 血压数据
             if query.value1:
-                if query.value > query.value1:
-                    _ = Health.create(mode=333, value=query.value1, username=query.username)
+                if query.value > query.value1:  # 高压大于低压
+                    await Health.create(mode=333, value=query.value1, username=query.username)  # 低压
                 else:
                     result.msg = Msg.HealthBloodPressureErr.get_text(hh.lang)
                     result.code = 1
@@ -74,7 +73,7 @@ async def set_data(query: models.HealthData, hh: models.SessionBase) -> Result:
                 result.code = 1
                 logger.error(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
                 return result
-        _ = Health.create(mode=query.healthType, value=query.value, username=query.username)
+        await Health.create(mode=query.healthType, value=query.value, username=query.username)
         result.msg = f'{Msg.HealthSetData.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}'
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
     except:

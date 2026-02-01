@@ -16,7 +16,8 @@
 
 """
 
-import requests
+import json
+from common.httpRequest import http
 from mycloud.onlyoffice.configuration.configuration import ConfigurationManager
 from . import fileUtils, jwtManager
 
@@ -25,7 +26,7 @@ config_manager = ConfigurationManager()
 
 
 # convert file and give url to a new file
-def getConvertedData(docUri, fromExt, toExt, docKey, isAsync, filePass=None, lang=None):
+async def getConvertedData(docUri, fromExt, toExt, docKey, isAsync, filePass=None, lang=None):
     if not fromExt:  # check if the extension from the request matches the real file extension
         fromExt = fileUtils.getFileExt(docUri)  # if not, overwrite the extension value
 
@@ -52,14 +53,12 @@ def getConvertedData(docUri, fromExt, toExt, docKey, isAsync, filePass=None, lan
         # add a header Authorization with a header token with Authorization prefix in it
         headers[config_manager.jwt_header()] = f'Bearer {headerToken}'
     # send the headers and body values to the converter and write the result to the response
-    response = requests.post(config_manager.document_server_converter_url().geturl(), json=payload, headers=headers,
-                             verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
+    response = await http.post(config_manager.document_server_converter_url().geturl(), json=payload, headers=headers,
+                               verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
     status_code = response.status_code
     if status_code != 200:  # checking status code
         raise RuntimeError(f'Convertation service returned status: {status_code}')
-    json = response.json()
-
-    return getResponseUri(json)
+    return getResponseUri(json.loads(response.text))
 
 
 # get response url
