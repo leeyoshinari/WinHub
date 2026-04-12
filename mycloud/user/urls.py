@@ -56,7 +56,10 @@ class UserContoller(Controller):
                         os.mkdir(user_path)
             except:
                 await Group.query().equal(id=group.id).delete()
+                result.code = 1
+                result.msg = f"{Msg.Create.get_text(hh_no.lang).format(group_name)}{Msg.Failure.get_text(hh_no.lang)}"
                 logger.error(traceback.format_exc())
+                return result
             result.msg = f"{Msg.Create.get_text(hh_no.lang).format(group.id)}{Msg.Success.get_text(hh_no.lang)}"
             logger.info(f"{result.msg}, IP: {hh_no.ip}")
         except:

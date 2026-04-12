@@ -18,7 +18,7 @@ class WebSSH:
         data = json.loads(text_data)
         if data.get('type') == "web":
             try:
-                server = Servers.get_one(data.get('id'))
+                server = await Servers.get_one(data.get('id'))
                 if server.host == data['host']:
                     ssh_args = {"width": int(data['cols']), "height": int(data['rows']), "auth": "pwd", "host": server.host,
                                 "user": server.user, "password": server.pwd, "port": server.port, 'time': server.id}
