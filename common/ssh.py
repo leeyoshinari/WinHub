@@ -42,8 +42,10 @@ class SSH:
             self.channel.get_pty(term=term, width=pty_width, height=pty_height)
             self.channel.invoke_shell()
             logger.info('ssh connect success ~ ')
-            Thread(target=self.run_async_backend_to_frontend).start()
-            Thread(target=self.run_async_heart_beat_check, args=(host,)).start()
+            # Thread(target=self.run_async_backend_to_frontend).start()
+            asyncio.create_task(self.backend_to_frontend())
+            asyncio.create_task(self.heart_beat_check(host))
+            # Thread(target=self.run_async_heart_beat_check, args=(host,)).start()
 
         except socket.timeout:
             logger.error('ssh connect timeout! ')
@@ -58,25 +60,25 @@ class SSH:
             logger.error(traceback.format_exc())
             await self.close()
 
-    def run_async_backend_to_frontend(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(self.backend_to_frontend())
-        except:
-            logger.error(traceback.format_exc())
-        finally:
-            loop.close()
+    # def run_async_backend_to_frontend(self):
+    #     loop = asyncio.new_event_loop()
+    #     asyncio.set_event_loop(loop)
+    #     try:
+    #         loop.run_until_complete(self.backend_to_frontend())
+    #     except:
+    #         logger.error(traceback.format_exc())
+    #     finally:
+    #         loop.close()
 
-    def run_async_heart_beat_check(self, host):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(self.heart_beat_check(host))
-        except:
-            logger.error(traceback.format_exc())
-        finally:
-            loop.close()
+    # def run_async_heart_beat_check(self, host):
+    #     loop = asyncio.new_event_loop()
+    #     asyncio.set_event_loop(loop)
+    #     try:
+    #         loop.run_until_complete(self.heart_beat_check(host))
+    #     except:
+    #         logger.error(traceback.format_exc())
+    #     finally:
+    #         loop.close()
 
     def exec_command(self, command):
         _, stdout, _ = self.ssh_client.exec_command(command)

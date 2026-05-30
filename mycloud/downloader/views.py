@@ -91,8 +91,7 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
                     return result
                 await asyncio.sleep(1)
                 res = await aria2c_downloader.get_completed_task_info(gid)
-        # Thread(target=run_async_write_aria2c_to_db, args=(gid, folder_id, )).start()
-        asyncio.create_task(write_aria2c_task_to_db(gid, folder_id))
+        asyncio.create_task(write_aria2c_task_to_db(gid, folder_id, hh.groupname))
         aria2c_downloader.add_gid_dict(gid, hh.username)
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(query.url, gid, hh.username, hh.ip))
@@ -160,18 +159,7 @@ async def open_torrent(file_id: str, hh: models.SessionBase) -> Result:
     return result
 
 
-def run_async_write_aria2c_to_db(gid, parent_id):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(write_aria2c_task_to_db(gid, parent_id))
-    except:
-        logger.error(traceback.format_exc())
-    finally:
-        loop.close()
-
-
-async def write_aria2c_task_to_db(gid, parent_id):
+async def write_aria2c_task_to_db(gid, parent_id, username):
     while True:
         try:
             res = await aria2c_downloader.get_completed_task_info(gid)
@@ -180,14 +168,15 @@ async def write_aria2c_task_to_db(gid, parent_id):
                 file_path = files[0]['path']
                 file_name = os.path.basename(file_path)
                 folder = await FileExplorer.get_one(parent_id)
+                folder_path = await folder.full_path()
                 file_size = os.path.getsize(file_path)
-                target_file = os.path.join(await folder.full_path(), file_name)
+                target_file = os.path.join(folder_path, file_name)
                 if os.path.exists(target_file):
                     os.remove(target_file)
-                shutil.move(file_path, await folder.full_path())
+                shutil.move(file_path, folder_path)
                 file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
-                                                        parent_id=parent_id, size=file_size, username=folder.username)
-                logger.info(f"{file.id} - {file.name}")
+                                                        parent_id=parent_id, size=file_size, username=username)
+                logger.info(f"{file.id} - {file.name} - {folder_path}")
                 await aria2c_downloader.update_task(gid, "cancel")
                 aria2c_downloader.delete_gid_dict(gid)
                 await asyncio.sleep(2)
@@ -240,8 +229,7 @@ async def download_selected_file(query: models.BtSelectedFiles, hh: models.Sessi
             result.msg = res['error']["message"]
             logger.error(f"{Msg.DownloadError.get_text(hh.lang)}, gid: {query.gid}, username: {hh.username}, ip: {hh.ip}")
             return result
-        # Thread(target=run_async_write_aria2c_to_db, args=(query.gid, query.folder,)).start()
-        asyncio.create_task(write_aria2c_task_to_db(query.gid, query.folder))
+        asyncio.create_task(write_aria2c_task_to_db(query.gid, query.folder, hh.groupname))
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(query.gid, query.index, hh.username, hh.ip))
     except:
@@ -269,7 +257,8 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
         cmd = ['ffmpeg', '-i', query.url, '-c', 'copy', '-y', file_name]
         if query.cookie:
             cmd = ['ffmpeg', '-headers', f'Cookie: {query.cookie}', '-i', query.url, '-c', 'copy', file_name]
-        Thread(target=run_async_write_m3u8_to_db, args=(cmd, parent_id, file_name,)).start()
+        # Thread(target=run_async_write_m3u8_to_db, args=(cmd, parent_id, file_name,)).start()
+        asyncio.create_task(write_m3u8_task_to_db(cmd, parent_id, file_name))
         result.msg = Msg.Download.get_text(hh.lang).format(file_name.replace(TMP_PATH, ''))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, parent_id, hh.username, hh.ip))
     except:
@@ -279,15 +268,15 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
     return result
 
 
-def run_async_write_m3u8_to_db(cmd, parent_id, file_name):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(write_m3u8_task_to_db(cmd, parent_id, file_name))
-    except:
-        logger.error(traceback.format_exc())
-    finally:
-        loop.close()
+# def run_async_write_m3u8_to_db(cmd, parent_id, file_name):
+#     loop = asyncio.new_event_loop()
+#     asyncio.set_event_loop(loop)
+#     try:
+#         loop.run_until_complete(write_m3u8_task_to_db(cmd, parent_id, file_name))
+#     except:
+#         logger.error(traceback.format_exc())
+#     finally:
+#         loop.close()
 
 
 async def write_m3u8_task_to_db(cmd, parent_id, file_path):
