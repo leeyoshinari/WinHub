@@ -9,7 +9,7 @@ import subprocess
 import traceback
 import platform
 from settings import TRACKER_URL
-from common.httpRequest import http
+from common.httpRequest import HttpClient
 from common.logging import logger
 
 
@@ -19,8 +19,14 @@ class Aria2Downloader:
         self.rpc_port = rpc_port
         self.rpc_url = f'http://localhost:{rpc_port}/jsonrpc'
         self.process = None
+        self.session = None
         self.gid_dict = {}
         self.kill_aria2c()
+
+    def get_session(self):
+        if self.session is None:
+            self.session = HttpClient()
+        return self.session
 
     def start_rpc_server(self):
         self.process = subprocess.Popen([self.aria2c_path, '--enable-rpc=true', '--allow-overwrite=true', '--enable-dht=true', f'--dht-listen-port={self.rpc_port + 2}', f'--rpc-listen-port={self.rpc_port}'])
@@ -82,6 +88,7 @@ class Aria2Downloader:
             "id": "1",
             "params": [[url], options]
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         logger.info(response.text)
         return json.loads(response.text).get('result')
@@ -106,6 +113,7 @@ class Aria2Downloader:
             "id": "1",
             "params": [[url], options]
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         logger.info(response.text)
         return json.loads(response.text).get('result')
@@ -130,6 +138,7 @@ class Aria2Downloader:
             "id": "1",
             "params": [url, [], options]
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         return json.loads(response.text).get('result')
 
@@ -139,6 +148,7 @@ class Aria2Downloader:
             "method": "aria2.tellActive",
             "id": "2"
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         res = json.loads(response.text).get('result', [])
         payload = {
@@ -173,6 +183,7 @@ class Aria2Downloader:
             "id": "5",
             "params": [gid]
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         return json.loads(response.text).get('result', {})
 
@@ -183,6 +194,7 @@ class Aria2Downloader:
             "id": "8",
             "params": [gid]
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         return json.loads(response.text).get('result', {})
 
@@ -202,6 +214,7 @@ class Aria2Downloader:
             "method": "aria2.changeOption",
             "params": [gid, options]  # {"select-file": f"{file_index}"}]
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         return json.loads(response.text)
 
@@ -213,6 +226,7 @@ class Aria2Downloader:
             "id": "4",
             "params": [gid]
         }
+        http = self.get_session()
         response = await http.post(self.rpc_url, json=payload, timeout=15)
         return json.loads(response.text)
 
@@ -220,6 +234,7 @@ class Aria2Downloader:
 async def get_tracker_list():
     urls = TRACKER_URL.split(',')
     tracker = []
+    http = HttpClient()
     for url in urls:
         try:
             response = await http.get(url, timeout=15)
@@ -229,4 +244,5 @@ async def get_tracker_list():
         except:
             logger.error(traceback.format_exc())
     logger.info(f"Tracker List: {tracker}")
+    del http
     return ','.join(tracker)
