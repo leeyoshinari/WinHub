@@ -38,7 +38,7 @@ class FileController(Controller):
     async def query_files(self, file_id: str, q: str, sort_field: str, sort_type: str, hh: models.SessionBase, page: int = 1, page_size: int = 20) -> Result:
         query = models.SearchItems()
         query.q = q if q else ""
-        query.sort_field = sort_field if sort_field else 'update_time'
+        query.sort_field = sort_field if sort_field else 'id'
         query.sort_type = sort_type if sort_type else 'desc'
         query.page = page
         query.page_size = page_size

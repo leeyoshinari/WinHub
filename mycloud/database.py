@@ -353,7 +353,7 @@ class FileExplorer(Base, CRUDBase):
 
     parent = relationship('FileExplorer', remote_side=[id])
 
-    __sortable__ = {'size': size, 'create_time': create_time, 'update_time': update_time, 'format': format, 'name': name}
+    __sortable__ = {'id': id, 'size': size, 'update_time': update_time, 'name': name}
 
     async def full_path(self):
         paths = []

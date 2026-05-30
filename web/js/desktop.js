@@ -661,7 +661,7 @@ let apps = {
             $('#win-explorer>.path>.goback')[0].classList.add('disabled');
             m_tab.rename('explorer', '<img src="img/explorer/rb.png" alt="rb.png" loading="lazy"> '+i18next.t('explore.window.menu.garbage.title'));
             document.getElementById("all_files").checked = false;
-            let sort_field = 'update_time';
+            let sort_field = 'id';
             let sort_type = 'desc';
             document.querySelectorAll('#win-explorer>.page>.main>.content>.header>.row>span>button').forEach(item => {
                 if (item.className) {
@@ -919,7 +919,7 @@ let apps = {
             let pathlid = path_id.split('/');
             let pathqwq = '';
             let pathqwqid = '';
-            let sort_field = 'update_time';
+            let sort_field = 'id';
             let sort_type = 'desc';
             if (path === i18next.t('computer')) {
                 apps.explorer.reset(clear);
@@ -2710,7 +2710,7 @@ function delete_selected(del_type = 1, is_delete= -1, delete_type = 0) {
 document.getElementById('search-file').addEventListener("keyup", function (event) {
     if (event.key === "Enter") {
         let q = this.value;
-        let sort_field = 'update_time';
+        let sort_field = 'id';
         let sort_type = 'desc';
         if (q.trim() !== "") {
             document.querySelectorAll('#win-explorer>.page>.main>.content>.header>.row>span>button').forEach(item => {
@@ -3028,7 +3028,7 @@ document.getElementById("update_time-sort").addEventListener("click", function (
     apps.explorer.goto($('#win-explorer>.path>.tit')[0].dataset.path, $('#win-explorer>.path>.tit')[0].id);
 })
 
-function queryAllFiles(parent_id, q="", sort_field='update_time', sort_type='desc') {
+function queryAllFiles(parent_id, q="", sort_field='id', sort_type='desc') {
     let res = [];
     let url = server + '/file/get?file_id=' + parent_id + '&q=' + q + '&sort_field=' + sort_field + '&sort_type=' + sort_type;
     $.ajax({
