@@ -19,13 +19,24 @@ from common.messages import Msg
 from settings import CONTENT_TYPE
 
 
-async def read_file(file_path, start_index=0):
+async def read_file(file_path, start_index=0, end_index=None):
     async with aiofiles.open(file_path, 'rb') as f:
         await f.seek(start_index)
+        remaining = None
+        if end_index is not None:
+            remaining = end_index - start_index + 1
         while True:
-            chunk = await f.read(65536)
+            if remaining is not None:
+                if remaining <= 0:
+                    break
+                chunk_size = min(65536, remaining)
+            else:
+                chunk_size = 65536
+            chunk = await f.read(chunk_size)
             if not chunk:
                 break
+            if remaining is not None:
+                remaining -= len(chunk)
             yield chunk
 
 
@@ -146,13 +157,27 @@ class FileController(Controller):
         try:
             result = await views.download_file(file_id, hh)
             header_range = request.headers.get('range', '0-')
-            start_index = int(header_range.strip('bytes=').split('-')[0])
             file_size = os.path.getsize(result['path'])
-            content_range = f"bytes {start_index}-{file_size - 1}/{file_size}"
-            headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(file_size - start_index),
+            start_index = 0
+            end_index = file_size - 1
+            status_code = 200
+            if header_range and header_range.startswith('bytes='):
+                status_code = 206
+                index_list = header_range.strip('bytes=').split('-')
+                start_index = int(index_list[0])
+                if len(index_list) > 1 and index_list[1]:
+                    end_index = int(index_list[1])
+            if start_index >= file_size:
+                start_index = file_size - 1
+            if end_index >= file_size:
+                end_index = file_size - 1
+            if start_index > end_index:
+                start_index = end_index
+            content_range = f"bytes {start_index}-{end_index}/{file_size}"
+            headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(end_index - start_index + 1),
                        'Content-Range': content_range, 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
                        'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
-            return Stream(read_file(result['path'], start_index=start_index), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=206)
+            return Stream(read_file(result['path'], start_index=start_index, end_index=end_index), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers, status_code=status_code)
         except:
             logger.error(traceback.format_exc())
             return Result(code=1, msg=Msg.VideoError.get_text(hh.lang))
