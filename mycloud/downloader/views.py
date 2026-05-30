@@ -91,7 +91,8 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
                     return result
                 await asyncio.sleep(1)
                 res = await aria2c_downloader.get_completed_task_info(gid)
-        Thread(target=run_async_write_aria2c_to_db, args=(gid, folder_id, )).start()
+        # Thread(target=run_async_write_aria2c_to_db, args=(gid, folder_id, )).start()
+        asyncio.create_task(write_aria2c_task_to_db(gid, folder_id))
         aria2c_downloader.add_gid_dict(gid, hh.username)
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(query.url, gid, hh.username, hh.ip))
@@ -239,7 +240,8 @@ async def download_selected_file(query: models.BtSelectedFiles, hh: models.Sessi
             result.msg = res['error']["message"]
             logger.error(f"{Msg.DownloadError.get_text(hh.lang)}, gid: {query.gid}, username: {hh.username}, ip: {hh.ip}")
             return result
-        Thread(target=run_async_write_aria2c_to_db, args=(query.gid, query.folder,)).start()
+        # Thread(target=run_async_write_aria2c_to_db, args=(query.gid, query.folder,)).start()
+        asyncio.create_task(write_aria2c_task_to_db(query.gid, query.folder))
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(query.gid, query.index, hh.username, hh.ip))
     except:
