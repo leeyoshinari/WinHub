@@ -7,12 +7,12 @@ import traceback
 import urllib.parse
 import aiofiles
 from typing import Union
-from litestar import Controller, get, post, Request, Response
+from litestar import Controller, get, post, Response
 from litestar.response import Stream
 from litestar.di import Provide
 from mycloud import models
 from mycloud.share import views
-from mycloud.auth_middleware import auth
+from mycloud.auth_middleware import auth, no_auth
 from common.results import Result
 from common.logging import logger
 from common.xmind import read_xmind, generate_xmind8
@@ -33,7 +33,7 @@ async def read_file(file_path, start_index=0):
 class ShareController(Controller):
     path = "/share"
     tags = ['share (文件分享)']
-    dependencies = {"hh": Provide(auth)}
+    dependencies = {"hh": Provide(auth), "hh_no": Provide(no_auth)}
 
     @get("/list", summary="Share file list (分享文件列表)")
     async def get_share_list(self, hh: models.SessionBase) -> Result:
@@ -41,10 +41,9 @@ class ShareController(Controller):
         return result
 
     @get("/get/{file_id: int}", summary="Open share link (打开文件分享链接)")
-    async def get_share_file(self, file_id: int, request: Request) -> Union[Stream, Response]:
+    async def get_share_file(self, file_id: int, hh_no: models.SessionBase) -> Union[Stream, Response]:
         try:
-            h1 = models.SessionBase(ip=request.headers.get('x-real-ip', ''), lang=request.headers.get('lang', 'en'), username='', groupname='')
-            result = await views.open_share_file(file_id, h1)
+            result = await views.open_share_file(file_id, hh_no)
             if result['type'] == 0:
                 if result["format"] in ['md', 'docu', 'py']:
                     res = Result()
@@ -78,10 +77,9 @@ class ShareController(Controller):
             return Response(status_code=404, content=HTML404, media_type="text/html")
 
     @get("/export/{file_id: int}", summary="Export file (导出文件)")
-    async def export_share_file(self, file_id: int, request: Request) -> Union[Stream, Response]:
+    async def export_share_file(self, file_id: int, hh_no: models.SessionBase) -> Union[Stream, Response]:
         try:
-            h1 = models.SessionBase(ip=request.headers.get('x-real-ip', ''), lang=request.headers.get('lang', 'en'), username='', groupname='')
-            result = await views.open_share_file(file_id, h1)
+            result = await views.open_share_file(file_id, hh_no)
             if result['type'] == 0:
                 if result["format"] == 'xmind':
                     file_path = generate_xmind8(result['file_id'], result['name'], result['path'])

@@ -12,7 +12,7 @@ from litestar.response import Stream, Response
 from litestar.di import Provide
 from mycloud import models
 from mycloud.files import views
-from mycloud.auth_middleware import auth, auth_url
+from mycloud.auth_middleware import auth, auth_url, no_auth
 from common.results import Result
 from common.logging import logger
 from common.messages import Msg
@@ -43,7 +43,7 @@ async def read_file(file_path, start_index=0, end_index=None):
 class FileController(Controller):
     path = "/file"
     tags = ['file (文件)']
-    dependencies = {"hh": Provide(auth), "hh_url": Provide(auth_url)}
+    dependencies = {"hh": Provide(auth), "hh_url": Provide(auth_url), 'hh_no': Provide(no_auth)}
 
     @get("/get", summary="Query all files and folders in the current directory (查询当前目录下所有文件夹和文件)")
     async def query_files(self, file_id: str, q: str, sort_field: str, sort_type: str, hh: models.SessionBase, page: int = 1, page_size: int = 20) -> Result:
@@ -195,14 +195,14 @@ class FileController(Controller):
             return Result(code=1, msg=Msg.DownloadError.get_text(hh.lang))
 
     @get("/export/md/{file_id: str}", summary="Export markdown to html (导出 markdown 转 html)")
-    async def md2html(self, file_id: str, hh: models.SessionBase) -> Union[Response, Result]:
+    async def md2html(self, file_id: str, hh_no: models.SessionBase) -> Union[Response, Result]:
         try:
-            result = await views.markdown_to_html(file_id, hh)
+            result = await views.markdown_to_html(file_id, hh_no)
             headers = {'Accept-Ranges': 'bytes', 'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"'}
             return Response(result['data'].encode('utf-8'), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
         except:
             logger.error(traceback.format_exc())
-            return Result(code=1, msg=Msg.Failure.get_text(hh.lang))
+            return Result(code=1, msg=Msg.Failure.get_text(hh_no.lang))
 
     @get("/shortcuts", summary="Get all shortcuts (查询快捷方式数据)")
     async def get_shortcuts(self, hh: models.SessionBase) -> Result:
