@@ -1001,7 +1001,7 @@ let apps = {
                                 <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
                         } else {
                             let f_src = icons[tmp[i]['format']] || default_icon;
-                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act touchs file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'explorer.file','${path_id}/${tmp[i]['id']}');return stop(event);">
+                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act touchs file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'explorer.file','${path_id}/${tmp[i]['id']}','${tmp[i]['format']}');return stop(event);">
                                 <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="file" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
                                 <span style="width: 10%;">${tmp[i]['size']}</span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
                         }
@@ -2755,7 +2755,7 @@ document.getElementById('search-file').addEventListener("keyup", function (event
                             <span style="width: 10%;"></span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
                         } else {
                             let f_src = icons[tmp[i]['format']] || default_icon;
-                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'search.file','${tmp[i]['id']}');return stop(event);">
+                            ht += `<div class="row" style="padding-left: 5px;"><input type="checkbox" id="check${tmp[i]['id']}" style="float: left; margin-top: 8px;margin-right: 8px;"><a class="a item act file" id="f${tmp[i]['id']}" onclick="apps.explorer.select('${tmp[i]['id']}');" ondblclick="apps.explorer.open_file('${tmp[i]['id']}', '${tmp[i]['name']}')" oncontextmenu="showcm(event,'search.file','${tmp[i]['id']}','${tmp[i]['format']}');return stop(event);">
                             <span style="width: 40%;"><img style="float: left;" src="${f_src}" alt="file" loading="lazy">${tmp[i]['name']}</span><span style="width: 10%;">${tmp[i]['format']}</span>
                             <span style="width: 10%;">${tmp[i]['size']}</span><span style="width: 20%;">${tmp[i]['update_time']}</span><span style="width: 20%;">${tmp[i]['create_time']}</span></a></div>`;
                         }

@@ -105,7 +105,6 @@ body {
     color: var(--text);
     text-decoration: none !important;
     cursor: pointer;
-    padding-left: 6px;
 }
 
 .jump {

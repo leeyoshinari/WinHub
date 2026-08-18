@@ -54,7 +54,7 @@ async def getConvertedData(docUri, fromExt, toExt, docKey, isAsync, filePass=Non
         headers[config_manager.jwt_header()] = f'Bearer {headerToken}'
     # send the headers and body values to the converter and write the result to the response
     response = await http.post(config_manager.document_server_converter_url().geturl(), json=payload, headers=headers,
-                               verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
+                               ssl=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
     status_code = response.status_code
     if status_code != 200:  # checking status code
         raise RuntimeError(f'Convertation service returned status: {status_code}')

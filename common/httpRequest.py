@@ -67,8 +67,17 @@ class HttpClient:
                     **kwargs,
                 ) as resp:
 
-                    text = await resp.text()
                     content = await resp.read()
+                    text = ""
+                    if content:
+                        try:
+                            text = await resp.text()    # 默认 utf-8 解码
+                        except UnicodeDecodeError:
+                            try:
+                                text = await resp.text(encoding='gbk')
+                            except UnicodeDecodeError:
+                                # 强制解码，无法解析的字符替换为  问号，绝不报错
+                                text = content.decode('utf-8', errors='replace')
 
                     return HttpResponse(
                         url=str(resp.url),
@@ -93,6 +102,8 @@ class HttpClient:
         await self.start()
         for attempt in range(self.retry + 1):
             try:
+                if 'timeout' in kwargs and kwargs['timeout']:
+                    kwargs['timeout'] = aiohttp.ClientTimeout(kwargs['timeout'])
                 async with self.session.request(method="GET", url=url, **kwargs) as resp:
                     resp.raise_for_status()
                     async with aiofiles.open(file_path, 'wb') as f:
@@ -105,10 +116,14 @@ class HttpClient:
                     raise
                 await asyncio.sleep(0.5 * (attempt + 1))
 
-    async def get(self, url: str, **kwargs) -> HttpResponse:
+    async def get(self, url: str, timeout: float = None, **kwargs) -> HttpResponse:
+        if timeout:
+            kwargs['timeout'] = aiohttp.ClientTimeout(timeout)
         return await self.request("GET", url, **kwargs)
 
-    async def post(self, url: str, **kwargs) -> HttpResponse:
+    async def post(self, url: str, timeout: float = None, **kwargs) -> HttpResponse:
+        if timeout:
+            kwargs['timeout'] = aiohttp.ClientTimeout(timeout)
         return await self.request("POST", url, **kwargs)
 
 

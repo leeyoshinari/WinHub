@@ -43,9 +43,9 @@ class OnlyofficeController(Controller):
         return result
 
     @post("/track/{file_id: str}", summary="track file（保存文件）")
-    async def save(self, file_id: str, request: Request, hh: SessionBase) -> Response:
+    async def save(self, file_id: str, request: Request, hh_url: SessionBase) -> Response:
         body = await request.body()
-        result = await views.track(file_id, body.decode(encoding='utf-8'), hh)
+        result = await views.track(file_id, body.decode(encoding='utf-8'), hh_url)
         return Response(result, media_type='application/json', status_code=200)
 
     @post("/rename/{file_id: str}", summary="rename file（重命名文件）")

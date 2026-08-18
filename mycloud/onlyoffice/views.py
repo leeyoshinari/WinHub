@@ -263,7 +263,7 @@ async def save_as(file_id, body: str, hh: models.SessionBase):
         path = os.path.join('tmp', file_time)
         if not os.path.exists(path):
             os.makedirs(path)
-        docManager.downloadFileFromUri(saveAsFileUrl, os.path.join(path, filename), True)
+        await docManager.downloadFileFromUri(saveAsFileUrl, os.path.join(path, filename), True)
         response.setdefault('file', filename)
         response.setdefault('file_id', file_time)
         logger.info(f"{Msg.Save.get_text(hh.lang).format(file_id)} {Msg.Success.get_text(hh.lang)}")

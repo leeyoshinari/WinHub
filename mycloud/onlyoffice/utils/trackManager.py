@@ -55,7 +55,7 @@ async def processSave(body, filename, file_path, file_id: str):
 
     path = docManager.getStoragePath(file_id, file_id)  # get the file path
 
-    data = docManager.downloadFileFromUri(download)  # download document file
+    data = await docManager.downloadFileFromUri(download)  # download document file
     if data is None:
         raise Exception("Downloaded document is null")
 
@@ -71,7 +71,7 @@ async def processSave(body, filename, file_path, file_id: str):
     await docManager.saveFile(data, file_path)
 
     if changesUri:
-        dataChanges = docManager.downloadFileFromUri(changesUri)  # download changes file
+        dataChanges = await docManager.downloadFileFromUri(changesUri)  # download changes file
         if dataChanges is None:
             raise Exception("Downloaded changes is null")
         # save file changes to the diff.zip archive
@@ -112,7 +112,7 @@ async def processForceSave(body, filename, file_path, file_id):
         except Exception:
             newFilename = True
 
-    data = docManager.downloadFileFromUri(download)  # download document file
+    data = await docManager.downloadFileFromUri(download)  # download document file
     if data is None:
         raise Exception("Downloaded document is null")
 
@@ -140,7 +140,7 @@ async def processForceSave(body, filename, file_path, file_id):
             data_name = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + ".txt", file_id)
             data_path = docManager.getStoragePath(data_name, file_id)
 
-            forms_data = docManager.downloadFileFromUri(forms_data_url)
+            forms_data = await docManager.downloadFileFromUri(forms_data_url)
 
             if forms_data is None:
                 raise Exception("Document editing service didn't return forms_data")
@@ -166,7 +166,7 @@ async def commandRequest(method, key, meta=None):
 
         payload['token'] = jwtManager.encode(payload)  # encode a payload object into a body token
     response = await http.post(config_manager.document_server_command_url().geturl(), json=payload, headers=headers,
-                               verify=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
+                               ssl=config_manager.ssl_verify_peer_mode_enabled(), timeout=5)
 
     if meta:
         return response
