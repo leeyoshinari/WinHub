@@ -15,7 +15,8 @@ from common.calc import str_md5, parse_pwd
 from common.results import Result
 from common.logging import logger
 from common.messages import Msg
-from settings import BASE_PATH, TOKENs, ROOT_PATH
+from settings import BASE_PATH, ROOT_PATH, SECRET_KEY
+import jwt
 
 
 class UserContoller(Controller):
@@ -25,12 +26,14 @@ class UserContoller(Controller):
 
     @get("/status", summary="Get login status (获取用户登录状态)")
     async def get_status(self, request: Request) -> Result:
-        username = request.cookies.get("u", 's')
         token = request.cookies.get("token", None)
-        if not username or username not in TOKENs or token != TOKENs[username]:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user = await User.get(payload['username'])
+            return Result(data=user.nickname)
+        except:
+            logger.warning(f"获取用户登录状态失败: {traceback.format_exc()}")
             return Result(code=-1)
-        user = await User.get(username)
-        return Result(data=user.nickname)
 
     @post("/create/group", summary="Create group (创建用户组)")
     async def create_group(self, group_name: str, hh_no: models.SessionBase) -> Result:
@@ -174,14 +177,10 @@ class UserContoller(Controller):
                     user_path = os.path.join(v, user.group_id)
                     if not os.path.exists(user_path):
                         os.mkdir(user_path)
-                pwd_str = f'{time.time()}_{user.id}_{int(time.time())}_{user.group_id}'
-                token = str_md5(pwd_str)
-                TOKENs.update({user.id: token})
+                token_dict = {'username': user.id, 'groupname': user.group_id, 'nickname': user.nickname, 'exp': time.time() + 36000}
+                token = jwt.encode(token_dict, SECRET_KEY, algorithm="HS256")
                 response = Response(Result().__dict__)
-                response.set_cookie('u', user.id)
-                response.set_cookie('t', str(int(time.time() / 1000)))
                 response.set_cookie('token', token)
-                response.set_cookie('g', user.group_id)
                 result.data = user.nickname
                 result.msg = f"{Msg.Login.get_text(hh_no.lang).format(user.id)}{Msg.Success.get_text(hh_no.lang)}"
                 logger.info(f"{result.msg}, IP: {hh_no.ip}")
@@ -198,9 +197,10 @@ class UserContoller(Controller):
 
     @get("/logout", summary="Logout (退出登陆)")
     async def logout(self, hh: models.SessionBase) -> Result:
-        TOKENs.pop(hh.username, 0)
+        response = Response(Result().__dict__)
+        response.set_cookie('token', None)
         logger.info(f"{Msg.Logout.get_text(hh.lang).format(hh.username)}{Msg.Success.get_text(hh.lang)}, IP: {hh.ip}")
-        return Result()
+        return response
 
     @get("/list", summary="Users list（用户列表）")
     async def user_list(self, hh: models.SessionBase) -> Result:

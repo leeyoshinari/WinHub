@@ -8,7 +8,7 @@ import urllib.parse
 import aiofiles
 from typing import Union
 from litestar import Controller, get, post, put, Request
-from litestar.response import Stream, Response
+from litestar.response import Stream, Response, File
 from litestar.di import Provide
 from mycloud.onlyoffice import views
 from mycloud.auth_middleware import auth, auth_url
@@ -74,7 +74,7 @@ class OnlyofficeController(Controller):
             headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
                        'Content-Disposition': f'attachment;filename="{file_name}"', 'Access-Control-Allow-Origin': '*',
                        'content-type': "application/zip"}
-            return Stream(result['path'], 200, headers=headers, media_type='application/zip')
+            return File(path=result['path'], filename=file_name, media_type='application/zip', headers=headers)
         else:
             return Response(json.dumps(result, ensure_ascii=False), media_type='application/json', status_code=200)
 

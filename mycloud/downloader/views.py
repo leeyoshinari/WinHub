@@ -9,7 +9,7 @@ import base64
 import asyncio
 import subprocess
 import traceback
-from threading import Thread
+# from threading import Thread
 from urllib.parse import urlparse
 from settings import TMP_PATH
 from mycloud import models
@@ -17,7 +17,6 @@ from mycloud.database import FileExplorer
 from common.results import Result
 from common.messages import Msg
 from common.logging import logger
-from common.calc import calc_file_md5
 from common.aria2c import Aria2Downloader
 
 

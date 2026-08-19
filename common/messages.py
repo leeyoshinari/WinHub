@@ -95,6 +95,22 @@ class Msg:
     LoginUserOrPwdError.zh_CN = "用户名或密码错误"
     LoginUserOrPwdError.en = "Username or password is incorrect."
 
+    ToeknCheckExpire = MsgObj()
+    ToeknCheckExpire.zh_CN = "会话已经过期，请重新登录"
+    ToeknCheckExpire.en = "Session has expired, please log in again."
+
+    ToeknCheckNotMatch = MsgObj()
+    ToeknCheckNotMatch.zh_CN = "签名不匹配"
+    ToeknCheckNotMatch.en = "Signature mismatch."
+
+    ToeknCheckFormat = MsgObj()
+    ToeknCheckFormat.zh_CN = "签名格式不对"
+    ToeknCheckFormat.en = "The signature format is incorrect."
+
+    ToeknCheckInvalid = MsgObj()
+    ToeknCheckInvalid.zh_CN = "无效的签名"
+    ToeknCheckInvalid.en = "Invalid signature."
+
     CreateUser = MsgObj()
     CreateUser.zh_CN = "用户 {} 创建"
     CreateUser.en = "Create {}"

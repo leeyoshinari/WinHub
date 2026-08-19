@@ -61,10 +61,7 @@ class FormatManager():
     async def editable(self) -> list[Format]:
         formats = await self.all()
         filtered = filter(
-            lambda format: (
-                'edit' in format.actions or
-                'lossy-edit' in format.actions
-            ),
+            lambda format: ('edit' in format.actions or 'lossy-edit' in format.actions),
             formats
         )
         return list(filtered)

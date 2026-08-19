@@ -14,8 +14,6 @@ if hasattr(sys, 'frozen'):
 else:
     BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-TOKENs = {}
-
 
 def sync_with_dotenv():
     example_config = dotenv_values('.env.example')
@@ -62,6 +60,7 @@ WEBRTC_CRED = get_config("winHubCredential")
 LOGGER_LEVEL = get_config("winHubLevel")
 REQUEST_BODY_SIZE = int(get_config("winHubRequestBodySize"))
 PIP_CMD = get_config("winHubPipCmd")
+SECRET_KEY = get_config("winHubSecretKey")
 TMP_PATH = os.path.join(BASE_PATH, 'tmp')
 KTV_TMP_PATH = os.path.join(TMP_PATH, 'ktv')
 TIME_ZONE = str(tzlocal.get_localzone())

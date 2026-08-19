@@ -13,6 +13,7 @@ from common.calc import beauty_size, beauty_time, time2date, beauty_chat_status,
 class SessionBase(BaseModel):
     username: str
     groupname: str
+    token: str
     ip: Optional[str] = None
     lang: str = 'en'
 
