@@ -181,6 +181,7 @@ class UserContoller(Controller):
                 token = jwt.encode(token_dict, SECRET_KEY, algorithm="HS256")
                 response = Response(Result().__dict__)
                 response.set_cookie('token', token)
+                response.set_cookie('u', user.id)
                 result.data = user.nickname
                 result.msg = f"{Msg.Login.get_text(hh_no.lang).format(user.id)}{Msg.Success.get_text(hh_no.lang)}"
                 logger.info(f"{result.msg}, IP: {hh_no.ip}")

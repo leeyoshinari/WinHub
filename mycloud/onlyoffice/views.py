@@ -115,7 +115,7 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
             'document': {
                 'file_id': file_id,
                 'title': filename,
-                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={hh.token}&u={hh.username}&g={hh.groupname}&lang={hh.lang}",
+                'url': f"{request_host}{server_prefix}/file/onlyoffice/{file_id}?token={hh.token}&lang={hh.lang}",
                 'fileType': ext[1:],
                 'key': docKey,
                 'lang': hh.lang,
@@ -145,7 +145,7 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
                 'actionLink': actionLink,
                 'mode': mode,
                 'lang': hh.lang,
-                'callbackUrl': f"{request_host}{server_prefix}/onlyoffice/track/{file_id}?token={hh.token}&u={hh.username}&lang={hh.lang}",
+                'callbackUrl': f"{request_host}{server_prefix}/onlyoffice/track/{file_id}?token={hh.token}&lang={hh.lang}",
                 # 'coEditing': {"mode": "strict", "change": False} if edMode == 'view' and user.id == 'uid-0' else None,
                 'createUrl': createUrl,
                 'templates': [],
@@ -298,7 +298,7 @@ async def history_obj(file_id: str, request: Request, body: str, hh: models.Sess
         file = await FileExplorer.get_one(file_id)
         storage_path = docManager.getStoragePath(file_id, file_id)
         doc_key = docManager.generateFileKey(await file.full_path())
-        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={hh.token}&u={hh.username}&g={hh.groupname}&lang={hh.lang}"
+        file_url = f"{request_host}/file/onlyoffice/{file_id}?token={hh.token}&lang={hh.lang}"
         response = historyManager.getHistoryObject(storage_path, file.name, doc_key, file_url, False, file_id, request_host)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.HistoryRecord.get_text(hh.lang), file_id, hh.username, hh.ip))
         return json.dumps(response, ensure_ascii=False)
