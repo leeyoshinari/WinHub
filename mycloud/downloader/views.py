@@ -168,11 +168,11 @@ async def write_aria2c_task_to_db(gid, parent_id, username):
                 file_name = os.path.basename(file_path)
                 folder = await FileExplorer.get_one(parent_id)
                 folder_path = await folder.full_path()
-                file_size = os.path.getsize(file_path)
+                file_size = await asyncio.to_thread(os.path.getsize, file_path)
                 target_file = os.path.join(folder_path, file_name)
-                if os.path.exists(target_file):
-                    os.remove(target_file)
-                shutil.move(file_path, folder_path)
+                if await asyncio.to_thread(os.path.exists, target_file):
+                    await asyncio.to_thread(os.remove, target_file)
+                await asyncio.to_thread(shutil.move, file_path, folder_path)
                 file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
                                                         parent_id=parent_id, size=file_size, username=username)
                 logger.info(f"{file.id} - {file.name} - {folder_path}")
@@ -294,11 +294,11 @@ async def write_m3u8_task_to_db(cmd, parent_id, file_path):
     if process.returncode == 0:
         file_name = os.path.basename(file_path)
         folder = await FileExplorer.get_one(parent_id)
-        file_size = os.path.getsize(file_path)
+        file_size = await asyncio.to_thread(os.path.getsize, file_path)
         target_file = os.path.join(await folder.full_path(), file_name)
-        if os.path.exists(target_file):
-            os.remove(target_file)
-        shutil.move(file_path, await folder.full_path())
+        if await asyncio.to_thread(os.path.exists, target_file):
+            await asyncio.to_thread(os.remove, target_file)
+        await asyncio.to_thread(shutil.move, file_path, await folder.full_path())
         file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=file_name, format=file_name.split(".")[-1].lower(),
                                                 parent_id=parent_id, size=file_size, username=folder.username)
         logger.info(f"Download m3u8 completed successfully! fileId: {file.id}, fileName: {file.name}")

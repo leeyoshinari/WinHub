@@ -4,6 +4,7 @@
 import os
 import time
 import shutil
+import asyncio
 import traceback
 from sqlalchemy.exc import NoResultFound
 from mycloud import models
@@ -135,7 +136,7 @@ async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) ->
             if folder_id == query.to_id:
                 continue
             folder = await FileExplorer.get_one(folder_id)
-            shutil.move(await folder.full_path(), to_path)
+            await asyncio.to_thread(shutil.move, await folder.full_path(), to_path)
             await FileExplorer.update(folder.id, parent_id=query.to_id)
         result.msg = f"{Msg.Move.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -195,7 +196,7 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
                 files = await FileExplorer.query().isin(id=query.ids).all()
                 for file in files:
                     try:
-                        os.remove(await file.full_path())
+                        await asyncio.to_thread(os.remove, await file.full_path())
                         if file.format in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
                             remove(file.id, hh)
                     except FileNotFoundError:

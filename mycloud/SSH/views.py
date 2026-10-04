@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 import os
+import asyncio
 import traceback
 import aiofiles
 from mycloud.database import Servers
@@ -79,7 +80,7 @@ async def upload_file_to_linux(query, hh: models.SessionBase) -> Result:
         server = await Servers.get_one(server_id)
         upload_obj = UploadAndDownloadFile(server)
         _ = upload_obj.upload(temp_path, f'{remote_path}/{file_name}')
-        os.remove(temp_path)
+        await asyncio.to_thread(os.remove, temp_path)
         del upload_obj
         result.msg = f"{Msg.Upload.get_text(hh.lang).format(file_name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))

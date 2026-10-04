@@ -3,6 +3,7 @@
 # Author: leeyoshinari
 import os
 import time
+import asyncio
 import shutil
 import zipfile
 import traceback
@@ -325,7 +326,7 @@ async def move_to_folder(query: models.CatalogMoveTo, hh: models.SessionBase) ->
             file = await FileExplorer.get_one(file_id)
             if file.parent_id == query.to_id:
                 continue
-            shutil.move(await file.full_path(), to_path)
+            await asyncio.to_thread(shutil.move, await file.full_path(), to_path)
             await FileExplorer.update(file.id, parent_id=query.to_id)
         result.msg = f"{Msg.Move.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -345,8 +346,8 @@ async def upload_file_by_path(query: models.ImportLocalFileByPath, hh: models.Se
             file_path = entry.path
             if entry.is_file():
                 try:
-                    file_size = os.path.getsize(file_path)
-                    shutil.move(file_path, to_path)
+                    file_size = await asyncio.to_thread(os.path.getsize, file_path)
+                    await asyncio.to_thread(shutil.move, file_path, to_path)
                     file_obj = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=entry.name, format=entry.name.split('.')[-1].lower(),
                                                                 parent_id=to_folder.id, size=file_size, username=hh.groupname)
                     logger.info(f"{Msg.Upload.get_text(hh.lang).format(file_obj.name)}{Msg.Success.get_text(hh.lang)}")
