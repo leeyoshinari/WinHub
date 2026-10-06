@@ -28,7 +28,7 @@ class WebSSH:
                 logger.error(traceback.format_exc())
         else:
             if data['code'] == 0:  # send data
-                await self.ssh.django_to_ssh(data['data'])
+                await self.ssh.backend_to_ssh(data['data'])
             elif data['code'] == 2:  # close session
                 await self.ssh.close()
             elif data['code'] == 1:  # setting terminal size

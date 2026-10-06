@@ -66,7 +66,7 @@ class SSH:
     async def resize_pty(self, cols, rows):
         await asyncio.to_thread(self.channel.resize_pty, width=cols, height=rows)
 
-    async def django_to_ssh(self, data):
+    async def backend_to_ssh(self, data):
         try:
             await asyncio.to_thread(self.channel.send, data)
         except OSError:
@@ -86,7 +86,7 @@ class SSH:
                     try:
                         data = data_bytes.decode('utf-8')
                     except UnicodeDecodeError:
-                        logger.warning(f"decode error：{self.channel.recv(1024)}")
+                        logger.warning(f"decode error：{data_bytes}")
                         data = data_bytes.decode('unicode_escape')
                     self.keepalive_last_time = time.time()
                     try:
@@ -125,8 +125,7 @@ class SSH:
                     continue
                 else:
                     break
-            if self.ssh_client.get_transport():
-                await self.close()
+            await self.close()
             logger.info('close ssh success ~ ')
         except:
             logger.error(traceback.format_exc())
