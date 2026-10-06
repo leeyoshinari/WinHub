@@ -24,7 +24,8 @@ class Aria2Downloader:
 
     async def start_rpc_server(self):
         await self.kill_aria2c()
-        self.process = await asyncio.create_subprocess_exec([self.aria2c_path, '--enable-rpc=true', '--allow-overwrite=true', '--enable-dht=true', f'--dht-listen-port={self.rpc_port + 2}', f'--rpc-listen-port={self.rpc_port}'])
+        cmd = [self.aria2c_path, '--enable-rpc=true', '--allow-overwrite=true', '--enable-dht=true', f'--dht-listen-port={self.rpc_port + 2}', f'--rpc-listen-port={self.rpc_port}']
+        self.process = await asyncio.create_subprocess_exec(*cmd)
         logger.info('aria2c RPC server started.')
 
     async def stop_rpc_server(self):

@@ -345,7 +345,8 @@ async def get_update_status(hh: models.SessionBase):
 async def get_windows_cpu_model() -> str:
     try:
         # result = subprocess.run(['wmic', 'cpu', 'get', 'name'], capture_output=True, text=True, check=True)
-        process = await asyncio.create_subprocess_exec(['wmic', 'cpu', 'get', 'name'], stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        cmd = ['wmic', 'cpu', 'get', 'name']
+        process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         stdout, stderr = await process.communicate()
         if process.returncode == 0:
             return stdout.decode().replace('Name', '').strip()
