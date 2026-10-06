@@ -88,7 +88,7 @@ async def generate_xmind8(file_id, file_name, file_path):
                 else:
                     z.write(os.path.join(tmp_path, file), file)
         return new_path
-    return asyncio.to_thread(_sync_generate)
+    return await asyncio.to_thread(_sync_generate)
 
 
 def format_x_reader(data):
