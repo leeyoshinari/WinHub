@@ -18,6 +18,7 @@
 
 import json
 import os
+import asyncio
 import shutil
 import aiofiles
 from common.httpRequest import http
@@ -43,31 +44,28 @@ async def processSave(body, filename, file_path, file_id: str):
     if curExt != downloadExt:
         try:
             # convert file and give url to a new file
-            convertedData = serviceConverter.getConvertedData(download, downloadExt, curExt,
-                                                              docManager.generateRevisionId(download), False)
+            convertedData = await serviceConverter.getConvertedData(download, downloadExt, curExt, docManager.generateRevisionId(download), False)
             if not convertedData:
-                newFilename = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + downloadExt,
-                                                        file_id)  # get the correct file name if it already exists
+                newFilename = await docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + downloadExt, file_id)  # get the correct file name if it already exists
             else:
                 download = convertedData['uri']
         except Exception:
-            newFilename = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + downloadExt, file_id)
+            newFilename = await docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + downloadExt, file_id)
 
-    path = docManager.getStoragePath(file_id, file_id)  # get the file path
+    path = await docManager.getStoragePath(file_id, file_id)  # get the file path
 
     data = await docManager.downloadFileFromUri(download)  # download document file
     if data is None:
         raise Exception("Downloaded document is null")
 
     histDir = historyManager.getHistoryDir(path)  # get the path to the history direction
-    if not os.path.exists(histDir):  # if the path doesn't exist
-        os.makedirs(histDir)  # create it
+    if not await asyncio.to_thread(os.path.exists, histDir):  # if the path doesn't exist
+        await asyncio.to_thread(os.makedirs, histDir)  # create it
 
-    versionDir = historyManager.getNextVersionDir(histDir)  # get the path to the next file version
+    versionDir = await historyManager.getNextVersionDir(histDir)  # get the path to the next file version
 
     # get the path to the previous file version and rename the storage path with it
-    shutil.copy2(file_path, historyManager.getPrevFilePath(versionDir, curExt))
-
+    await asyncio.to_thread(shutil.copy2, file_path, historyManager.getPrevFilePath(versionDir, curExt))
     await docManager.saveFile(data, file_path)
 
     if changesUri:
@@ -82,13 +80,13 @@ async def processSave(body, filename, file_path, file_id: str):
         hist = json.dumps(body.get('history'), ensure_ascii=False)
     if hist:
         # write the history changes to the changes.json file
-        historyManager.writeFile(historyManager.getChangesHistoryPath(versionDir), hist)
+        await historyManager.writeFile(historyManager.getChangesHistoryPath(versionDir), hist)
     # write the key value to the key.txt file
-    historyManager.writeFile(historyManager.getKeyPath(versionDir), body.get('key'))
+    await historyManager.writeFile(historyManager.getKeyPath(versionDir), body.get('key'))
     # get the path to the forcesaved file version
-    forcesavePath = docManager.getForcesavePath(newFilename, file_id, False)
+    forcesavePath = await docManager.getForcesavePath(newFilename, file_id, False)
     if forcesavePath != "":  # if the forcesaved file version exists
-        os.remove(forcesavePath)  # remove it
+        await asyncio.to_thread(os.remove, forcesavePath)  # remove it
 
 
 # file force saving process
@@ -103,8 +101,7 @@ async def processForceSave(body, filename, file_path, file_id):
     if curExt != downloadExt:
         try:
             # convert file and give url to a new file
-            convertedData = serviceConverter.getConvertedData(download, downloadExt, curExt,
-                                                              docManager.generateRevisionId(download), False)
+            convertedData = await serviceConverter.getConvertedData(download, downloadExt, curExt, docManager.generateRevisionId(download), False)
             if not convertedData:
                 newFilename = True
             else:
@@ -119,27 +116,25 @@ async def processForceSave(body, filename, file_path, file_id):
     isSubmitForm = body.get('forcesavetype') == 3  # SubmitForm
     if isSubmitForm:
         if newFilename:
-            filename = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + "-form" + downloadExt,
-                                                 file_id)  # get the correct file name if it already exists
+            filename = await docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + "-form" + downloadExt, file_id)  # get the correct file name if it already exists
         else:
-            filename = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + "-form" + curExt, file_id)
-        forcesavePath = docManager.getStoragePath(filename, file_id)
+            filename = await docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + "-form" + curExt, file_id)
+        forcesavePath = await docManager.getStoragePath(filename, file_id)
     else:
         if newFilename:
-            filename = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + downloadExt, file_id)
+            filename = await docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + downloadExt, file_id)
         forcesavePath = file_path
 
     await docManager.saveFile(data, forcesavePath)  # save document file
 
     if isSubmitForm:
         uid = body['actions'][0]['userid']  # get the user id
-        historyManager.createMetaData(filename, uid, "Filling Form", file_id)  # create meta data for forcesaved file
+        await historyManager.createMetaData(filename, uid, "Filling Form", file_id)  # create meta data for forcesaved file
 
         forms_data_url = body.get('formsdataurl')
         if forms_data_url:
-            data_name = docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + ".txt", file_id)
-            data_path = docManager.getStoragePath(data_name, file_id)
-
+            data_name = await docManager.getCorrectName(fileUtils.getFileNameWithoutExt(filename) + ".txt", file_id)
+            data_path = await docManager.getStoragePath(data_name, file_id)
             forms_data = await docManager.downloadFileFromUri(forms_data_url)
 
             if forms_data is None:

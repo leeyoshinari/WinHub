@@ -4,6 +4,7 @@
 
 import os
 import shutil
+import asyncio
 import traceback
 from settings import ENABLE_BACKUP, ROOT_PATH, BACKUP_PATH, BACKUP_INTERVAL
 from mycloud import models
@@ -42,10 +43,10 @@ async def start_sync(username: str = None):
             if folder_path.startswith(v):
                 relative_path = folder_path[len(v) + 1:]
                 target_path = os.path.join(BACKUP_PATH, k, relative_path)
-                if not os.path.exists(target_path):
-                    os.makedirs(target_path, exist_ok=True)
+                if not await asyncio.to_thread(os.path.exists, target_path):
+                    await asyncio.to_thread(os.makedirs, target_path, exist_ok=True)
                 logger.info(f"Syncing {folder_path}")
-                sync_data(folder_path, target_path)
+                await asyncio.to_thread(sync_data, folder_path, target_path)
 
 
 async def index_backup(hh: models.SessionBase) -> Result:

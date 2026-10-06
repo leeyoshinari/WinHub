@@ -5,9 +5,11 @@
 import os
 import time
 import json
+import asyncio
 import random
 import codecs
 import zipfile
+import aiofiles
 from zipfile import ZipFile
 from common import xmltodict
 
@@ -20,67 +22,73 @@ x_extensions = '<extensions><extension provider="org.xmind.ui.map.unbalanced"><c
 progress = ['', 'start', 'oct', 'quarter', '3oct', 'half', '5oct', '3quar', '7oct', 'done']
 
 
-def create_xmind(file_path):
+async def create_xmind(file_path):
     content = {"template": "right", "theme": "fresh-blue", "version": "0", "root": {"data": {"id": str(int(time.time() * 1000)), "text": "中心主题"}, "children": [{"data": {"id": str(int(time.time())), "text": "分支主题"}, "children": []}]}}
-    with codecs.open(file_path, 'w', encoding='utf-8') as f:
-        f.write(json.dumps(content, ensure_ascii=False))
+    async with aiofiles.open(file_path, 'w', encoding='utf-8') as f:
+        await f.write(json.dumps(content, ensure_ascii=False))
 
 
-def read_xmind(file_path):
-    try:
-        with ZipFile(file_path, 'r') as z:
-            if 'content.json' in z.namelist():
-                result = format_zen_reader(json.loads(z.open('content.json').read().decode('utf-8')))
-            elif 'content.xml' in z.namelist():
-                result = format_x_reader(xmltodict.parse(z.open('content.xml').read().decode('utf-8')))
-            else:
-                result = None
-    except zipfile.BadZipfile:
-        result = None
+async def read_xmind(file_path):
+    def _sync_read():
+        try:
+            with ZipFile(file_path, 'r') as z:
+                if 'content.json' in z.namelist():
+                    return format_zen_reader(json.loads(z.open('content.json').read().decode('utf-8')))
+                elif 'content.xml' in z.namelist():
+                    return format_x_reader(xmltodict.parse(z.open('content.xml').read().decode('utf-8')))
+                else:
+                    return None
+        except zipfile.BadZipfile:
+            return None
+
+    result = await asyncio.to_thread(_sync_read)
     if result:
-        with codecs.open(file_path, 'w', encoding='utf-8') as f:
-            f.write(json.dumps(result, ensure_ascii=False))
-    result = json.load(open(file_path, 'r', encoding='utf-8'))
+        content = json.dumps(result, ensure_ascii=False)
+        async with aiofiles.open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        result = json.loads(content)
     return result
 
 
-def write_xmind(file_path, data):
-    with codecs.open(file_path, 'w', encoding='utf-8') as f:
-        f.write(data)
+async def write_xmind(file_path, data):
+    async with aiofiles.open(file_path, 'w', encoding='utf-8') as f:
+        await f.write(data)
 
 
-def generate_xmind8(file_id, file_name, file_path):
-    if not os.path.exists('tmp'):
-        os.mkdir('tmp')
-    tmp_path = os.path.join('tmp', file_id)
-    if not os.path.exists(tmp_path):
-        os.mkdir(tmp_path)
+async def generate_xmind8(file_id, file_name, file_path):
+    def _sync_generate():
+        if not os.path.exists('tmp'):
+            os.mkdir('tmp')
+        tmp_path = os.path.join('tmp', file_id)
+        if not os.path.exists(tmp_path):
+            os.mkdir(tmp_path)
 
-    with open(os.path.join(tmp_path, 'styles.xml'), 'w', encoding='utf-8') as f:
-        f.write('')
-    content = json.load(open(file_path, 'r', encoding='utf-8'))
-    content = format_x_writer(content, os.path.join(tmp_path, 'styles.xml'))
-    with open(os.path.join(tmp_path, 'styles.xml'), 'r', encoding='utf-8') as f:
-        styles = f.read()
-    with codecs.open(os.path.join(tmp_path, 'styles.xml'), 'w', encoding='utf-8') as f:
-        f.write(x_style.format(styles))
-    with codecs.open(os.path.join(tmp_path, 'content.xml'), 'w', encoding='utf-8') as f:
-        f.write(x_content.format(int(time.time() * 1000), int(time.time() * 1000), content))
-    with codecs.open(os.path.join(tmp_path, 'manifest.xml'), 'w', encoding='utf-8') as f:
-        f.write(x_manifest)
-    with codecs.open(os.path.join(tmp_path, 'meta.xml'), 'w', encoding='utf-8') as f:
-        f.write(x_meta.format(time.strftime('%Y-%m-%d %H:%M:%S')))
-    new_path = os.path.join(tmp_path, file_name)
-    file_names = os.listdir(tmp_path)
-    with ZipFile(new_path, "w") as z:
-        for file in file_names:
-            if 'xmind' in file or 'json' in file:
-                continue
-            if 'manifest.xml' == file:
-                z.write(os.path.join(tmp_path, file), 'META-INF/' + file)
-            else:
-                z.write(os.path.join(tmp_path, file), file)
-    return new_path
+        with open(os.path.join(tmp_path, 'styles.xml'), 'w', encoding='utf-8') as f:
+            f.write('')
+        content = json.load(open(file_path, 'r', encoding='utf-8'))
+        content = format_x_writer(content, os.path.join(tmp_path, 'styles.xml'))
+        with open(os.path.join(tmp_path, 'styles.xml'), 'r', encoding='utf-8') as f:
+            styles = f.read()
+        with codecs.open(os.path.join(tmp_path, 'styles.xml'), 'w', encoding='utf-8') as f:
+            f.write(x_style.format(styles))
+        with codecs.open(os.path.join(tmp_path, 'content.xml'), 'w', encoding='utf-8') as f:
+            f.write(x_content.format(int(time.time() * 1000), int(time.time() * 1000), content))
+        with codecs.open(os.path.join(tmp_path, 'manifest.xml'), 'w', encoding='utf-8') as f:
+            f.write(x_manifest)
+        with codecs.open(os.path.join(tmp_path, 'meta.xml'), 'w', encoding='utf-8') as f:
+            f.write(x_meta.format(time.strftime('%Y-%m-%d %H:%M:%S')))
+        new_path = os.path.join(tmp_path, file_name)
+        file_names = os.listdir(tmp_path)
+        with ZipFile(new_path, "w") as z:
+            for file in file_names:
+                if 'xmind' in file or 'json' in file:
+                    continue
+                if 'manifest.xml' == file:
+                    z.write(os.path.join(tmp_path, file), 'META-INF/' + file)
+                else:
+                    z.write(os.path.join(tmp_path, file), file)
+        return new_path
+    return asyncio.to_thread(_sync_generate)
 
 
 def format_x_reader(data):

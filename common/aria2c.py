@@ -20,41 +20,49 @@ class Aria2Downloader:
         self.rpc_url = f'http://localhost:{rpc_port}/jsonrpc'
         self.process = None
         self.gid_dict = {}
-        self.kill_aria2c()
+        # self.kill_aria2c()
 
-    def start_rpc_server(self):
-        self.process = subprocess.Popen([self.aria2c_path, '--enable-rpc=true', '--allow-overwrite=true', '--enable-dht=true', f'--dht-listen-port={self.rpc_port + 2}', f'--rpc-listen-port={self.rpc_port}'])
+    async def start_rpc_server(self):
+        await self.kill_aria2c()
+        self.process = await asyncio.create_subprocess_exec([self.aria2c_path, '--enable-rpc=true', '--allow-overwrite=true', '--enable-dht=true', f'--dht-listen-port={self.rpc_port + 2}', f'--rpc-listen-port={self.rpc_port}'])
         logger.info('aria2c RPC server started.')
 
-    def stop_rpc_server(self):
+    async def stop_rpc_server(self):
         if self.process:
             self.process.terminate()
-            self.process.wait()
+            try:
+                await asyncio.wait_for(asyncio.to_thread(self.process.wait), timeout=5.0)
+            except asyncio.TimeoutError:
+                logger.warning("aria2c process did not terminate in 5s, forcing kill.")
+                self.process.kill()
+                await asyncio.to_thread(self.process.wait)
             self.process = None
             self.gid_dict = {}
             logger.info('aria2c RPC server stopped.')
         else:
             logger.info('aria2c RPC server has stopped.')
 
-    def kill_aria2c(self):
-        try:
-            current_platform = platform.system().lower()
-            if current_platform == "windows":
-                stop_cmd = "tasklist | findstr aria2c.exe"
-                result = subprocess.run(stop_cmd, capture_output=True, text=True, shell=True, timeout=15)
-                if result.stdout:
-                    stop_cmd = ["taskkill", "/F", "/IM", "aria2c.exe"]
-                    subprocess.run(stop_cmd, check=True, capture_output=True, text=True, timeout=15)
-            else:
-                stop_cmd = "ps -ef|grep aria2c|grep -v grep"
-                with os.popen(stop_cmd) as p:
-                    result = p.read()
-                if result:
-                    stop_cmd = "ps -ef|grep aria2c|grep -v grep |awk '{print $2}' |xargs kill -9"
+    async def kill_aria2c(self):
+        def _sync_kill():
+            try:
+                current_platform = platform.system().lower()
+                if current_platform == "windows":
+                    stop_cmd = "tasklist | findstr aria2c.exe"
+                    result = subprocess.run(stop_cmd, capture_output=True, text=True, shell=True, timeout=15)
+                    if result.stdout:
+                        stop_cmd = ["taskkill", "/F", "/IM", "aria2c.exe"]
+                        subprocess.run(stop_cmd, check=True, capture_output=True, text=True, timeout=15)
+                else:
+                    stop_cmd = "ps -ef|grep aria2c|grep -v grep"
                     with os.popen(stop_cmd) as p:
-                        _ = p.read()
-        except:
-            logger.error(traceback.format_exc())
+                        result = p.read()
+                    if result:
+                        stop_cmd = "ps -ef|grep aria2c|grep -v grep |awk '{print $2}' |xargs kill -9"
+                        with os.popen(stop_cmd) as p:
+                            _ = p.read()
+            except:
+                logger.error(traceback.format_exc())
+        await asyncio.to_thread(_sync_kill)
 
     def add_gid_dict(self, gid: str, username: str):
         self.gid_dict.update({gid: username})
@@ -64,7 +72,7 @@ class Aria2Downloader:
 
     async def add_http_task(self, url: str, file_path: str, file_name: str = "", cookie: str = ""):
         if not self.process:
-            self.start_rpc_server()
+            await self.start_rpc_server()
             await asyncio.sleep(1)
         options = {
             "max-connection-per-server": "8",
@@ -88,7 +96,7 @@ class Aria2Downloader:
 
     async def add_bt_task(self, url: str, file_path: str):
         if not self.process:
-            self.start_rpc_server()
+            await self.start_rpc_server()
             await asyncio.sleep(1)
         trackers = await get_tracker_list()
         options = {
@@ -112,7 +120,7 @@ class Aria2Downloader:
 
     async def add_bt_file(self, url: str, file_path: str):
         if not self.process:
-            self.start_rpc_server()
+            await self.start_rpc_server()
             await asyncio.sleep(1)
         trackers = await get_tracker_list()
         options = {
@@ -162,9 +170,10 @@ class Aria2Downloader:
 
     async def close_aria2c_downloader(self):
         if self.process:
-            tasks = await self.list_download_tasks(is_stop=False)
-            if not tasks:
-                self.stop_rpc_server()
+            if not self.gid_dict:
+                tasks = await self.list_download_tasks(is_stop=False)
+                if not tasks:
+                    await self.stop_rpc_server()
 
     async def get_completed_task_info(self, gid):
         payload = {

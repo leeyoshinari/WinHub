@@ -22,7 +22,7 @@ async def get_disk_usage(hh: models.SessionBase) -> Result:
     try:
         data = []
         for k, v in ROOT_PATH.items():
-            info = shutil.disk_usage(v)
+            info = await asyncio.to_thread(shutil.disk_usage, v)
             data.append({'disk': k, 'total': beauty_size(info.total), 'free': beauty_size(info.free),
                          'used': round(info.used / info.total * 100, 2), 'enableOnlyoffice': ENABLE_ONLYOFFICE})
         result.data = data
@@ -79,11 +79,11 @@ async def create_folder(parent_id: str, hh: models.SessionBase) -> Result:
         folder = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=Msg.Folder.get_text(hh.lang), parent_id=parent_id, format='ffolder', username=hh.groupname)
         folder_p = await FileExplorer.get_one(folder.id)
         folder_path = await folder_p.full_path()
-        if os.path.exists(folder_path):
+        if await asyncio.to_thread(os.path.exists, folder_path):
             await FileExplorer.query().equal(id=folder.id).delete()
             raise FileExistsError
         else:
-            os.mkdir(folder_path)
+            await asyncio.to_thread(os.mkdir, folder_path)
         result.data = folder.id
         result.msg = f"{Msg.Create.get_text(hh.lang).format(folder.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, folder.id, hh.username, hh.ip))
@@ -103,10 +103,10 @@ async def rename_folder(query: models.FilesBase, hh: models.SessionBase) -> Resu
         folder = await FileExplorer.get_one(query.id)
         folder_path = await folder.full_path()
         new_path = os.path.join(os.path.dirname(folder_path), query.name)
-        if os.path.exists(new_path):
+        if await asyncio.to_thread(os.path.exists, new_path):
             raise FileExistsError
         else:
-            os.rename(folder_path, new_path)
+            await asyncio.to_thread(os.rename, folder_path, new_path)
             await FileExplorer.update(folder.id, name=query.name)
         result.data = query.id
         result.msg = f"{Msg.Rename.get_text(hh.lang).format(query.name)}{Msg.Success.get_text(hh.lang)}"
@@ -184,7 +184,7 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
                 for folder in folders:
                     try:
                         folder_path = await folder.full_path()
-                        shutil.rmtree(folder_path)
+                        await asyncio.to_thread(shutil.rmtree, folder_path)
                     except FileNotFoundError:
                         result.code = 1
                         result.msg = Msg.FileNotExist.get_text(hh.lang).format(folder.name)
@@ -198,7 +198,7 @@ async def delete_file(query: models.IsDelete, hh: models.SessionBase) -> Result:
                     try:
                         await asyncio.to_thread(os.remove, await file.full_path())
                         if file.format in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
-                            remove(file.id, hh)
+                            await remove(file.id, hh)
                     except FileNotFoundError:
                         result.code = 1
                         result.msg = Msg.FileNotExist.get_text(hh.lang).format(file.name)

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 import os
+import asyncio
 import traceback
 import eyed3
 import aiofiles
@@ -17,7 +18,7 @@ async def get_mp3_info(file_id: str, hh: models.SessionBase) -> Result:
     result = Result()
     try:
         file = await FileExplorer.get_one(file_id)
-        mp3_info = eyed3.load(await file.full_path())
+        mp3_info = await asyncio.to_thread(eyed3.load, await file.full_path())
         result.data = {'id': file.id, 'name': file.name, 'duration': beauty_mp3_time(mp3_info.info.time_secs)}
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file_id, hh.username, hh.ip))
@@ -35,7 +36,7 @@ async def get_all_mp3(folder_id: str, hh: models.SessionBase) -> Result:
         file_list = []
         for f in music_list:
             try:
-                mp3_info = eyed3.load(await f.full_path())
+                mp3_info = await asyncio.to_thread(eyed3.load, await f.full_path())
                 file_list.append(models.MP3List.from_orm_format(f, beauty_mp3_time(mp3_info.info.time_secs)).model_dump())
             except:
                 logger.error(f"load {await f.full_path()} error.")
@@ -107,7 +108,7 @@ async def get_mp3_lyric(file_id: str, hh: models.SessionBase) -> Result:
         lrc_file_name = mp3_file.name.replace('.mp3', '.lrc')
         mp3_file_path = await mp3_file.full_path()
         lrc_file_path = mp3_file_path.replace('.mp3', '.lrc')
-        if os.path.exists(lrc_file_path):
+        if await asyncio.to_thread(os.path.exists, lrc_file_path):
             async with aiofiles.open(lrc_file_path, 'rb') as f:
                 result.data = await f.read()
             result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"

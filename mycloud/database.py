@@ -505,7 +505,7 @@ async def execute_sql(sql):
 
 async def init_data():
     migrate_lines_file = os.path.join(BASE_PATH, 'migrate_sql.txt')
-    if os.path.exists(migrate_lines_file):
+    if await asyncio.to_thread(os.path.exists, migrate_lines_file):
         async with aiofiles.open(migrate_lines_file, 'r', encoding='utf-8') as f:
             migrate_lines = await f.readlines()
         for line in migrate_lines:

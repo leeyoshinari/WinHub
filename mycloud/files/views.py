@@ -51,15 +51,15 @@ async def create_file(folder_id: str, file_type: str, hh: models.SessionBase) ->
         else:
             file_name = f"{Msg.FileTxt.get_text(hh.lang)}.{file_type}"
         file_path = os.path.join(folder_path, file_name)
-        if os.path.exists(file_path):
+        if await asyncio.to_thread(os.path.exists, file_path):
             raise FileExistsError
         else:
             if file_type == 'xmind':
-                create_xmind(file_path)
+                await create_xmind(file_path)
             elif file_type == 'sheet':
                 await create_sheet(file_path)
             elif file_type in ['docx', 'xlsx', 'pptx']:
-                shutil.copy2(f"mycloud/static_files/new.{file_type}", file_path)
+                await asyncio.to_thread(shutil.copy2, f"mycloud/static_files/new.{file_type}", file_path)
             else:
                 async with aiofiles.open(file_path, 'w', encoding='utf-8'):
                     pass
@@ -125,10 +125,10 @@ async def rename_file(query: models.FilesBase, hh: models.SessionBase) -> Result
             else:
                 new_file_name = query.name
         new_file_path = os.path.join(folder_path, new_file_name)
-        if os.path.exists(new_file_path):
+        if await asyncio.to_thread(os.path.exists, new_file_path):
             raise FileExistsError
         else:
-            os.rename(file_path, new_file_path)
+            await asyncio.to_thread(os.rename, file_path, new_file_path)
         await FileExplorer.update(file.id, name=new_file_name, format=new_file_format)
         result.data = query.id
         result.msg = f"{Msg.Rename.get_text(hh.lang).format(file.name)}{Msg.Success.get_text(hh.lang)}"
@@ -149,7 +149,7 @@ async def get_file_by_id(file_id: str, hh: models.SessionBase) -> Result:
         file = await FileExplorer.get_one(file_id)
         file_path = await file.full_path()
         if file.format == 'xmind':
-            xmind = read_xmind(file_path)
+            xmind = await read_xmind(file_path)
             result.data = xmind
         elif file.format == 'sheet':
             excel = await read_sheet(file_path)
@@ -209,7 +209,7 @@ async def save_txt_file(query: models.SaveFile, hh: models.SessionBase) -> Resul
         file_path = await file.full_path()
         async with aiofiles.open(file_path, 'w', encoding='utf-8') as f:
             await f.write(query.data)
-        file_size = os.path.getsize(file_path)
+        file_size = await asyncio.to_thread(os.path.getsize, file_path)
         await FileExplorer.update(file.id, size=file_size)
         result.msg = f"{Msg.Save.get_text(hh.lang).format(file.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file.id, hh.username, hh.ip))
@@ -234,9 +234,9 @@ async def copy_file(file_id: str, hh: models.SessionBase) -> Result:
             file_name = f"{file.name.replace(f'.{file.format}', '')} - {Msg.CopyName.get_text(hh.lang)}.{file.format}"
         else:
             file_name = f"{file.name.replace(f'.{file.format}', '')} - {Msg.CopyName.get_text(hh.lang)}"
-        if os.path.exists(os.path.join(folder_path, file_name)):
+        if await asyncio.to_thread(os.path.exists, os.path.join(folder_path, file_name)):
             raise FileExistsError
-        shutil.copy2(file_path, os.path.join(folder_path, file_name))
+        await asyncio.to_thread(shutil.copy2, file_path, os.path.join(folder_path, file_name))
         new_file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=file_name, format=file.format,
                                                     parent_id=file.parent_id, size=file.size, username=hh.groupname)
         result.data = new_file.id
@@ -271,13 +271,14 @@ async def zip_file(query: models.DownloadFile, hh: models.SessionBase) -> Result
             folder = await FileExplorer.get_one(files[0].parent_id)
             parent_path = await folder.full_path()
         zip_path = os.path.join(parent_path, f"{folder.name}.zip")
-        if os.path.exists(zip_path):
+        if await asyncio.to_thread(os.path.exists, zip_path):
             result.code = 1
             result.msg = Msg.FileExist.get_text(hh.lang).format(zip_path)
             return result
-        zip_multiple_file(zip_path, files, parent_path)
+        await asyncio.to_thread(zip_multiple_file, zip_path, files, parent_path)
+        file_size = await asyncio.to_thread(os.path.getsize, zip_path)
         file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=f"{folder.name}.zip", format='zip', parent_id=folder.id,
-                                                size=os.path.getsize(zip_path), username=hh.groupname)
+                                                size=file_size, username=hh.groupname)
         result.data = file.id
         result.msg = f"{Msg.Export.get_text(hh.lang).format(file.name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(result.msg, file.id, hh.username, hh.ip))
@@ -357,8 +358,8 @@ async def upload_file_by_path(query: models.ImportLocalFileByPath, hh: models.Se
             else:
                 folder = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=entry.name, parent_id=query.id, format='ffolder', username=hh.groupname)
                 folder_path = await folder.full_path()
-                if not os.path.exists(folder_path):
-                    os.mkdir(folder_path)
+                if not await asyncio.to_thread(os.path.exists, folder_path):
+                    await asyncio.to_thread(os.mkdir, folder_path)
                     query1 = models.ImportLocalFileByPath(id=folder.id, path=file_path)
                     await upload_file_by_path(query1, hh)
                 else:
@@ -398,7 +399,7 @@ async def upload_file(query, hh: models.SessionBase) -> Result:
         folder = await FileExplorer.get_one(parent_id)
         parent_path = await folder.full_path()
         file_path = os.path.join(parent_path, file_name)
-        if os.path.exists(file_path):
+        if await asyncio.to_thread(os.path.exists, file_path):
             result.code = 1
             result.data = file_name
             result.msg = Msg.FileExist.get_text(hh.lang).format(file_name)
@@ -409,10 +410,12 @@ async def upload_file(query, hh: models.SessionBase) -> Result:
             file_type = ''
         else:
             file_type = file_name_list[-1].lower()
+        content = await asyncio.to_thread(data.read)
         async with aiofiles.open(file_path, 'wb') as f:
-            await f.write(data.read())
+            await f.write(content)
+        file_size = await asyncio.to_thread(os.path.getsize, file_path)
         file = await FileExplorer.create2return(id=str(int(time.time() * 10000)), name=file_name, format=file_type,
-                                                parent_id=parent_id, size=os.path.getsize(file_path), username=hh.groupname)
+                                                parent_id=parent_id, size=file_size, username=hh.groupname)
         result.msg = f"{Msg.Upload.get_text(hh.lang).format(file_name)}{Msg.Success.get_text(hh.lang)}"
         result.data = file.name
         logger.info(f"{Msg.CommonLog1.get_text(hh.lang).format(result.msg, file.id, hh.username, hh.ip)}, content_type: {query['file'].content_type}")
@@ -430,8 +433,8 @@ async def upload_image(query, hh: models.SessionBase) -> Result:
     query = await query.form()
     img_type = query['imgType']
     folder_path = os.path.join(BASE_PATH, 'web/img/pictures', hh.username)
-    if not os.path.exists(folder_path):
-        os.mkdir(folder_path)
+    if not await asyncio.to_thread(os.path.exists, folder_path):
+        await asyncio.to_thread(os.mkdir, folder_path)
     if img_type == '1':
         file_path = os.path.join(folder_path, 'background.jpg')
     elif img_type == '0':
@@ -440,8 +443,9 @@ async def upload_image(query, hh: models.SessionBase) -> Result:
         file_path = os.path.join(folder_path, 'login.jpg')
     data = query['file'].file
     try:
+        content = await asyncio.to_thread(data.read)
         async with aiofiles.open(file_path, 'wb') as f:
-            await f.write(data.read())
+            await f.write(content)
         result.msg = f"{Msg.Upload.get_text(hh.lang).format(query['file'].filename)}{Msg.Success.get_text(hh.lang)}"
         logger.info(f"{Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip)}, content_type: {query['file'].content_type}")
     except:
@@ -454,7 +458,7 @@ async def upload_image(query, hh: models.SessionBase) -> Result:
 
 async def export_xmind_file(file_id, hh: models.SessionBase) -> dict:
     file = await FileExplorer.get_one(file_id)
-    file_path = generate_xmind8(file.id, file.name, await file.full_path())
+    file_path = await generate_xmind8(file.id, file.name, await file.full_path())
     result = {'path': file_path, 'name': file.name, 'format': file.format}
     logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.Export.get_text(hh.lang).format(file.name) + Msg.Success.get_text(hh.lang), file.id, hh.username, hh.ip))
     return result
@@ -530,7 +534,7 @@ async def save_shared_to_myself(share_id: int, folder_id: str, hh: models.Sessio
         origin_file_path = await file.full_path()
         folder = await FileExplorer.get_one(folder_id)
         target_folder_path = await folder.full_path()
-        shutil.copy2(origin_file_path, target_folder_path)
+        await asyncio.to_thread(shutil.copy2, origin_file_path, target_folder_path)
         await FileExplorer.create(id=str(int(time.time() * 10000)), name=file.name, format=file.format, parent_id=folder_id,
                                   size=file.size, username=hh.groupname)
         result.msg = f"{Msg.Save.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"

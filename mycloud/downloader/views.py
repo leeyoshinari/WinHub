@@ -7,7 +7,6 @@ import shutil
 import time
 import base64
 import asyncio
-import subprocess
 import traceback
 # from threading import Thread
 from urllib.parse import urlparse
@@ -30,7 +29,7 @@ async def get_download_list(hh: models.SessionBase) -> Result:
             result.data = []
             return result
         file_lists = await aria2c_downloader.list_download_tasks()
-        download_list = [models.DownloadList.from_orm_format(d).model_dump() for d in file_lists if aria2c_downloader.gid_dict.get(d['gid'], '') == hh.username]
+        download_list = [models.DownloadList.from_orm_format(d).model_dump() for d in file_lists if aria2c_downloader.gid_dict.get(d['gid'], '') == hh.groupname]
         result.data = download_list
         result.total = len(download_list)
         result.msg = f"{Msg.Query.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}"
@@ -91,7 +90,7 @@ async def download_with_aria2c_http(query: models.DownloadFileOnline, hh: models
                 await asyncio.sleep(1)
                 res = await aria2c_downloader.get_completed_task_info(gid)
         asyncio.create_task(write_aria2c_task_to_db(gid, folder_id, hh.groupname))
-        aria2c_downloader.add_gid_dict(gid, hh.username)
+        aria2c_downloader.add_gid_dict(gid, hh.groupname)
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(query.url, gid, hh.username, hh.ip))
     except:
@@ -123,7 +122,7 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
         await aria2c_downloader.update_task(new_gid, 'pause')
         bt_file_list = [models.BtFileList.from_orm_format(f, new_gid, folder_id).model_dump() for f in file_list if int(f['length']) > 1024]
         await aria2c_downloader.update_task(gid, "remove")
-        aria2c_downloader.add_gid_dict(new_gid, hh.username)
+        aria2c_downloader.add_gid_dict(new_gid, hh.groupname)
         result.data = bt_file_list
         result.total = len(result.data)
         result.msg = Msg.DownloadOnline.get_text(hh.lang)
@@ -145,7 +144,7 @@ async def open_torrent(file_id: str, hh: models.SessionBase) -> Result:
         file_list = await aria2c_downloader.get_file_list(new_gid)
         await aria2c_downloader.update_task(new_gid, 'pause')
         bt_file_list = [models.BtFileList.from_orm_format(f, new_gid, file.parent_id).model_dump() for f in file_list if int(f['length']) > 1024]
-        aria2c_downloader.add_gid_dict(new_gid, hh.username)
+        aria2c_downloader.add_gid_dict(new_gid, hh.groupname)
         await aria2c_downloader.update_task(gid, "remove")
         result.data = bt_file_list
         result.total = len(result.data)
@@ -279,18 +278,18 @@ async def download_m3u8_video(query: models.DownloadFileOnline, hh: models.Sessi
 
 
 async def write_m3u8_task_to_db(cmd, parent_id, file_path):
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     while True:
         try:
-            output = process.stderr.readline()
-            if output == '' and process.poll() is not None:
+            output = await process.stderr.readline()
+            if not output and process.returncode is not None:
                 break
-            logger.info(output)
+            logger.info(output.decode().strip())
         except:
             logger.error(traceback.format_exc())
             break
 
-    process.wait()
+    await process.wait()
     if process.returncode == 0:
         file_name = os.path.basename(file_path)
         folder = await FileExplorer.get_one(parent_id)

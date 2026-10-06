@@ -17,8 +17,9 @@
 """
 
 import os
-import io
 import json
+import asyncio
+import aiofiles
 from datetime import datetime
 from mycloud.onlyoffice.utils import docManager
 from mycloud.onlyoffice.utils import jwtManager
@@ -36,25 +37,26 @@ def getVersionDir(histDir, version):
 
 
 # get file version of the given history directory
-def getFileVersion(histDir):
-    if not os.path.exists(histDir):  # if the history directory doesn't exist
+async def getFileVersion(histDir):
+    if not await asyncio.to_thread(os.path.exists, histDir):  # if the history directory doesn't exist
         return 0  # file version is 0
 
     cnt = 1
-    for f in os.listdir(histDir):  # run through all the files in the history directory
-        if not os.path.isfile(os.path.join(histDir, f)):  # and count the number of files
+    dirs = await asyncio.to_thread(os.listdir, histDir)
+    for f in dirs:  # run through all the files in the history directory
+        if not await asyncio.to_thread(os.path.isfile, os.path.join(histDir, f)):  # and count the number of files
             cnt += 1
 
     return cnt
 
 
 # get the path to the next file version
-def getNextVersionDir(histDir):
-    v = getFileVersion(histDir)  # get file version of the given history directory
+async def getNextVersionDir(histDir):
+    v = await getFileVersion(histDir)  # get file version of the given history directory
     path = getVersionDir(histDir, v)  # get the path to the next file version
 
-    if not os.path.exists(path):  # if this path doesn't exist
-        os.makedirs(path)  # make the directory for this file version
+    if not await asyncio.to_thread(os.path.exists, path):  # if this path doesn't exist
+        await asyncio.to_thread(os.makedirs, path)  # make the directory for this file version
     return path
 
 
@@ -84,12 +86,12 @@ def getMetaPath(histDir):
 
 
 # create a json file with file meta data using the storage path and request
-def createMeta(storagePath, req):
+async def createMeta(storagePath, req):
     histDir = getHistoryDir(storagePath)
     path = getMetaPath(histDir)  # get the path to a json file with meta data about file
 
-    if not os.path.exists(histDir):
-        os.makedirs(histDir)
+    if not await asyncio.to_thread(os.path.exists, histDir):
+        await asyncio.to_thread(os.makedirs, histDir)
 
     user = users.getUser(req, req)  # get the user information (id and name)
 
@@ -99,16 +101,17 @@ def createMeta(storagePath, req):
         'uname': user.name
     }
 
-    writeFile(path, json.dumps(obj))
+    await writeFile(path, json.dumps(obj))
 
 
 # create a json file with file meta data using the file name, user id, user name and user address
-def createMetaData(filename, uid, uname, usAddr):
-    histDir = getHistoryDir(docManager.getStoragePath(filename, usAddr))
+async def createMetaData(filename, uid, uname, usAddr):
+    storage_path = await docManager.getStoragePath(filename, usAddr)
+    histDir = getHistoryDir(storage_path)
     path = getMetaPath(histDir)  # get the path to a json file with meta data about file
 
-    if not os.path.exists(histDir):
-        os.makedirs(histDir)
+    if not await asyncio.to_thread(os.path.exists, histDir):
+        await asyncio.to_thread(os.makedirs, histDir)
 
     obj = {  # create the meta data object
         'created': datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
@@ -116,19 +119,19 @@ def createMetaData(filename, uid, uname, usAddr):
         'uname': uname
     }
 
-    writeFile(path, json.dumps(obj))
+    await writeFile(path, json.dumps(obj))
 
 
 # create file with a given content in it
-def writeFile(path, content):
-    with io.open(path, 'w', encoding='utf-8') as out:
-        out.write(content)
+async def writeFile(path, content):
+    async with aiofiles.open(path, 'w', encoding='utf-8') as out:
+        await out.write(content)
 
 
 # read a file
-def readFile(path):
-    with io.open(path, 'r', encoding='utf-8') as stream:
-        return stream.read()
+async def readFile(path):
+    async with aiofiles.open(path, 'r', encoding='utf-8') as stream:
+        return await stream.read()
 
 
 # get the url to the history file version with a given extension
@@ -137,21 +140,21 @@ def getPublicHistUri(server_prefix, ver, file, file_id: str):
 
 
 # get the meta data of the file
-def getMeta(storagePath):
+async def getMeta(storagePath):
     histDir = getHistoryDir(storagePath)
     path = getMetaPath(histDir)
 
-    if os.path.exists(path):  # check if the json file with file meta data exists
-        with io.open(path, 'r') as stream:
-            return json.loads(stream.read())  # turn meta data into python format
+    if await asyncio.to_thread(os.path.exists, path):  # check if the json file with file meta data exists
+        async with aiofiles.open(path, 'r') as stream:
+            return json.loads(await stream.read())  # turn meta data into python format
 
     return None
 
 
 # get the document history of a given file
-def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, file_id: str, request_host):
+async def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, file_id: str, request_host):
     histDir = getHistoryDir(storagePath)
-    version = getFileVersion(histDir)
+    version = await getFileVersion(histDir)
     if version > 0:  # if the file was modified (the file version is greater than 0)
         hist = []
         histData = {}
@@ -163,7 +166,7 @@ def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, f
             verDir = getVersionDir(histDir, i)  # get the path to the given file version
 
             try:
-                key = docKey if i == version else readFile(getKeyPath(verDir))  # get document key
+                key = docKey if i == version else await readFile(getKeyPath(verDir))  # get document key
                 obj['key'] = key
                 obj['version'] = i
                 dataObj['fileType'] = fileUtils.getFileExt(filename)[1:]
@@ -171,7 +174,7 @@ def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, f
                 dataObj['version'] = i
 
                 if i == 1:  # check if the version number is equal to 1
-                    meta = getMeta(storagePath)  # get meta data of this file
+                    meta = await getMeta(storagePath)  # get meta data of this file
                     if meta:  # write meta information to the object (user information and creation date)
                         obj['created'] = meta['created']
                         obj['user'] = {
@@ -187,7 +190,7 @@ def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, f
 
                 if i > 1:  # check if the version number is greater than 1 (the file was modified)
                     # get the path to the changes.json file
-                    changes = json.loads(readFile(getChangesHistoryPath(prevVerDir)))
+                    changes = json.loads(await readFile(getChangesHistoryPath(prevVerDir)))
                     change = changes['changes'][0] if 'changes' in changes else None
                     # write information about changes to the object
                     obj['changes'] = changes['changes'] if change else None
@@ -209,7 +212,7 @@ def getHistoryObject(storagePath, filename, docKey, docUrl, isEnableDirectUrl, f
                     dataObj['previous'] = prevInfo  # write information about previous file version to the data object
 
                     diffPath = os.path.sep.join([histDir, str(i - 1), "diff.zip"])
-                    if os.path.exists(diffPath):
+                    if await asyncio.to_thread(os.path.exists, diffPath):
                         # write the path to the diff.zip archive with differences in this file version
                         dataObj['changesUrl'] = getPublicHistUri(request_host, i - 1, "diff.zip", file_id)
 

@@ -8,7 +8,6 @@ import json
 import asyncio
 import shutil
 import zipfile
-import subprocess
 import traceback
 import socket
 import signal
@@ -18,7 +17,7 @@ import aiofiles
 from mycloud import models
 from settings import TMP_PATH, BASE_PATH, TIME_ZONE, ENABLED_AUTO_UPDATE, PIP_CMD
 from common.calc import beauty_time, beauty_size, beauty_time_pretty
-from common.scheduler import scheduler, get_schedule_time
+from common.scheduler import scheduler, get_schedule_time, _sync_remove_tmp_folder
 from common.httpRequest import http
 from common.results import Result
 from common.messages import Msg
@@ -37,7 +36,8 @@ async def get_system_info(hh: models.SessionBase) -> Result:
         os_architecture = platform.architecture()[0].lower()  # 系统架构
         machine = platform.machine()
         logical_cores = psutil.cpu_count(logical=True)  # 逻辑核数
-        uptime_seconds = time.time() - psutil.boot_time()
+        boot_time = await asyncio.to_thread(psutil.boot_time)
+        uptime_seconds = time.time() - boot_time
         cpu_run_time = beauty_time_pretty(beauty_time(uptime_seconds).split(':'), Msg.DateFormatPretty.get_text(hh.lang))  # 系统运行时间
         if os_name == "Windows":
             os_version = f"{os_name} {os_version}"
@@ -48,11 +48,16 @@ async def get_system_info(hh: models.SessionBase) -> Result:
         else:
             os_version = await get_linux_system_version()
             os_processor = await get_linux_cpu_model()
-        total_memory = psutil.virtual_memory().total / 1073741824
-        total_size = 0
-        for partition in psutil.disk_partitions():
-            disk_usage = psutil.disk_usage(partition.mountpoint)
-            total_size += disk_usage.total
+        virtual_memory = await asyncio.to_thread(psutil.virtual_memory)
+        total_memory = virtual_memory.total / 1073741824
+
+        def get_total_disk_size():
+            total_size = 0
+            for partition in psutil.disk_partitions():
+                disk_usage = psutil.disk_usage(partition.mountpoint)
+                total_size += disk_usage.total
+            return total_size
+        total_size = await asyncio.to_thread(get_total_disk_size)
         result.data = {'os_name': os_name, 'os_version': os_version, 'cpu_core': logical_cores, 'memory': round(total_memory, 2),
                        'os_arch': os_architecture.replace('bit', ''), 'cpu_model': os_processor,
                        'disk': beauty_size(total_size), 'run_time': cpu_run_time, 'machine': machine}
@@ -68,12 +73,14 @@ async def get_system_info(hh: models.SessionBase) -> Result:
 async def get_resource(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        virtual_memory = psutil.virtual_memory()
-        initial_io = psutil.disk_io_counters()
-        initial_net = psutil.net_io_counters()
-        cpu_percent = psutil.cpu_percent(interval=1)
-        final_io = psutil.disk_io_counters()
-        final_net = psutil.net_io_counters()
+        await asyncio.to_thread(psutil.cpu_percent, interval=None)
+        initial_io = await asyncio.to_thread(psutil.disk_io_counters)
+        initial_net = await asyncio.to_thread(psutil.net_io_counters)
+        await asyncio.sleep(1)
+        cpu_percent = await asyncio.to_thread(psutil.cpu_percent, interval=None)
+        final_io = await asyncio.to_thread(psutil.disk_io_counters)
+        final_net = await asyncio.to_thread(psutil.net_io_counters)
+        virtual_memory = await asyncio.to_thread(psutil.virtual_memory)
         memory_percent = virtual_memory.percent
         total_memory = virtual_memory.total / 1073741824
         used_memory = virtual_memory.used / 1073741824
@@ -120,13 +127,18 @@ async def get_cpu_info(hh: models.SessionBase) -> Result:
 
 async def get_disk_info(hh: models.SessionBase) -> Result:
     result = Result()
-    try:
+
+    def _sync_get_disk_usage():
         total_size = 0
         used_size = 0
         for partition in psutil.disk_partitions():
             disk_usage = psutil.disk_usage(partition.mountpoint)
             total_size += disk_usage.total
             used_size += disk_usage.used
+        return total_size, used_size
+
+    try:
+        total_size, used_size = await asyncio.to_thread(_sync_get_disk_usage)
         result.data = {'total': beauty_size(total_size), 'used': beauty_size(used_size),
                        'usage': round(used_size / total_size * 100, 2)}
         result.msg = f'{Msg.SystemDiskInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}'
@@ -140,12 +152,8 @@ async def get_disk_info(hh: models.SessionBase) -> Result:
 
 async def get_net_info(hh: models.SessionBase) -> Result:
     result = Result()
-    try:
-        net_speed = None
-        net_name = ''
-        ipv4_addr = ''
-        ipv6_addr = ''
-        mac_addr = ''
+
+    def get_net_info_sync():
         network_interfaces = psutil.net_if_addrs()
         network_stats = psutil.net_if_stats()
         for interface_name, interface_addresses in network_interfaces.items():
@@ -153,16 +161,22 @@ async def get_net_info(hh: models.SessionBase) -> Result:
                 continue
             interface_status = network_stats[interface_name]
             if interface_status.isup:
-                net_name = interface_name
-                net_speed = f"{interface_status.speed} Mbps" if interface_status.speed else None
+                speed = f"{interface_status.speed} Mbps" if interface_status.speed else None
+                ipv4 = ''
+                ipv6 = ''
+                mac = ''
                 for address in interface_addresses:
                     if address.family == socket.AF_INET:
-                        ipv4_addr = address.address
+                        ipv4 = address.address
                     elif address.family == socket.AF_INET6:
-                        ipv6_addr = address.address
+                        ipv6 = address.address
                     elif address.family == psutil.AF_LINK:
-                        mac_addr = address.address
-                break
+                        mac = address.address
+                return interface_name, speed, ipv4, ipv6, mac
+        return '', None, '', '', ''
+
+    try:
+        net_name, net_speed, ipv4_addr, ipv6_addr, mac_addr = await asyncio.to_thread(get_net_info_sync)
         result.data = {'name': net_name, 'speed': net_speed, 'ipv4': ipv4_addr, 'ipv6': ipv6_addr, 'mac': mac_addr}
         result.msg = f'{Msg.SystemNetWorkInfo.get_text(hh.lang)}{Msg.Success.get_text(hh.lang)}'
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -176,18 +190,19 @@ async def get_net_info(hh: models.SessionBase) -> Result:
 async def remove_tmp_folder(hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        for root, _, files in os.walk(TMP_PATH):
-            for file in files:
-                file_path = os.path.join(root, file)
-                await asyncio.to_thread(os.remove, file_path)
-                log_str = f"{Msg.Delete.get_text(hh.lang).format(file_path)}{Msg.Success.get_text(hh.lang)}"
-                logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
+        # for root, _, files in os.walk(TMP_PATH):
+        #     for file in files:
+        #         file_path = os.path.join(root, file)
+        #         await asyncio.to_thread(os.remove, file_path)
+        #         log_str = f"{Msg.Delete.get_text(hh.lang).format(file_path)}{Msg.Success.get_text(hh.lang)}"
+        #         logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
 
-        folders = os.listdir(TMP_PATH)
-        for folder in folders:
-            await asyncio.to_thread(shutil.rmtree, os.path.join(TMP_PATH, folder))
-            log_str = f"{Msg.Delete.get_text(hh.lang).format(folder)}{Msg.Success.get_text(hh.lang)}"
-            logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
+        # folders = os.listdir(TMP_PATH)
+        # for folder in folders:
+        #     await asyncio.to_thread(shutil.rmtree, os.path.join(TMP_PATH, folder))
+        #     log_str = f"{Msg.Delete.get_text(hh.lang).format(folder)}{Msg.Success.get_text(hh.lang)}"
+        #     logger.info(Msg.CommonLog.get_text(hh.lang).format(log_str, hh.username, hh.ip))
+        await asyncio.to_thread(_sync_remove_tmp_folder)
         result.msg = Msg.Delete.get_text(hh.lang).format('') + Msg.Success.get_text(hh.lang)
     except:
         logger.error(traceback.format_exc())
@@ -205,7 +220,7 @@ async def get_new_version(hh: models.SessionBase) -> Result:
             res_json = json.loads(res.text)
             latest_version = res_json['name']
             current_version = ""
-            if os.path.exists(UPDATE_DATE_PATH):
+            if await asyncio.to_thread(os.path.exists, UPDATE_DATE_PATH):
                 async with aiofiles.open(UPDATE_DATE_PATH, 'r') as f:
                     update_info = await f.read()
                 current_version = update_info.split('_')[0]
@@ -265,7 +280,7 @@ async def restart_system(start_type: int, hh: models.SessionBase) -> Result:
         current_platform = platform.system().lower()
         if start_type == 1:
             package_path = os.path.join(BASE_PATH, 'WinHub.zip')
-            if os.path.exists(package_path):
+            if await asyncio.to_thread(os.path.exists, package_path):
                 await asyncio.to_thread(extract_zip, package_path)
             # 安装第三方包
             await asyncio.sleep(1)
@@ -320,7 +335,7 @@ async def auto_update():
 
 async def get_update_status(hh: models.SessionBase):
     update_date = ''
-    if os.path.exists(UPDATE_DATE_PATH):
+    if await asyncio.to_thread(os.path.exists, UPDATE_DATE_PATH):
         async with aiofiles.open(UPDATE_DATE_PATH, 'r') as f:
             update_date = await f.read()
     logger.info(f"Get system status, username: {hh.username}, ip: {hh.ip}")
@@ -390,11 +405,11 @@ async def exec_cmd(cmd):
 
 
 async def run_async_subprocess(cmd):
-    process = await asyncio.create_subprocess_shell(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     await process.communicate()
 
 
-async def extract_zip(zip_path):
+def extract_zip(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as f:
         zip_files = f.namelist()
         tmp_name = zip_files[0][: zip_files[0].index('/')]

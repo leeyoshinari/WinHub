@@ -5,6 +5,7 @@
 import os
 import time
 import shutil
+import asyncio
 import datetime
 import traceback
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -15,21 +16,25 @@ from settings import TMP_PATH
 scheduler = AsyncIOScheduler()
 
 
-def remove_tmp_folder():
+def _sync_remove_tmp_folder():
     try:
-        # 删除最近30分钟没有修改的文件，避免删除当前正在编辑的文件
+        # 删除最近1天没有修改的文件，避免删除当前正在编辑的文件
         for root, _, files in os.walk(TMP_PATH):
             for file in files:
-                file_path = os.path.join(root, file)
-                if os.path.getmtime(file_path) < time.time() - 1800:
-                    os.remove(file_path)
-                    logger.info(f"Delete file successfully. file: {file_path}")
+                try:
+                    file_path = os.path.join(root, file)
+                    if os.path.getmtime(file_path) < time.time() - 86520:
+                        os.remove(file_path)
+                        logger.info(f"Delete file successfully. file: {file_path}")
+                except:
+                    logger.error(traceback.format_exc())
 
         # 删除文件后，再删除目录。如果目录大于 1KB，说明该目录正在使用，不删除
         folders = os.listdir(TMP_PATH)
         for folder in folders:
-            if get_folder_size(folder) < 1024:
-                shutil.rmtree(os.path.join(TMP_PATH, folder))
+            folder_path = os.path.join(TMP_PATH, folder)
+            if get_folder_size(folder_path) < 1024:
+                shutil.rmtree(folder_path)
                 logger.info(f"Remove directory successfully. folder: {folder}")
     except:
         logger.error(traceback.format_exc())
@@ -47,6 +52,10 @@ def get_folder_size(folder_path) -> int:
         except:
             continue
     return total_size
+
+
+async def remove_tmp_folder():
+    await asyncio.to_thread(_sync_remove_tmp_folder)
 
 
 def get_schedule_time(hour: int = 5, minute: int = 20, second: int = 20):

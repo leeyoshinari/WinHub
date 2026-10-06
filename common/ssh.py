@@ -7,7 +7,6 @@ import time
 import socket
 import asyncio
 import traceback
-from threading import Thread
 import paramiko
 import websockets.exceptions
 from common.logging import logger
@@ -24,7 +23,7 @@ class SSH:
 
     async def connect(self, host, user, password=None, ssh_key=None, port=22, timeout=10,
                       term='xterm', pty_width=40, pty_height=24, current_time=None):
-        try:
+        def _sync_connect(host, user, password, ssh_key, port, timeout, term, pty_width, pty_height, current_time):
             # Allow trusted hosts to be added to "host_allow" list.
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             if ssh_key:
@@ -32,7 +31,6 @@ class SSH:
                     get_key_obj(paramiko.DSSKey, pkey_obj=ssh_key, password=password) or \
                     get_key_obj(paramiko.ECDSAKey, pkey_obj=ssh_key, password=password) or \
                     get_key_obj(paramiko.Ed25519Key, pkey_obj=ssh_key, password=password)
-
                 self.ssh_client.connect(username=user, hostname=host, port=port, pkey=key, timeout=timeout)
             else:
                 self.ssh_client.connect(username=user, password=parse_pwd(password, current_time), hostname=host, port=port, timeout=timeout)
@@ -41,10 +39,12 @@ class SSH:
             self.channel = self.transport.open_session()
             self.channel.get_pty(term=term, width=pty_width, height=pty_height)
             self.channel.invoke_shell()
-            logger.info('ssh connect success ~ ')
-            Thread(target=self.run_async_backend_to_frontend).start()
-            Thread(target=self.run_async_heart_beat_check, args=(host,)).start()
 
+        try:
+            await asyncio.to_thread(_sync_connect, host, user, password, ssh_key, port, timeout, term, pty_width, pty_height, current_time)
+            logger.info('ssh connect success ~ ')
+            asyncio.create_task(self.backend_to_frontend())
+            asyncio.create_task(self.heart_beat_check(host))
         except socket.timeout:
             logger.error('ssh connect timeout! ')
             await self.close('Session Connect Timeout ~ ')
@@ -58,37 +58,17 @@ class SSH:
             logger.error(traceback.format_exc())
             await self.close()
 
-    def run_async_backend_to_frontend(self):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(self.backend_to_frontend())
-        except:
-            logger.error(traceback.format_exc())
-        finally:
-            loop.close()
-
-    def run_async_heart_beat_check(self, host):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(self.heart_beat_check(host))
-        except:
-            logger.error(traceback.format_exc())
-        finally:
-            loop.close()
-
     def exec_command(self, command):
         _, stdout, _ = self.ssh_client.exec_command(command)
         result = stdout.read().decode("utf-8")
         return result
 
-    def resize_pty(self, cols, rows):
-        self.channel.resize_pty(width=cols, height=rows)
+    async def resize_pty(self, cols, rows):
+        await asyncio.to_thread(self.channel.resize_pty, width=cols, height=rows)
 
     async def django_to_ssh(self, data):
         try:
-            self.channel.send(data)
+            await asyncio.to_thread(self.channel.send, data)
         except:
             logger.error(traceback.format_exc())
             await self.close()
@@ -97,24 +77,30 @@ class SSH:
         try:
             while True:
                 try:
-                    data = self.channel.recv(1024).decode('utf-8')
-                except UnicodeDecodeError:
-                    logger.warning(f"decode error：{self.channel.recv(1024)}")
-                    data = self.channel.recv(1024).decode('unicode_escape')
-                self.keepalive_last_time = time.time()
-                try:
-                    await self.websocket.send_text(data)
-                except (RuntimeError, websockets.exceptions.ConnectionClosedOK):
+                    data_bytes = await asyncio.to_thread(self.channel.recv, 1024)
+                    if not data_bytes:
+                        break
+                    try:
+                        data = data_bytes.decode('utf-8')
+                    except UnicodeDecodeError:
+                        logger.warning(f"decode error：{self.channel.recv(1024)}")
+                        data = data_bytes.decode('unicode_escape')
+                    self.keepalive_last_time = time.time()
+                    try:
+                        await self.websocket.send_text(data)
+                    except (RuntimeError, websockets.exceptions.ConnectionClosedOK):
+                        logger.error(traceback.format_exc())
+                        break
+                    logger.debug(f'back to front data: {data}')
+                except ValueError as err:
+                    logger.error(err)
+                    self.ssh_client.close()
                     break
-                logger.debug(f'back to front data: {data}')
-        except ValueError as err:
-            logger.error(err)
-            self.ssh_client.close()
-        except RuntimeError as err:
-            logger.error(err)
-            self.ssh_client.close()
+                except RuntimeError as err:
+                    logger.error(err)
+                    self.ssh_client.close()
+                    break
         except:
-            logger.error(self.channel.recv(1024))
             logger.error(traceback.format_exc())
             await self.close()
 
@@ -124,7 +110,8 @@ class SSH:
             await self.websocket.close()
         except (websockets.exceptions.ConnectionClosedOK, websockets.exceptions.ConnectionClosedError):
             logger.error(traceback.format_exc())
-        self.ssh_client.close()
+        finally:
+            self.ssh_client.close()
 
     async def heart_beat_check(self, host):
         try:
@@ -137,12 +124,6 @@ class SSH:
                     break
             await self.close()
             logger.info('close ssh success ~ ')
-        except ValueError as err:
-            logger.error(err)
-            self.ssh_client.close()
-        except RuntimeError as err:
-            logger.error(err)
-            self.ssh_client.close()
         except:
             logger.error(traceback.format_exc())
             await self.close()
@@ -278,6 +259,11 @@ class UploadAndDownloadFile(object):
         fp.seek(0)
         return fp
 
+    def close(self):
+        if self.sftp:
+            self.sftp.close()
+        if self.t:
+            self.t.close()
+
     def __del__(self):
-        self.sftp.close()
-        self.t.close()
+        self.close()

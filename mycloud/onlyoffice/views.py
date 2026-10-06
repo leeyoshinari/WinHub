@@ -6,6 +6,7 @@ import os
 import json
 import time
 import shutil
+import asyncio
 import traceback
 import aiofiles
 from datetime import datetime
@@ -67,7 +68,7 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
         file = await FileExplorer.get_one(file_id)
         filename = file.name
         ext = fileUtils.getFileExt(filename)
-        docKey = docManager.generateFileKey(await file.full_path())
+        docKey = await docManager.generateFileKey(await file.full_path())
         fileType = await fileUtils.getFileType(filename)
 
         # get the editor mode: view/edit/review/comment/fillForms/embedded (the default mode is edit)
@@ -85,8 +86,8 @@ async def edit(file_id: str, request: Request, hh: models.SessionBase) -> Result
         # get the editor type: embedded/mobile/desktop (the default type is desktop)
         edType = 'desktop'
 
-        storagePath = docManager.getStoragePath(file_id, file_id)
-        meta = historyManager.getMeta(storagePath)  # get the document meta data
+        storagePath = await docManager.getStoragePath(file_id, file_id)
+        meta = await historyManager.getMeta(storagePath)  # get the document meta data
 
         actionData = ''     # request.GET.get('actionLink')  # get the action data that will be scrolled to (comment or bookmark)
         actionLink = json.loads(actionData) if actionData else None
@@ -233,10 +234,10 @@ async def rename(file_id: str, body: str, hh: models.SessionBase):
         file = await FileExplorer.get_one(file_id)
         file_path = await file.full_path()
         folder_path = os.path.dirname(file_path)
-        if os.path.exists(file_path):
+        if await asyncio.to_thread(os.path.exists, file_path):
             raise FileExistsError
         else:
-            os.rename(file_path, os.path.join(folder_path, newfilename))
+            await asyncio.to_thread(os.rename, file_path, os.path.join(folder_path, newfilename))
             await FileExplorer.update(file.id, name=newfilename, format=body['ext'])
         response.setdefault('result', json.loads(await trackManager.commandRequest('meta', dockey, meta).text))
         logger.info(f"{Msg.Rename.get_text(hh.lang).format(file_id)} {Msg.Success.get_text(hh.lang)}")
@@ -252,7 +253,7 @@ async def save_as(file_id, body: str, hh: models.SessionBase):
         body = json.loads(body)
         saveAsFileUrl = body['url']
         title = body['title']
-        filename = docManager.getCorrectName(title, file_id)
+        filename = await docManager.getCorrectName(title, file_id)
         curExt = fileUtils.getFileExt(filename)
         if not await docManager.isSupportedExt(curExt):  # check if the file extension is supported by the document manager
             response.setdefault('error', Msg.FileTypeNotSupport.get_text(hh.lang))
@@ -261,8 +262,8 @@ async def save_as(file_id, body: str, hh: models.SessionBase):
         # save the file from the new url in the storage directory
         file_time = str(int(time.time()))
         path = os.path.join('tmp', file_time)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        if not await asyncio.to_thread(os.path.exists, path):
+            await asyncio.to_thread(os.makedirs, path)
         await docManager.downloadFileFromUri(saveAsFileUrl, os.path.join(path, filename), True)
         response.setdefault('file', filename)
         response.setdefault('file_id', file_time)
@@ -274,9 +275,9 @@ async def save_as(file_id, body: str, hh: models.SessionBase):
     return json.dumps(response, ensure_ascii=False)
 
 
-def remove(file_id: str, hh: models.SessionBase):
+async def remove(file_id: str, hh: models.SessionBase):
     try:
-        docManager.removeFile(file_id, file_id)
+        await docManager.removeFile(file_id, file_id)
         logger.info(f"{Msg.Delete.get_text(hh.lang).format(file_id)} {Msg.Success.get_text(hh.lang)}")
         return True
     except:
@@ -296,8 +297,8 @@ async def history_obj(file_id: str, request: Request, body: str, hh: models.Sess
             return json.dumps(response, ensure_ascii=False)
 
         file = await FileExplorer.get_one(file_id)
-        storage_path = docManager.getStoragePath(file_id, file_id)
-        doc_key = docManager.generateFileKey(await file.full_path())
+        storage_path = await docManager.getStoragePath(file_id, file_id)
+        doc_key = await docManager.generateFileKey(await file.full_path())
         file_url = f"{request_host}/file/onlyoffice/{file_id}?token={hh.token}&lang={hh.lang}"
         response = historyManager.getHistoryObject(storage_path, file.name, doc_key, file_url, False, file_id, request_host)
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.HistoryRecord.get_text(hh.lang), file_id, hh.username, hh.ip))
@@ -312,7 +313,7 @@ async def download_history(file_id: str, request: Request):
     try:
         file = request.query_params.get('file')
         version = request.query_params.get('ver')
-        filePath = docManager.getHistoryPath(file, version, file_id)
+        filePath = await docManager.getHistoryPath(file, version, file_id)
         response.setdefault('path', filePath)
     except:
         logger.error(traceback.format_exc())
@@ -327,11 +328,11 @@ async def restore(file_id: str, body: str, hh: models.SessionBase):
         version: int = body['version']
         source_extension = f".{file.format}"
         source_file = await file.full_path()
-        history_directory = historyManager.getHistoryDir(docManager.getStoragePath(file_id, file_id))
+        history_directory = historyManager.getHistoryDir(await docManager.getStoragePath(file_id, file_id))
         recovery_version_directory = historyManager.getVersionDir(history_directory, version)
         recovery_file = historyManager.getPrevFilePath(recovery_version_directory, source_extension)
-        bumped_version_directory = historyManager.getNextVersionDir(history_directory)
-        bumped_key = docManager.generateFileKey(source_file)
+        bumped_version_directory = await historyManager.getNextVersionDir(history_directory)
+        bumped_key = await docManager.generateFileKey(source_file)
         bumped_key_file = historyManager.getKeyPath(bumped_version_directory)
         bumped_changes_file = historyManager.getChangesHistoryPath(bumped_version_directory)
         bumped_file = historyManager.getPrevFilePath(bumped_version_directory, source_extension)
@@ -344,8 +345,8 @@ async def restore(file_id: str, body: str, hh: models.SessionBase):
             await f.write(bumped_key)
         async with aiofiles.open(bumped_changes_file, 'w', encoding='utf-8') as f:
             await f.write(json.dumps(bumped_changes, ensure_ascii=False))
-        shutil.copy(source_file, bumped_file)
-        shutil.copy(recovery_file, source_file)
+        await asyncio.to_thread(shutil.copy, source_file, bumped_file)
+        await asyncio.to_thread(shutil.copy, recovery_file, source_file)
         await FileExplorer.update(file.id, size=os.path.getsize(source_file))
         logger.info(Msg.CommonLog1.get_text(hh.lang).format(Msg.RestoreFromHistory.get_text(hh.lang), file_id, hh.username, hh.ip))
         return "{}"

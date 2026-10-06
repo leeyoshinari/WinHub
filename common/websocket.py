@@ -32,7 +32,7 @@ class WebSSH:
             elif data['code'] == 2:  # close session
                 await self.ssh.close()
             elif data['code'] == 1:  # setting terminal size
-                self.ssh.resize_pty(cols=data['cols'], rows=data['rows'])
+                await self.ssh.resize_pty(cols=data['cols'], rows=data['rows'])
 
     async def sshConnect(self, ssh_args):
         self.ssh = SSH(websocket=self.ws)

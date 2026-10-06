@@ -5,6 +5,7 @@
 import os
 import time
 import shutil
+import asyncio
 import traceback
 from litestar import Controller, get, post, Request, Response
 from litestar.di import Provide
@@ -55,8 +56,8 @@ class UserContoller(Controller):
                     if not folder:
                         await FileExplorer.create(id=f"{k}{group.id}", name=group.id, parent_id=k, format='ffolder', username='system')
                     user_path = os.path.join(v, group.id)
-                    if not os.path.exists(user_path):
-                        os.mkdir(user_path)
+                    if not await asyncio.to_thread(os.path.exists, user_path):
+                        await asyncio.to_thread(os.mkdir, user_path)
             except:
                 await Group.query().equal(id=group.id).delete()
                 result.code = 1
@@ -107,16 +108,16 @@ class UserContoller(Controller):
                     if not folder:
                         await FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
                     user_path = os.path.join(v, user.group_id)
-                    if not os.path.exists(user_path):
-                        os.mkdir(user_path)
+                    if not await asyncio.to_thread(os.path.exists, user_path):
+                        await asyncio.to_thread(os.mkdir, user_path)
                 back_path = os.path.join(BASE_PATH, 'web/img/pictures', user.id)
-                if not os.path.exists(back_path):
-                    os.mkdir(back_path)
+                if not await asyncio.to_thread(os.path.exists, back_path):
+                    await asyncio.to_thread(os.mkdir, back_path)
                 source_file = os.path.join(BASE_PATH, 'web/img/pictures/undefined/background.jpg')
                 target_file = os.path.join(back_path, 'background.jpg')
                 login_file = os.path.join(back_path, 'login.jpg')
-                shutil.copy(source_file, target_file)
-                shutil.copy(source_file, login_file)
+                await asyncio.to_thread(shutil.copy, source_file, target_file)
+                await asyncio.to_thread(shutil.copy, source_file, login_file)
             except:
                 await User.query().equal(id=user.id).delete()
                 logger.error(traceback.format_exc())
@@ -175,8 +176,8 @@ class UserContoller(Controller):
                     if not folder:
                         await FileExplorer.create(id=f"{k}{user.group_id}", name=user.group_id, parent_id=k, format='ffolder', username='system')
                     user_path = os.path.join(v, user.group_id)
-                    if not os.path.exists(user_path):
-                        os.mkdir(user_path)
+                    if not await asyncio.to_thread(os.path.exists, user_path):
+                        await asyncio.to_thread(os.mkdir, user_path)
                 token_dict = {'username': user.id, 'groupname': user.group_id, 'nickname': user.nickname, 'exp': time.time() + 36000}
                 token = jwt.encode(token_dict, SECRET_KEY, algorithm="HS256")
                 response = Response(Result().__dict__)

@@ -17,8 +17,9 @@
 """
 
 import os
-import shutil
 import re
+import shutil
+import asyncio
 import aiofiles
 from settings import ONLYOFFICE_SERVER
 from common.httpRequest import http
@@ -78,14 +79,15 @@ def getTemplateImageUrl(fileType, request_url):
 
 
 # get file name with an index if such a file name already exists
-def getCorrectName(filename, file_id: str):
+async def getCorrectName(filename, file_id: str):
     maxName = 50
     basename = fileUtils.getFileNameWithoutExt(filename)[0:maxName] + ('', '[...]')[len(filename) > maxName]
     ext = fileUtils.getFileExt(filename)
     name = f'{basename}{ext}'
 
     i = 1
-    while os.path.exists(getStoragePath(name, file_id)):  # if file with such a name already exists
+    storage_path = await getStoragePath(name, file_id)
+    while await asyncio.to_thread(os.path.exists, storage_path):  # if file with such a name already exists
         name = f'{basename} ({i}){ext}'  # add an index to its name
         i += 1
 
@@ -115,44 +117,44 @@ def getDownloadUrl(filename):
 
 
 # get root folder for the current file
-def getRootFolder(file_id: str):
+async def getRootFolder(file_id: str):
     storage_directory = config_manager.storage_path()
     directory = storage_directory.joinpath(file_id)
-    if not os.path.exists(directory):  # if such a directory does not exist, make it
-        os.makedirs(directory)
+    if not await asyncio.to_thread(os.path.exists, directory):  # if such a directory does not exist, make it
+        await asyncio.to_thread(os.makedirs, directory)
 
     return directory
 
 
 # get the file history path
-def getHistoryPath(file, version, file_id: str):
-    directory = getRootFolder(file_id)
+async def getHistoryPath(file, version, file_id: str):
+    directory = await getRootFolder(file_id)
     filePath = os.path.join(directory, f'{file_id}-hist', version, file)
     return filePath
 
 
 # get the file path
-def getStoragePath(filename, file_id: str):
-    directory = getRootFolder(file_id)
+async def getStoragePath(filename, file_id: str):
+    directory = await getRootFolder(file_id)
     return os.path.join(directory, fileUtils.getFileName(filename))
 
 
 # get the path to the forcesaved file version
-def getForcesavePath(filename, file_id: str, create):
+async def getForcesavePath(filename, file_id: str, create):
     storage_directory = config_manager.storage_path()
     directory = storage_directory.joinpath(file_id)
-    if not os.path.exists(directory):  # the directory with host address doesn't exist
+    if not await asyncio.to_thread(os.path.exists, directory):  # the directory with host address doesn't exist
         return ""
 
     directory = os.path.join(directory, f'{file_id}-hist')  # get the path to the history of the given file
-    if not os.path.exists(directory):
+    if not await asyncio.to_thread(os.path.exists, directory):
         if create:  # if the history directory doesn't exist
-            os.makedirs(directory)  # create history directory if it doesn't exist
+            await asyncio.to_thread(os.makedirs, directory)  # create history directory if it doesn't exist
         else:  # the history directory doesn't exist and we are not supposed to create it
             return ""
 
     directory = os.path.join(directory, filename)  # and get the path to the given file
-    if not os.path.exists(directory) and not create:
+    if not await asyncio.to_thread(os.path.exists, directory) and not create:
         return ""
 
     return directory
@@ -178,16 +180,16 @@ async def downloadFileFromUri(uri, path=None, withSave=False):
 
 
 # remove file from the directory
-def removeFile(filename, file_id: str):
-    path = getStoragePath(filename, file_id)
+async def removeFile(filename, file_id: str):
+    path = await getStoragePath(filename, file_id)
     path = os.path.dirname(path)
-    if os.path.exists(path):  # remove all the history information about this file
-        shutil.rmtree(path)
+    if await asyncio.to_thread(os.path.exists, path):  # remove all the history information about this file
+        await asyncio.to_thread(shutil.rmtree, path)
 
 
 # generate file key
-def generateFileKey(file_path):
-    stat = os.stat(file_path)  # get the directory parameters
+async def generateFileKey(file_path):
+    stat = await asyncio.to_thread(os.stat, file_path)  # get the directory parameters
     h = str(hash(f'{file_path}_{stat.st_mtime_ns}'))
     replaced = re.sub(r'[^0-9-.a-zA-Z_=]', '_', h)
     return replaced[:20]  # take the first 20 characters for the key

@@ -3,6 +3,7 @@
 # @Author: leeyoshinari
 
 import os
+import asyncio
 import traceback
 import urllib.parse
 import aiofiles
@@ -53,7 +54,7 @@ class ShareController(Controller):
                     return res
                 if result["format"] == 'xmind':
                     res = Result()
-                    xmind = read_xmind(result['path'])
+                    xmind = await read_xmind(result['path'])
                     res.data = xmind
                     res.msg = result['name']
                     return res
@@ -64,7 +65,7 @@ class ShareController(Controller):
                     res.msg = result['name']
                     return res
                 else:
-                    if os.path.exists(result['path']):
+                    if await asyncio.to_thread(os.path.exists, result['path']):
                         headers = {'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"', 'Cache-Control': 'no-store',
                                    'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
                         return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)
@@ -82,9 +83,10 @@ class ShareController(Controller):
             result = await views.open_share_file(file_id, hh_no)
             if result['type'] == 0:
                 if result["format"] == 'xmind':
-                    file_path = generate_xmind8(result['file_id'], result['name'], result['path'])
+                    file_path = await generate_xmind8(result['file_id'], result['name'], result['path'])
                     result['path'] = file_path
-                headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(os.path.getsize(result['path'])),
+                file_size = await asyncio.to_thread(os.path.getsize, result['path'])
+                headers = {'Accept-Ranges': 'bytes', 'Content-Length': str(file_size),
                            'Content-Disposition': f'inline;filename="{urllib.parse.quote(result["name"])}"',
                            'content-type': f'{CONTENT_TYPE.get(result["format"], "application/octet-stream")}'}
                 return Stream(read_file(result['path']), media_type=CONTENT_TYPE.get(result["format"], 'application/octet-stream'), headers=headers)

@@ -20,7 +20,7 @@ if not os.path.exists('tmp'):
 async def save_server(query: models.ServerModel, hh: models.SessionBase) -> Result:
     result = Result()
     try:
-        datas = get_server_info(host=query.host, port=int(query.port), user=query.user, pwd=query.pwd, current_time=query.t)
+        datas = await asyncio.to_thread(get_server_info, host=query.host, port=int(query.port), user=query.user, pwd=query.pwd, current_time=query.t)
         if datas['code'] == 0:
             await Servers.create(id=query.t, host=query.host, port=query.port, user=query.user, username=hh.groupname, pwd=query.pwd, system=datas['system'], cpu=datas['cpu'], mem=datas['mem'], disk=datas['disk'])
         else:
@@ -78,9 +78,10 @@ async def upload_file_to_linux(query, hh: models.SessionBase) -> Result:
             await f.write(query['file'].file.read())
         remote_path = remote_path if remote_path else '/home'
         server = await Servers.get_one(server_id)
-        upload_obj = UploadAndDownloadFile(server)
-        _ = upload_obj.upload(temp_path, f'{remote_path}/{file_name}')
+        upload_obj = await asyncio.to_thread(UploadAndDownloadFile, server)
+        await asyncio.to_thread(upload_obj.upload, temp_path, f'{remote_path}/{file_name}')
         await asyncio.to_thread(os.remove, temp_path)
+        await asyncio.to_thread(upload_obj.close)
         del upload_obj
         result.msg = f"{Msg.Upload.get_text(hh.lang).format(file_name)}{Msg.Success.get_text(hh.lang)}"
         logger.info(Msg.CommonLog.get_text(hh.lang).format(result.msg, hh.username, hh.ip))
@@ -94,8 +95,9 @@ async def upload_file_to_linux(query, hh: models.SessionBase) -> Result:
 async def download_file_from_linux(server_id, file_path, hh: models.SessionBase):
     try:
         server = await Servers.get_one(server_id)
-        upload_obj = UploadAndDownloadFile(server)
-        fp = upload_obj.download(file_path)
+        upload_obj = await asyncio.to_thread(UploadAndDownloadFile, server)
+        fp = await asyncio.to_thread(upload_obj.download, file_path)
+        await asyncio.to_thread(upload_obj.close)
         logger.info(Msg.CommonLog.get_text(hh.lang).format(Msg.Download.get_text(hh.lang).format(file_path), hh.username, hh.ip))
         return fp
     except:
