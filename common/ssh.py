@@ -69,8 +69,11 @@ class SSH:
     async def django_to_ssh(self, data):
         try:
             await asyncio.to_thread(self.channel.send, data)
+        except OSError:
+            logger.info("Socket is closed ~")
         except:
             logger.error(traceback.format_exc())
+        finally:
             await self.close()
 
     async def backend_to_frontend(self):
@@ -122,7 +125,8 @@ class SSH:
                     continue
                 else:
                     break
-            await self.close()
+            if self.ssh_client.get_transport():
+                await self.close()
             logger.info('close ssh success ~ ')
         except:
             logger.error(traceback.format_exc())
