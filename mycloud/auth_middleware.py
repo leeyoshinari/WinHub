@@ -10,6 +10,11 @@ from common.messages import Msg
 import jwt
 
 
+# SECRET_KEY 必须配置且具备足够强度，否则拒绝启动，避免使用弱密钥或默认密钥伪造 token
+if not SECRET_KEY or len(SECRET_KEY) < 32:
+    raise RuntimeError("winHubSecretKey is not configured or too weak, please set a strong SECRET_KEY in .env")
+
+
 # 校验用户是否登陆，返回用户名
 # 从 cookie 中校验
 async def auth(request: Request) -> SessionBase:
