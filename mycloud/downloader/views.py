@@ -112,9 +112,17 @@ async def download_with_aria2c_bt(query: models.DownloadFileOnline, hh: models.S
             return result
         gid = await aria2c_downloader.add_bt_task(query.url, TMP_PATH)
         res = await aria2c_downloader.get_completed_task_info(gid)
+        start_time = time.time()
         while res['status'] != 'complete':
+            if time.time() - start_time > 30:
+                _ = await aria2c_downloader.update_task(gid, 'cancel')
+                await asyncio.sleep(2)
+                _ = await aria2c_downloader.update_task(gid, 'remove')
+                await asyncio.sleep(2)
+                await aria2c_downloader.close_aria2c_downloader()
+                raise Exception("Can not get resources from magnet.")
             logger.info(res)
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
             res = await aria2c_downloader.get_completed_task_info(gid)
         res = await aria2c_downloader.get_completed_task_info(gid)
         new_gid = res['followedBy'][0]
