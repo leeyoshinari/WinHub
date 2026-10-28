@@ -4,6 +4,7 @@
 
 import json
 import os
+import logging
 import urllib.parse
 import aiofiles
 from typing import Union
@@ -14,8 +15,10 @@ from mycloud.onlyoffice import views
 from mycloud.auth_middleware import auth, auth_url
 from mycloud.models import SessionBase
 from common.results import Result
-from common.logging import logger
 from common.messages import Msg
+
+
+logger = logging.getLogger(__name__)
 
 
 async def read_file(file_path, start_index=0):

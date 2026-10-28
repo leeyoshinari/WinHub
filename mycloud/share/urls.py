@@ -3,6 +3,7 @@
 # @Author: leeyoshinari
 
 import os
+import logging
 import asyncio
 import traceback
 import urllib.parse
@@ -15,10 +16,12 @@ from mycloud import models
 from mycloud.share import views
 from mycloud.auth_middleware import auth, no_auth
 from common.results import Result
-from common.logging import logger
 from common.xmind import read_xmind, generate_xmind8
 from common.sheet import read_sheet
 from settings import CONTENT_TYPE, HTML404
+
+
+logger = logging.getLogger(__name__)
 
 
 async def read_file(file_path, start_index=0):

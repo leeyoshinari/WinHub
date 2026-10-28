@@ -5,14 +5,15 @@
 import os
 import time
 import shutil
+import logging
 import asyncio
 import datetime
 import traceback
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from common.logging import logger
 from settings import TMP_PATH
 
 
+logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
 
 

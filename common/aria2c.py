@@ -4,13 +4,16 @@
 
 import os
 import json
+import logging
 import asyncio
 import subprocess
 import traceback
 import platform
 from settings import TRACKER_URL
 from common.httpRequest import http
-from common.logging import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 class Aria2Downloader:

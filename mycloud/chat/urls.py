@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Author: leeyoshinari
 
+import logging
 import traceback
 from litestar import Controller, get, WebSocket, websocket
 from litestar.exceptions import WebSocketDisconnect
@@ -10,9 +11,9 @@ from mycloud import models
 from mycloud.auth_middleware import auth
 from mycloud.chat import views
 from common.results import Result
-from common.logging import logger
 
 
+logger = logging.getLogger(__name__)
 rooms = {}
 
 

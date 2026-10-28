@@ -3,6 +3,7 @@
 # @Author: leeyoshinari
 
 import os
+import logging
 import traceback
 import urllib.parse
 from litestar import Controller, get, post, Request, WebSocket, websocket
@@ -13,9 +14,11 @@ from mycloud import models
 from mycloud.SSH import views
 from mycloud.auth_middleware import auth
 from common.results import Result
-from common.logging import logger
 from common.messages import Msg
 from common.websocket import WebSSH
+
+
+logger = logging.getLogger(__name__)
 
 
 class ServerController(Controller):

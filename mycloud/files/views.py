@@ -3,6 +3,7 @@
 # Author: leeyoshinari
 import os
 import time
+import logging
 import asyncio
 import shutil
 import zipfile
@@ -14,10 +15,12 @@ from mycloud.database import FileExplorer, Shortcuts, Shares
 from settings import BASE_PATH
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
 from common.xmind import read_xmind, create_xmind, generate_xmind8
 from common.sheet import read_sheet, create_sheet
 from common.md2html import md_to_html
+
+
+logger = logging.getLogger(__name__)
 
 
 async def create_file(folder_id: str, file_type: str, hh: models.SessionBase) -> Result:

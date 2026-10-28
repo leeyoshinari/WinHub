@@ -5,6 +5,7 @@
 import os
 import time
 import shutil
+import logging
 import asyncio
 import traceback
 from litestar import Controller, get, post, Request, Response
@@ -14,10 +15,12 @@ from mycloud.database import Group, User, FileExplorer
 from mycloud.auth_middleware import auth, no_auth
 from common.calc import str_md5, parse_pwd
 from common.results import Result
-from common.logging import logger
 from common.messages import Msg
 from settings import BASE_PATH, ROOT_PATH, SECRET_KEY
 import jwt
+
+
+logger = logging.getLogger(__name__)
 
 
 class UserContoller(Controller):

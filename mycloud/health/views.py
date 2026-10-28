@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 
+import logging
 import traceback
 from mycloud import models
 from mycloud.database import Health
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_all_data(health_type: int, username: str, hh: models.SessionBase) -> Result:

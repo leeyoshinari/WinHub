@@ -6,11 +6,14 @@ import io
 import time
 import socket
 import asyncio
+import logging
 import traceback
 import paramiko
 import websockets.exceptions
-from common.logging import logger
 from common.calc import parse_pwd
+
+
+logger = logging.getLogger(__name__)
 
 
 class SSH:

@@ -5,6 +5,7 @@
 import os
 import time
 import json
+import logging
 import random
 import asyncio
 import shutil
@@ -23,9 +24,9 @@ from common.scheduler import scheduler, get_schedule_time, _sync_remove_tmp_fold
 from common.httpRequest import http
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
 
 
+logger = logging.getLogger(__name__)
 UPDATE_STATUE = 0   # 0-默认状态, 1-最新版本, 2-有新版本, 3-已更新,需要重启
 UPDATE_DATE_PATH = os.path.join(BASE_PATH, '__update_date__')
 
@@ -440,7 +441,7 @@ def extract_zip(zip_path):
     shutil.rmtree(origin_path)
 
 
-async def getNewsFromDongCai(keyword: str, lastDay: str) -> str:
+async def getNewsFromDongCai(keyword: str, lastDay: str, hh: models.SessionBase) -> str:
     """
     东方财富-个股新闻-最近 100 条新闻 https://so.eastmoney.com/news/s?keyword=603777
 
@@ -499,6 +500,7 @@ async def getNewsFromDongCai(keyword: str, lastDay: str) -> str:
         target_day = lastDay + " 09:30:00"
         recent_news = [r for r in news_list if r['date'] > target_day]
         details = await asyncio.gather(*[get_detail(n) for n in recent_news])
+        logger.info(f"Search new from dongcai success. - {keyword} - {lastDay} - {hh.ip}")
         return "\n---\n".join(details)
     else:
         return ''

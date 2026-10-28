@@ -6,6 +6,7 @@ import os
 import shutil
 import time
 import base64
+import logging
 import asyncio
 import traceback
 # from threading import Thread
@@ -15,10 +16,10 @@ from mycloud import models
 from mycloud.database import FileExplorer
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
 from common.aria2c import Aria2Downloader
 
 
+logger = logging.getLogger(__name__)
 aria2c_downloader = Aria2Downloader()
 
 

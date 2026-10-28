@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Author: leeyoshinari
 
+import common.logging
 import asyncio
 from litestar import Litestar, Router
 from litestar.openapi import OpenAPIConfig

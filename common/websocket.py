@@ -3,10 +3,13 @@
 # Author: leeyoshinari
 
 import json
+import logging
 import traceback
-from common.logging import logger
 from mycloud.database import Servers
 from .ssh import SSH
+
+
+logger = logging.getLogger(__name__)
 
 
 class WebSSH:

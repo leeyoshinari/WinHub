@@ -3,6 +3,7 @@
 # @Author: leeyoshinari
 
 import os
+import logging
 import asyncio
 import traceback
 import urllib.parse
@@ -15,9 +16,11 @@ from mycloud import models
 from mycloud.files import views
 from mycloud.auth_middleware import auth, auth_url, no_auth
 from common.results import Result
-from common.logging import logger
 from common.messages import Msg
 from settings import CONTENT_TYPE
+
+
+logger = logging.getLogger(__name__)
 
 
 async def read_file(file_path, start_index=0, end_index=None):

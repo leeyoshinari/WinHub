@@ -4,6 +4,7 @@
 
 import os
 import shutil
+import logging
 import asyncio
 import traceback
 from settings import ENABLE_BACKUP, ROOT_PATH, BACKUP_PATH, BACKUP_INTERVAL
@@ -11,8 +12,10 @@ from mycloud import models
 from mycloud.database import FileExplorer
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
 from common.scheduler import scheduler, get_schedule_time
+
+
+logger = logging.getLogger(__name__)
 
 
 async def start_backup(hh: models.SessionBase) -> Result:

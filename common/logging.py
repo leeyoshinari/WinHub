@@ -20,7 +20,7 @@ log_level = {
 }
 
 logger = logging.getLogger()
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(threadName)s - %(filename)s[line:%(lineno)d] - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(threadName)s - %(name)s[line:%(lineno)d] - %(message)s')
 logger.setLevel(level=log_level.get(LOGGER_LEVEL))
 
 file_handler = logging.handlers.TimedRotatingFileHandler(

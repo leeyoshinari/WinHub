@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 
+import logging
 import traceback
 from mycloud import models
 from mycloud.database import Shares
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 async def open_share_file(share_id: int, hh: models.SessionBase) -> dict:

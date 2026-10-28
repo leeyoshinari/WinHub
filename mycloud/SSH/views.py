@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: leeyoshinari
 import os
+import logging
 import asyncio
 import traceback
 import aiofiles
@@ -9,10 +10,10 @@ from mycloud.database import Servers
 from mycloud import models
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
 from common.ssh import UploadAndDownloadFile, get_server_info
 
 
+logger = logging.getLogger(__name__)
 if not os.path.exists('tmp'):
     os.mkdir('tmp')
 

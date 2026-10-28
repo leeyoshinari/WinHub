@@ -4,6 +4,7 @@
 
 import time
 import uuid
+import logging
 import traceback
 from litestar import WebSocket
 from mycloud.database import ChatRoom, User
@@ -11,10 +12,10 @@ from mycloud import models
 from settings import WEBRTC_TURN, WEBRTC_STUN, WEBRTC_USER, WEBRTC_CRED
 from common.scheduler import scheduler, get_schedule_time
 from common.results import Result
-from common.logging import logger
 from common.messages import Msg
 
 
+logger = logging.getLogger(__name__)
 rooms = {}
 
 

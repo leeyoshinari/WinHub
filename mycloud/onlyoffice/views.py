@@ -6,12 +6,12 @@ import os
 import json
 import time
 import shutil
+import logging
 import asyncio
 import traceback
 import aiofiles
 from datetime import datetime
 from litestar import Request
-from common.logging import logger
 from common.results import Result
 from common.messages import Msg
 from mycloud import models
@@ -21,6 +21,7 @@ from mycloud.onlyoffice.utils import docManager, fileUtils, users, jwtManager, h
 from settings import PREFIX, ONLYOFFICE_SERVER
 
 
+logger = logging.getLogger(__name__)
 onlyoffice_server = ONLYOFFICE_SERVER
 server_prefix = PREFIX
 config_manager = ConfigurationManager()

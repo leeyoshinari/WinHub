@@ -3,6 +3,7 @@
 # Author: leeyoshinari
 import os
 import time
+import logging
 import shutil
 import asyncio
 import traceback
@@ -13,8 +14,10 @@ from mycloud.onlyoffice.views import remove
 from settings import ROOT_PATH, ENABLE_ONLYOFFICE
 from common.results import Result
 from common.messages import Msg
-from common.logging import logger
 from common.calc import beauty_size
+
+
+logger = logging.getLogger(__name__)
 
 
 async def get_disk_usage(hh: models.SessionBase) -> Result:
