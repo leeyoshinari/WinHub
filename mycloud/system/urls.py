@@ -75,6 +75,6 @@ class SystemController(Controller):
         return result
 
     @get("/getNews", summary="搜索东方财富新闻新闻")
-    async def get_news(self, keyWord: str, lastDay: str, hh_no: models.SessionBase) -> str:
-        result = await views.getNewsFromDongCai(keyWord, lastDay, hh_no)
+    async def get_news(self, keyword: str, lastDay: str, hh_no: models.SessionBase) -> str:
+        result = await views.getNewsFromDongCai(keyword, lastDay, hh_no)
         return result
